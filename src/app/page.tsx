@@ -98,7 +98,7 @@ export default function HomePage() {
                 </Link>
             </Button>
             <Button size="lg" variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
-                <Link href="/owner/login">
+                <Link href="/owner/portal"> {/* Updated Link */}
                     <ChefHat className="h-10 w-10 mb-2" />
                     I'm a Food Truck Owner
                     <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
@@ -233,3 +233,4 @@ export default function HomePage() {
     </div>
   );
 }
+
