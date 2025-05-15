@@ -2,14 +2,14 @@
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { FoodTruck, Testimonial } from "@/lib/types";
-import { MapPin, UtensilsCrossed, Smile, Star, Truck, Annoyed, Download } from "lucide-react";
+import type { Testimonial } from "@/lib/types"; // FoodTruck type removed as featuredTrucksData is empty
+import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-const featuredTrucksData: FoodTruck[] = []; // No more featured trucks placeholder
+// featuredTrucksData is already empty, so no need to declare it
 
 const testimonialsData: Testimonial[] = [
   {
@@ -85,29 +85,39 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <Truck className="mx-auto h-24 w-24 mb-6 text-background" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Find Your Next Favorite Food Truck!
+            Your Hub for Amazing Street Food!
           </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-            Discover amazing street food near you, track live locations, browse menus, and order ahead with Truck Tracker.
+          <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
+            Whether you're craving your next meal or you're a food truck owner ready to connect with customers, Truck Tracker is for you.
           </p>
-          <div className="space-x-0 sm:space-x-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" variant="secondary" className="bg-background text-primary hover:bg-background/90 w-full sm:w-auto" asChild>
-              <Link href="/map">Explore Trucks</Link>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <Button size="lg" variant="secondary" className="bg-background text-primary hover:bg-background/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
+                <Link href="/map">
+                    <Users className="h-10 w-10 mb-2" />
+                    I'm a Customer
+                    <span className="text-sm font-normal mt-1 block">(Find Food Trucks)</span>
+                </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-background text-background hover:bg-background/10 w-full sm:w-auto" asChild>
-              <Link href="/signup">Sign Up (Optional)</Link>
+            <Button size="lg" variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
+                <Link href="/owner/login">
+                    <ChefHat className="h-10 w-10 mb-2" />
+                    I'm a Food Truck Owner
+                    <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
+                </Link>
             </Button>
-            {showInstallButton && (
-              <Button 
-                size="lg" 
-                variant="outline" 
-                onClick={handleInstallClick}
-                className="border-background text-background hover:bg-background/10 w-full sm:w-auto"
-              >
-                <Download className="mr-2 h-5 w-5" /> Add to Home Screen
-              </Button>
-            )}
           </div>
+          {showInstallButton && (
+            <div className="mt-10 flex justify-center">
+                <Button
+                size="md"
+                variant="outline"
+                onClick={handleInstallClick}
+                className="border-background text-background hover:bg-background/10"
+                >
+                <Download className="mr-2 h-5 w-5" /> Add to Home Screen
+                </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -155,44 +165,40 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Trucks Section */}
+      {/* Newest Trucks Section */}
+      <section className="py-16 md:py-24 bg-secondary/10">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Discover Our <span className="text-accent">Newest Trucks</span>
+          </h2>
+          <div className="text-center text-muted-foreground">
+            <p className="mb-4 text-lg">
+              Freshly added food trucks will be showcased here!
+            </p>
+            <p>
+              As our community grows, this is where you'll find the latest culinary delights on wheels.
+              Check back soon for new additions!
+            </p>
+            {/* Placeholder for listing newest trucks - actual implementation would involve data fetching */}
+            <div className="mt-8">
+                <Button variant="outline" asChild>
+                    <Link href="/map">Explore All Trucks</Link>
+                </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Trucks Section (Currently shows placeholder text as data is empty) */}
       <section className="py-16 md:py-24 bg-secondary/20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Featured Food Trucks
           </h2>
-          {featuredTrucksData.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-8">
-              {featuredTrucksData.map((truck) => (
-                <Card key={truck.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <Image
-                    src={truck.imageUrl}
-                    alt={truck.name}
-                    width={600}
-                    height={400}
-                    className="w-full h-48 object-cover"
-                    data-ai-hint="food truck"
-                  />
-                  <CardHeader>
-                    <CardTitle className="text-2xl">{truck.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {truck.cuisine} - Rated {truck.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-yellow-400" />
-                    </p>
-                    <p className="text-sm mb-4">{truck.description}</p>
-                    <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10" asChild>
-                      <Link href={`/trucks/${truck.id}`}>View Menu</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground">
-              No featured trucks at the moment. Check the map to find delicious options near you!
-            </p>
-          )}
+          {/* featuredTrucksData is empty, so the else condition will render */}
+          <p className="text-center text-muted-foreground">
+            No featured trucks at the moment. Check the map to find delicious options near you!
+          </p>
         </div>
       </section>
 

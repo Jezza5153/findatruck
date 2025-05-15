@@ -1,9 +1,10 @@
 
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Edit, Eye, MapPinIcon, MenuSquare, DollarSign, Settings, Power, LocateFixed } from "lucide-react";
+import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, DollarSign, Settings, Power, LocateFixed, CalendarClock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function OwnerDashboardPage() {
@@ -16,46 +17,53 @@ export default function OwnerDashboardPage() {
   }, []);
 
   const updateCurrentLocation = () => {
-    if (!isClient) return;
+    if (!isClient || !navigator.geolocation) {
+      toast({ 
+          title: "Geolocation Error", 
+          description: "Geolocation is not supported by your browser or not available. Please set location manually or try a different browser.", 
+          variant: "destructive" 
+      });
+      // Fallback to mock location if real geolocation fails or is denied/unavailable
+      const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
+      const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
+      const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
+      setCurrentLocation(mockLocation);
+      toast({ 
+        title: "Location Updated (Simulated)!", 
+        description: `Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}. Customers will see this.`,
+        variant: "default"
+      });
+      return;
+    }
 
-    if (navigator.geolocation) {
-      toast({ title: "Fetching Location...", description: "Attempting to get your current location. This is a simulation." });
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Using actual geolocation data if available, otherwise mock
-          const newLocation = { 
-            lat: parseFloat(position.coords.latitude.toFixed(4)), 
-            lng: parseFloat(position.coords.longitude.toFixed(4)) 
-          };
-          setCurrentLocation(newLocation);
-          toast({ 
-            title: "Location Updated!", 
-            description: `Current location set to: ${newLocation.lat}, ${newLocation.lng}. Customers will see this location.` 
-          });
-          // Here, you would send `newLocation` to your backend.
-        },
-        (error) => {
-           // Fallback to mock location if real geolocation fails or is denied
-          console.warn("Geolocation error:", error.message, "Using mock location.");
-          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
+    toast({ title: "Fetching Location...", description: "Attempting to get your current location." });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation = { 
+          lat: parseFloat(position.coords.latitude.toFixed(4)), 
+          lng: parseFloat(position.coords.longitude.toFixed(4)) 
+        };
+        setCurrentLocation(newLocation);
+        toast({ 
+          title: "Location Updated!", 
+          description: `Current location set to: ${newLocation.lat}, ${newLocation.lng}. Customers will see this location.` 
+        });
+        // Here, you would send `newLocation` to your backend.
+      },
+      (error) => {
+          console.warn("Geolocation error:", error.message, "Falling back to mock location.");
+          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01; // LA coordinates
           const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
           const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
           setCurrentLocation(mockLocation);
           toast({ 
             title: "Location Updated (Simulated)!", 
-            description: `Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}. Customers will see this.`,
-            variant: "default"
+            description: `Could not get precise location. Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}.`,
+            variant: "default" // Consider 'warning' or custom variant if available
           });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      toast({ 
-          title: "Geolocation Error", 
-          description: "Geolocation is not supported by your browser. Please set location manually or try a different browser.", 
-          variant: "destructive" 
-      });
-    }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
   
   const handleSetManualLocation = () => {
@@ -73,7 +81,8 @@ export default function OwnerDashboardPage() {
           <p className="text-muted-foreground">Manage your food truck's presence and operations.</p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-            <span className="text-sm font-medium text-green-600">Status: Open</span>
+            {/* This would ideally come from backend state */}
+            <span className="text-sm font-medium text-green-600">Status: Open (Simulated)</span>
             <Button variant="outline" size="sm">
                 <Power className="mr-2 h-4 w-4"/> Toggle Open/Closed
             </Button>
@@ -114,7 +123,9 @@ export default function OwnerDashboardPage() {
             <CardDescription>Update items, prices, and availability.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Edit Menu</Button>
+            <Button className="w-full" asChild>
+              <Link href="/owner/menu">Edit Menu</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -126,31 +137,37 @@ export default function OwnerDashboardPage() {
             <CardDescription>Track incoming orders and update statuses.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">See Orders (3 New)</Button>
+             <Button className="w-full" asChild>
+              <Link href="/owner/orders">See Orders (Simulated 3 New)</Link>
+            </Button>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
-              <Edit className="mr-2 h-5 w-5 text-primary" /> Schedule Hours
+              <CalendarClock className="mr-2 h-5 w-5 text-primary" /> Schedule Hours
             </CardTitle>
             <CardDescription>Set your regular and special operating hours.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Set Hours</Button>
+            <Button className="w-full" asChild>
+              <Link href="/owner/schedule">Set Hours</Link>
+            </Button>
           </CardContent>
         </Card>
         
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
-              <BarChart className="mr-2 h-5 w-5 text-primary" /> View Analytics
+              <LineChart className="mr-2 h-5 w-5 text-primary" /> View Analytics
             </CardTitle>
             <CardDescription>Track popular items, revenue, and ratings.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">View Analytics</Button>
+            <Button className="w-full" asChild>
+              <Link href="/owner/analytics">View Analytics</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -162,7 +179,9 @@ export default function OwnerDashboardPage() {
             <CardDescription>Manage truck profile, photos, and description.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Edit Profile</Button>
+            <Button className="w-full" asChild>
+              <Link href="/owner/profile">Edit Profile</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
