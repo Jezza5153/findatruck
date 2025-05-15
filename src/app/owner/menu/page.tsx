@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
+import Image from "next/image"; // Corrected import
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 type MenuItem = {
@@ -41,8 +43,8 @@ export default function OwnerMenuPage() {
     { id: 'main', name: 'Main Courses' }, { id: 'sides', name: 'Sides' }, {id: 'drinks', name: 'Drinks'}
   ]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: '1', name: 'Spicy Chicken Tacos (Set of 3)', description: 'Our signature tacos with a fiery kick!', price: 12.00, category: 'Main Courses', imageUrl: 'https://placehold.co/300x200.png?text=Tacos' },
-    { id: '2', name: 'Classic Cheeseburger', description: 'Juicy beef patty with cheddar and fixings.', price: 10.50, category: 'Main Courses', imageUrl: 'https://placehold.co/300x200.png?text=Burger' },
+    { id: '1', name: 'Spicy Chicken Tacos (Set of 3)', description: 'Our signature tacos with a fiery kick!', price: 12.00, category: 'Main Courses', imageUrl: 'https://placehold.co/300x200.png' },
+    { id: '2', name: 'Classic Cheeseburger', description: 'Juicy beef patty with cheddar and fixings.', price: 10.50, category: 'Main Courses', imageUrl: 'https://placehold.co/300x200.png' },
     { id: '3', name: 'Crispy Fries', description: 'Perfectly salted golden fries.', price: 4.00, category: 'Sides' },
   ]);
   
@@ -94,7 +96,7 @@ export default function OwnerMenuPage() {
         description: itemDescription,
         price: parseFloat(itemPrice),
         category: itemCategory,
-        imageUrl: itemImageFile ? URL.createObjectURL(itemImageFile) : (editingItem?.imageUrl || 'https://placehold.co/300x200.png?text=New+Item')
+        imageUrl: itemImageFile ? URL.createObjectURL(itemImageFile) : (editingItem?.imageUrl || 'https://placehold.co/300x200.png')
     };
 
     if (editingItem) {

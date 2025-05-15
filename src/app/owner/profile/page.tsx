@@ -21,7 +21,7 @@ export default function OwnerProfilePage() {
   const [description, setDescription] = useState("Serving the best food on wheels!");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [operatingHoursSummary, setOperatingHoursSummary] = useState("Typically Mon-Fri, 11 AM - 7 PM");
-  const [truckImagePreview, setTruckImagePreview] = useState<string | null>("https://placehold.co/300x200.png?text=Truck+Image");
+  const [truckImagePreview, setTruckImagePreview] = useState<string | null>("https://placehold.co/300x200.png");
   const [truckImageFile, setTruckImageFile] = useState<File | null>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
