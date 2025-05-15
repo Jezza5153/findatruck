@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,29 +11,31 @@ import { User, ShoppingBag, Heart, Bell, Edit3, Save } from 'lucide-react';
 import type { UserProfile, NotificationPreferences } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock User Data
-const mockUserProfile: UserProfile = {
-  name: 'Alex Foodie',
-  email: 'alex.foodie@example.com',
-  savedPaymentMethods: ['Visa **** 1234'],
-  favoriteTrucks: ['1', '3'], // IDs of favorite trucks
+// Initial User Profile State for a new user
+const initialUserProfileState: UserProfile = {
+  name: 'New User', // This would typically be populated from auth/signup
+  email: 'user@example.com', // This would be their registered email
+  savedPaymentMethods: [], // Starts empty
+  favoriteTrucks: [], // Starts empty
   notificationPreferences: {
-    truckNearbyRadius: 2, // miles
-    orderUpdates: true,
-    promotionalMessages: false,
+    truckNearbyRadius: 2, // miles - default
+    orderUpdates: true, // default
+    promotionalMessages: false, // default - opt-in
   },
 };
 
 export default function DashboardPage() {
-  const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
+  const [profile, setProfile] = useState<UserProfile>(initialUserProfileState);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [tempProfile, setTempProfile] = useState<UserProfile>(mockUserProfile);
+  const [tempProfile, setTempProfile] = useState<UserProfile>(initialUserProfileState);
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
-    setTempProfile(profile); // Initialize tempProfile when profile loads or changes
+    // In a real app, you would fetch the user's profile here
+    // For now, we initialize tempProfile with the (initial or fetched) profile
+    setTempProfile(profile); 
   }, [profile]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +54,7 @@ export default function DashboardPage() {
   };
 
   const saveProfile = () => {
+    // In a real app, this would send tempProfile to the backend to save
     setProfile(tempProfile);
     setIsEditingProfile(false);
     toast({
@@ -60,6 +64,7 @@ export default function DashboardPage() {
   };
 
   const saveNotificationPreferences = () => {
+    // In a real app, this would send tempProfile.notificationPreferences to the backend
      setProfile(prev => ({...prev, notificationPreferences: tempProfile.notificationPreferences }));
      toast({
       title: "Preferences Updated",
@@ -99,6 +104,7 @@ export default function DashboardPage() {
                 readOnly={!isEditingProfile}
                 onChange={handleProfileChange}
                 className={!isEditingProfile ? "border-none px-0" : ""}
+                placeholder="Your Name"
               />
             </div>
             <div>
@@ -111,6 +117,7 @@ export default function DashboardPage() {
                 readOnly={!isEditingProfile}
                 onChange={handleProfileChange}
                 className={!isEditingProfile ? "border-none px-0" : ""}
+                placeholder="your.email@example.com"
               />
             </div>
             {isEditingProfile && (
@@ -176,13 +183,14 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><ShoppingBag className="mr-2 h-6 w-6 text-primary" /> Past Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Your past orders will appear here.</p>
-            {/* Example of a past order item */}
+            <p className="text-muted-foreground">Your past orders will appear here once you start ordering.</p>
+            {/* Example of how a past order item might look - hidden if no orders
             <div className="mt-4 p-3 border rounded-md">
               <p className="font-semibold">Taco 'Bout Delicious - Order #12345</p>
               <p className="text-sm text-muted-foreground">Date: 2024-07-15 - Total: $15.50</p>
               <Button variant="link" className="p-0 h-auto text-primary">View Details</Button>
-            </div>
+            </div> 
+            */}
           </CardContent>
         </Card>
 
@@ -192,13 +200,16 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><Heart className="mr-2 h-6 w-6 text-primary" /> Favorite Trucks</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Your favorite trucks will appear here.</p>
-            {profile.favoriteTrucks?.map(truckId => (
-                 <div key={truckId} className="mt-4 p-3 border rounded-md">
-                    <p className="font-semibold">Truck ID: {truckId} (Details coming soon)</p>
-                    <Button variant="link" className="p-0 h-auto text-destructive">Remove</Button>
-                 </div>
-            ))}
+            {profile.favoriteTrucks?.length ? (
+                profile.favoriteTrucks.map(truckId => (
+                    <div key={truckId} className="mt-4 p-3 border rounded-md">
+                        <p className="font-semibold">Truck ID: {truckId} (Details coming soon)</p>
+                        <Button variant="link" className="p-0 h-auto text-destructive">Remove</Button>
+                    </div>
+                ))
+            ) : (
+                <p className="text-muted-foreground">Your favorite trucks will appear here once you add some.</p>
+            )}
           </CardContent>
         </Card>
       </div>
