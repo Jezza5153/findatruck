@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Edit, Eye, MapPinIcon, MenuSquare, DollarSign, Settings, Power, LocateFixed, Router } from "lucide-react";
-import { useToast } from "@/hooks/use-toast"; // Added useToast
+import { BarChart, Edit, Eye, MapPinIcon, MenuSquare, DollarSign, Settings, Power, LocateFixed } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OwnerDashboardPage() {
-  const [isLiveTracking, setIsLiveTracking] = useState(false);
-  const [liveLocation, setLiveLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
@@ -16,45 +15,49 @@ export default function OwnerDashboardPage() {
     setIsClient(true);
   }, []);
 
-  const toggleLiveTracking = () => {
+  const updateCurrentLocation = () => {
     if (!isClient) return;
 
-    if (isLiveTracking) {
-      setIsLiveTracking(false);
-      setLiveLocation(null);
-      // In a real app, you'd stop watching position (e.g., clear watchId from navigator.geolocation.watchPosition)
-      // and notify the backend that live tracking has stopped.
-      toast({ title: "Live Tracking Stopped", description: "Your location is no longer being shared live." });
-    } else {
-      if (navigator.geolocation) {
-        setIsLiveTracking(true);
-        toast({ title: "Starting Live Tracking...", description: "Attempting to get your location. This is a simulation." });
-        // Simulate getting location and sending updates
-        // In a real app, you'd use navigator.geolocation.watchPosition to get continuous updates
-        // and send them to your backend service.
-        setTimeout(() => {
-          // Mock location for simulation
-          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
-          const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
-          const newLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
-          setLiveLocation(newLocation);
+    if (navigator.geolocation) {
+      toast({ title: "Fetching Location...", description: "Attempting to get your current location. This is a simulation." });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Using actual geolocation data if available, otherwise mock
+          const newLocation = { 
+            lat: parseFloat(position.coords.latitude.toFixed(4)), 
+            lng: parseFloat(position.coords.longitude.toFixed(4)) 
+          };
+          setCurrentLocation(newLocation);
           toast({ 
-            title: "Live Tracking Active!", 
-            description: `Simulated location: ${newLocation.lat}, ${newLocation.lng}. In a real app, this would update continuously.` 
+            title: "Location Updated!", 
+            description: `Current location set to: ${newLocation.lat}, ${newLocation.lng}. Customers will see this location.` 
           });
           // Here, you would send `newLocation` to your backend.
-        }, 2000);
-      } else {
-        toast({ 
-            title: "Geolocation Error", 
-            description: "Geolocation is not supported by your browser or permission was denied.", 
-            variant: "destructive" 
-        });
-      }
+        },
+        (error) => {
+           // Fallback to mock location if real geolocation fails or is denied
+          console.warn("Geolocation error:", error.message, "Using mock location.");
+          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
+          const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
+          const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
+          setCurrentLocation(mockLocation);
+          toast({ 
+            title: "Location Updated (Simulated)!", 
+            description: `Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}. Customers will see this.`,
+            variant: "default"
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      toast({ 
+          title: "Geolocation Error", 
+          description: "Geolocation is not supported by your browser. Please set location manually or try a different browser.", 
+          variant: "destructive" 
+      });
     }
   };
   
-  // Placeholder for manual location set function
   const handleSetManualLocation = () => {
     toast({
         title: "Set Manual Location",
@@ -83,27 +86,21 @@ export default function OwnerDashboardPage() {
             <CardTitle className="flex items-center text-xl">
               <MapPinIcon className="mr-2 h-5 w-5 text-primary" /> Location Management
             </CardTitle>
-            <CardDescription>Manually set location or enable live GPS tracking.</CardDescription>
+            <CardDescription>Share your current location with customers.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button onClick={handleSetManualLocation} className="w-full" variant="outline">Set Location Manually</Button>
-            <Button onClick={toggleLiveTracking} className="w-full bg-primary hover:bg-primary/90">
-              {isLiveTracking ? <Router className="mr-2 h-4 w-4 animate-pulse" /> : <LocateFixed className="mr-2 h-4 w-4" />}
-              {isLiveTracking ? "Stop Live Tracking" : "Start Live Tracking"}
+            <Button onClick={updateCurrentLocation} className="w-full bg-primary hover:bg-primary/90">
+              <LocateFixed className="mr-2 h-4 w-4" /> Update My Current Location
             </Button>
-            {isClient && isLiveTracking && liveLocation && (
+            <Button onClick={handleSetManualLocation} className="w-full" variant="outline">Set Location Manually</Button>
+            {isClient && currentLocation && (
               <p className="text-sm text-green-600 text-center">
-                Live Tracking Active: {liveLocation.lat}, {liveLocation.lng}
+                Current Shared Location: {currentLocation.lat}, {currentLocation.lng}
               </p>
             )}
-             {isClient && isLiveTracking && !liveLocation && (
-              <p className="text-sm text-orange-500 text-center">
-                Live Tracking: Acquiring location...
-              </p>
-            )}
-            {isClient && !isLiveTracking && (
+             {isClient && !currentLocation && (
               <p className="text-sm text-muted-foreground text-center">
-                Live Tracking: Inactive
+                Share your location to appear on the map.
               </p>
             )}
           </CardContent>

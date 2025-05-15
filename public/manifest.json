@@ -1,0 +1,25 @@
+
+{
+  "name": "Truck Tracker",
+  "short_name": "TruckTracker",
+  "description": "Find Your Next Favorite Food Truck!",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192.png?text=Icon",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://placehold.co/512x512.png?text=Icon",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#A3B18A",
+  "theme_color": "#FF7A00",
+  "scope": "/"
+}
