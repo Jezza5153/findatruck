@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -67,7 +68,7 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
             <SelectValue placeholder="Any Cuisine" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Cuisine</SelectItem>
+            {/* <SelectItem value="">Any Cuisine</SelectItem>  Removed this line */}
             {availableCuisines.map(c => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
