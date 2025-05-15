@@ -12,27 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-// Mock data - in a real app, this would be fetched based on `id`
-const mockTrucksData: FoodTruck[] = [
-   {
-    id: "1", name: "Taco 'Bout Delicious", cuisine: "Mexican", rating: 4.8,
-    imageUrl: "https://placehold.co/800x400.png", description: "Authentic Mexican street tacos with a modern twist. We use locally sourced ingredients to bring you the freshest flavors. Our specialties include Al Pastor, Carnitas, and signature spicy salsas.",
-    menu: [
-      { id: "m1", name: "Al Pastor Taco", price: 3.50, description: "Marinated pork, pineapple, onion, cilantro.", category: "Tacos", imageUrl: "https://placehold.co/200x200.png" },
-      { id: "m2", name: "Carnitas Taco", price: 3.75, description: "Slow-cooked pork, onion, cilantro.", category: "Tacos", imageUrl: "https://placehold.co/200x200.png" },
-      { id: "m3", name: "Chicken Quesadilla", price: 8.00, description: "Grilled chicken, cheese, flour tortilla.", category: "Quesadillas", imageUrl: "https://placehold.co/200x200.png" },
-      { id: "m4", name: "Jarritos", price: 2.50, description: "Assorted flavors.", category: "Drinks", imageUrl: "https://placehold.co/200x200.png" },
-    ], 
-    hours: "Mon-Sat: 11am - 8pm, Sun: Closed", 
-    location: { lat: 34.0522, lng: -118.2437, address: "123 Main St, Los Angeles, CA" },
-    isOpen: true,
-    testimonials: [
-        { id: "t1", name: "Carlos R.", quote: "Best Al Pastor tacos in the city!"},
-        { id: "t2", name: "Linda G.", quote: "The quesadillas are huge and so cheesy."}
-    ]
-  },
-  // Add more mock trucks if needed for testing different IDs
-];
+// Mock data - in a real app, this would be fetched based on `id` from a database
+const mockTrucksData: FoodTruck[] = []; // No more mock data
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
@@ -44,7 +25,9 @@ export default function FoodTruckProfilePage() {
   useEffect(() => {
     setIsClient(true);
     if (params.id) {
-      const foundTruck = mockTrucksData.find(t => t.id === params.id);
+      // In a real app, you would fetch truck data from your backend API here
+      // For example: fetch(`/api/trucks/${params.id}`).then(res => res.json()).then(data => setTruck(data));
+      const foundTruck = mockTrucksData.find(t => t.id === params.id); // This will be undefined
       setTruck(foundTruck || null);
     }
   }, [params.id]);
@@ -84,7 +67,7 @@ export default function FoodTruckProfilePage() {
   }
 
   if (!truck) {
-    return <div className="container mx-auto px-4 py-8 text-center">Food truck not found.</div>;
+    return <div className="container mx-auto px-4 py-8 text-center">Food truck not found or not available.</div>;
   }
 
   const menuCategories = Array.from(new Set(truck.menu.map(item => item.category)));
@@ -98,11 +81,11 @@ export default function FoodTruckProfilePage() {
       <Card className="overflow-hidden shadow-xl">
         <div className="relative h-64 md:h-96">
           <Image
-            src={truck.imageUrl}
+            src={truck.imageUrl} // This will need a default if truck.imageUrl is empty
             alt={truck.name}
             layout="fill"
             objectFit="cover"
-            data-ai-hint={`${truck.cuisine} food truck`}
+            data-ai-hint={`${truck.cuisine || 'food'} truck`} // Added fallback for cuisine
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 md:p-8">
@@ -136,7 +119,7 @@ export default function FoodTruckProfilePage() {
               </div>
             </div>
             <div className="md:col-span-1 space-y-3">
-              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={!truck.isOpen}>
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={!truck.isOpen || truck.menu.length === 0}>
                 <ShoppingCart className="mr-2 h-5 w-5" /> Order Now
               </Button>
               <Button size="lg" variant="outline" className="w-full" onClick={handleNotifyNearby}>
@@ -147,28 +130,33 @@ export default function FoodTruckProfilePage() {
 
           <Separator className="my-8" />
           
-          <Tabs defaultValue={menuCategories[0] || 'all'} className="w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                <h2 className="text-2xl font-semibold text-primary flex items-center mb-4 sm:mb-0">
-                    <Utensils className="mr-2 h-6 w-6" /> Menu
-                </h2>
-                <TabsList>
-                {menuCategories.map(category => (
-                    <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                ))}
-                </TabsList>
-            </div>
-
-            {menuCategories.map(category => (
-              <TabsContent key={category} value={category}>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {truck.menu.filter(item => item.category === category).map(item => (
-                    <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
+          {truck.menu.length > 0 ? (
+            <Tabs defaultValue={menuCategories[0] || 'all'} className="w-full">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                  <h2 className="text-2xl font-semibold text-primary flex items-center mb-4 sm:mb-0">
+                      <Utensils className="mr-2 h-6 w-6" /> Menu
+                  </h2>
+                  <TabsList>
+                  {menuCategories.map(category => (
+                      <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
                   ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+                  </TabsList>
+              </div>
+
+              {menuCategories.map(category => (
+                <TabsContent key={category} value={category}>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {truck.menu.filter(item => item.category === category).map(item => (
+                      <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          ) : (
+            <p className="text-center text-muted-foreground">This truck's menu is not available at the moment.</p>
+          )}
+
 
           {truck.testimonials && truck.testimonials.length > 0 && (
             <>

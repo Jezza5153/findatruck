@@ -9,38 +9,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-const featuredTrucksData: FoodTruck[] = [
-  {
-    id: "1",
-    name: "Taco 'Bout Delicious",
-    cuisine: "Mexican",
-    rating: 4.8,
-    imageUrl: "https://placehold.co/600x400.png",
-    description: "Authentic Mexican street tacos with a modern twist.",
-    menu: [],
-    hours: "11am - 8pm",
-  },
-  {
-    id: "2",
-    name: "Pizza Wheels",
-    cuisine: "Italian",
-    rating: 4.5,
-    imageUrl: "https://placehold.co/600x400.png",
-    description: "Wood-fired pizzas made with fresh, local ingredients.",
-    menu: [],
-    hours: "12pm - 9pm",
-  },
-  {
-    id: "3",
-    name: "Curry Up Now",
-    cuisine: "Indian",
-    rating: 4.7,
-    imageUrl: "https://placehold.co/600x400.png",
-    description: "Flavorful Indian curries and street food delights.",
-    menu: [],
-    hours: "11:30am - 7:30pm",
-  },
-];
+const featuredTrucksData: FoodTruck[] = []; // No more featured trucks placeholder
 
 const testimonialsData: Testimonial[] = [
   {
@@ -48,18 +17,21 @@ const testimonialsData: Testimonial[] = [
     name: "Sarah L.",
     quote: "Truck Tracker helped me find the most amazing tacos right around the corner! So easy to use.",
     avatarUrl: "https://placehold.co/100x100.png",
+    dataAiHint: "person avatar"
   },
   {
     id: "2",
     name: "Mike P.",
     quote: "I love getting notifications when my favorite burger truck is nearby. Game changer!",
     avatarUrl: "https://placehold.co/100x100.png",
+    dataAiHint: "person avatar"
   },
   {
     id: "3",
     name: "Chen W.",
     quote: "The menus are always up-to-date, and ordering ahead is super convenient.",
     avatarUrl: "https://placehold.co/100x100.png",
+    dataAiHint: "person avatar"
   },
 ];
 
@@ -189,32 +161,38 @@ export default function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Featured Food Trucks
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {featuredTrucksData.map((truck) => (
-              <Card key={truck.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <Image
-                  src={truck.imageUrl}
-                  alt={truck.name}
-                  width={600}
-                  height={400}
-                  className="w-full h-48 object-cover"
-                  data-ai-hint="food truck"
-                />
-                <CardHeader>
-                  <CardTitle className="text-2xl">{truck.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {truck.cuisine} - Rated {truck.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-yellow-400" />
-                  </p>
-                  <p className="text-sm mb-4">{truck.description}</p>
-                  <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10" asChild>
-                    <Link href={`/trucks/${truck.id}`}>View Menu</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {featuredTrucksData.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {featuredTrucksData.map((truck) => (
+                <Card key={truck.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <Image
+                    src={truck.imageUrl}
+                    alt={truck.name}
+                    width={600}
+                    height={400}
+                    className="w-full h-48 object-cover"
+                    data-ai-hint="food truck"
+                  />
+                  <CardHeader>
+                    <CardTitle className="text-2xl">{truck.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {truck.cuisine} - Rated {truck.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    </p>
+                    <p className="text-sm mb-4">{truck.description}</p>
+                    <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10" asChild>
+                      <Link href={`/trucks/${truck.id}`}>View Menu</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground">
+              No featured trucks at the moment. Check the map to find delicious options near you!
+            </p>
+          )}
         </div>
       </section>
 
@@ -236,7 +214,7 @@ export default function HomePage() {
                         width={50}
                         height={50}
                         className="rounded-full mr-4"
-                        data-ai-hint="person avatar"
+                        data-ai-hint={testimonial.dataAiHint || "person avatar"}
                       />
                     )}
                     <p className="font-semibold">{testimonial.name}</p>

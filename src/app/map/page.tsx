@@ -8,43 +8,17 @@ import { Button } from '@/components/ui/button';
 import { List, Map as MapIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const mockTrucksData: FoodTruck[] = [
-  {
-    id: "1", name: "Taco 'Bout Delicious", cuisine: "Mexican", rating: 4.8,
-    imageUrl: "https://placehold.co/400x200.png", description: "Authentic Mexican street tacos with a modern twist. Best carnitas in town!",
-    menu: [], hours: "11am - 8pm", isOpen: true, distance: "0.5 miles",
-    location: { lat: 34.0522, lng: -118.2437, address: "123 Main St, Los Angeles" }
-  },
-  {
-    id: "2", name: "Pizza Wheels", cuisine: "Italian", rating: 4.5,
-    imageUrl: "https://placehold.co/400x200.png", description: "Wood-fired pizzas made with fresh, local ingredients. Try our margherita!",
-    menu: [], hours: "12pm - 9pm", isOpen: false, distance: "1.2 miles",
-    location: { lat: 34.0550, lng: -118.2500, address: "456 Oak Ave, Los Angeles" }
-  },
-  {
-    id: "3", name: "Curry Up Now", cuisine: "Indian", rating: 4.7,
-    imageUrl: "https://placehold.co/400x200.png", description: "Flavorful Indian curries and street food delights. Butter chicken is a must!",
-    menu: [], hours: "11:30am - 7:30pm", isOpen: true, distance: "2.5 miles",
-    location: { lat: 34.0600, lng: -118.2450, address: "789 Pine Ln, Los Angeles" }
-  },
-  {
-    id: "4", name: "Burger Bliss", cuisine: "Burgers", rating: 4.2,
-    imageUrl: "https://placehold.co/400x200.png", description: "Gourmet burgers with all the fixings. Don't miss the truffle fries.",
-    menu: [], hours: "10am - 10pm", isOpen: true, distance: "0.8 miles",
-    location: { lat: 34.0480, lng: -118.2400, address: "321 Elm Rd, Los Angeles" }
-  },
-];
-
+const mockTrucksData: FoodTruck[] = []; // No more mock data
 
 export default function MapPage() {
-  const [filteredTrucks, setFilteredTrucks] = useState<FoodTruck[]>(mockTrucksData);
+  const [filteredTrucks, setFilteredTrucks] = useState<FoodTruck[]>([]); // Start with empty
   const [filters, setFilters] = useState<any>({});
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const { toast } = useToast();
 
   // Effect to apply filters when filters or mockTrucksData change
   useEffect(() => {
-    let trucks = mockTrucksData;
+    let trucks = mockTrucksData; // Will be empty initially
     if (filters.cuisine) {
       trucks = trucks.filter(truck => truck.cuisine.toLowerCase() === filters.cuisine.toLowerCase());
     }
@@ -103,7 +77,7 @@ export default function MapPage() {
                 filteredTrucks.map(truck => <FoodTruckCard key={truck.id} truck={truck} />)
               ) : (
                 <p className="col-span-full text-center text-muted-foreground">
-                  No food trucks match your current filters. Try expanding your search!
+                  No food trucks match your current filters. Try expanding your search or check back later!
                 </p>
               )}
             </div>
