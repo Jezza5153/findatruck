@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react'; // Added useState
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,7 @@ const availableCuisines = ["Mexican", "Italian", "Indian", "Burgers", "BBQ", "De
 export default function OwnerSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
-  // Add state for cuisine if needed for form handling
-  // const [cuisineType, setCuisineType] = useState("");
+  const [cuisineType, setCuisineType] = useState(""); // Added state for cuisine type
 
 
   const handleOwnerSignup = (event: React.FormEvent) => {
@@ -28,7 +28,7 @@ export default function OwnerSignupPage() {
     // Backend should:
     // 1. Ensure email uniqueness across ALL users (customers and owners).
     // 2. Create the user account and assign an "owner" role.
-    // 3. Potentially create an initial truck profile.
+    // 3. Potentially create an initial truck profile including cuisineType.
     // For simulation, we'll just show a toast and redirect.
     toast({
       title: "Owner Signup Successful (Simulated)",
@@ -62,7 +62,12 @@ export default function OwnerSignupPage() {
             </div>
              <div className="space-y-1">
                 <Label htmlFor="cuisineType">Primary Cuisine Type</Label>
-                <Select name="cuisineType" required>
+                <Select 
+                  name="cuisineType" 
+                  required 
+                  value={cuisineType} 
+                  onValueChange={setCuisineType}
+                >
                     <SelectTrigger id="cuisineType">
                     <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>

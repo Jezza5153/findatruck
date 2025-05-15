@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag, CheckCircle, Truck, XCircle } from "lucide-react";
+import { ShoppingBag, CheckCircle, Truck } from "lucide-react"; // Removed XCircle
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

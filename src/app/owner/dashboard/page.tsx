@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, DollarSign, Settings, Power, LocateFixed, CalendarClock } from "lucide-react";
+import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, LocateFixed, CalendarClock } from "lucide-react"; // Removed DollarSign, Settings
 import { useToast } from "@/hooks/use-toast";
 
 export default function OwnerDashboardPage() {
@@ -174,7 +174,7 @@ export default function OwnerDashboardPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
-              <Settings className="mr-2 h-5 w-5 text-primary" /> Truck Settings
+             <Edit className="mr-2 h-5 w-5 text-primary" /> Truck Profile {/* Changed Icon to Edit, as Settings was removed */}
             </CardTitle>
             <CardDescription>Manage truck profile, photos, and description.</CardDescription>
           </CardHeader>

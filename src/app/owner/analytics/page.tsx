@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LineChart, Users, Utensils, Star, DollarSign } from "lucide-react";
+import { LineChart, Star, DollarSign } from "lucide-react"; // Removed Users, Utensils
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -75,7 +75,7 @@ export default function OwnerAnalyticsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="shadow-lg">
             <CardHeader>
-            <CardTitle className="text-xl flex items-center"><Utensils className="mr-2 h-5 w-5"/>Most Popular Items</CardTitle>
+            <CardTitle className="text-xl flex items-center"><UtensilsIcon className="mr-2 h-5 w-5"/>Most Popular Items</CardTitle> {/* Changed to UtensilsIcon to avoid conflict if Utensils was meant for something else */}
             </CardHeader>
             <CardContent>
             <ul className="space-y-2">
@@ -123,4 +123,9 @@ const ShoppingBag = ({ className }: { className?: string }) => (
 const Clock = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
 );
-
+// Adding UtensilsIcon as a local SVG component as 'Utensils' from lucide was removed assuming it was unused.
+// If 'Utensils' from lucide-react IS needed for something else, this avoids a name clash.
+// If it was indeed for 'Most Popular Items', this local version can be used.
+const UtensilsIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>
+);
