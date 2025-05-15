@@ -11,7 +11,7 @@ import { User, ShoppingBag, Heart, Bell, Edit3, Save } from 'lucide-react';
 import type { UserProfile, NotificationPreferences } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-// Initial User Profile State for a new user
+// Initial User Profile State for a new user or guest
 const initialUserProfileState: UserProfile = {
   name: 'New User', // This would typically be populated from auth/signup
   email: 'user@example.com', // This would be their registered email
@@ -33,8 +33,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // In a real app, you would fetch the user's profile here
-    // For now, we initialize tempProfile with the (initial or fetched) profile
+    // In a real app, you would fetch the user's profile here if logged in.
+    // For now, we initialize tempProfile with the (initial or fetched) profile.
     setTempProfile(profile); 
   }, [profile]);
 
@@ -53,7 +53,22 @@ export default function DashboardPage() {
     }));
   };
 
+  const isDefaultGuestProfile = () => {
+    // Heuristic to check if it's the initial guest-like profile
+    return tempProfile.email === initialUserProfileState.email && tempProfile.name === initialUserProfileState.name;
+  };
+
   const saveProfile = () => {
+    if (isDefaultGuestProfile()) {
+        toast({
+            title: "Feature Requires Account",
+            description: "Please log in or sign up to save your profile changes.",
+            variant: "default", 
+        });
+        setIsEditingProfile(false); 
+        setTempProfile(profile); // Reset tempProfile to actual profile
+        return;
+    }
     // In a real app, this would send tempProfile to the backend to save
     setProfile(tempProfile);
     setIsEditingProfile(false);
@@ -64,6 +79,16 @@ export default function DashboardPage() {
   };
 
   const saveNotificationPreferences = () => {
+    if (isDefaultGuestProfile()) {
+         toast({
+            title: "Feature Requires Account",
+            description: "Please log in or sign up to save notification preferences.",
+            variant: "default",
+        });
+        // Optionally reset notification preferences in tempProfile if desired
+        // setTempProfile(prev => ({...prev, notificationPreferences: profile.notificationPreferences}));
+        return;
+    }
     // In a real app, this would send tempProfile.notificationPreferences to the backend
      setProfile(prev => ({...prev, notificationPreferences: tempProfile.notificationPreferences }));
      toast({
@@ -93,6 +118,9 @@ export default function DashboardPage() {
                 {isEditingProfile ? <Save className="h-5 w-5" /> : <Edit3 className="h-5 w-5" />}
               </Button>
             </CardTitle>
+            <CardDescription>
+              {isDefaultGuestProfile() ? "Log in to personalize your profile." : "Manage your personal details."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -128,9 +156,9 @@ export default function DashboardPage() {
               {profile.savedPaymentMethods?.length ? (
                 profile.savedPaymentMethods.map(method => <p key={method} className="text-sm text-muted-foreground">{method}</p>)
               ) : (
-                <p className="text-sm text-muted-foreground">No saved payment methods.</p>
+                <p className="text-sm text-muted-foreground">No saved payment methods. Log in to add them.</p>
               )}
-              <Button variant="link" className="p-0 h-auto text-primary">Manage Payment Methods</Button>
+              <Button variant="link" className="p-0 h-auto text-primary" onClick={() => isDefaultGuestProfile() && toast({title: "Feature Requires Account", description: "Log in to manage payment methods."})}>Manage Payment Methods</Button>
             </div>
           </CardContent>
         </Card>
@@ -141,6 +169,9 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center">
               <Bell className="mr-2 h-6 w-6 text-primary" /> Notification Preferences
             </CardTitle>
+             <CardDescription>
+              {isDefaultGuestProfile() ? "Log in to save your notification preferences." : "Customize how you receive updates."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -183,7 +214,7 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><ShoppingBag className="mr-2 h-6 w-6 text-primary" /> Past Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Your past orders will appear here once you start ordering.</p>
+            <p className="text-muted-foreground">Your past orders will appear here. Log in to view your order history.</p>
             {/* Example of how a past order item might look - hidden if no orders
             <div className="mt-4 p-3 border rounded-md">
               <p className="font-semibold">Taco 'Bout Delicious - Order #12345</p>
@@ -208,7 +239,7 @@ export default function DashboardPage() {
                     </div>
                 ))
             ) : (
-                <p className="text-muted-foreground">Your favorite trucks will appear here once you add some.</p>
+                <p className="text-muted-foreground">Your favorite trucks will appear here. Log in to add favorites.</p>
             )}
           </CardContent>
         </Card>
