@@ -6,14 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Menu, Utensils } from 'lucide-react'; 
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
-
-const navItems = [
-  { label: 'Home', href: '/' },
-  { label: 'Find Trucks', href: '/map' },
-  { label: 'My Dashboard', href: '/dashboard' }, // This is for customers
-  { label: 'Notifications', href: '/notifications' },
-  { label: 'Help', href: '/help' },
-];
+// navItems removed as per user request to simplify header
 
 export function SiteHeader() {
   return (
@@ -24,6 +17,8 @@ export function SiteHeader() {
           <span className="font-bold sm:inline-block text-lg">FindATruck</span>
         </Link>
         
+        {/* Desktop navigation removed */}
+        {/* 
         <nav className="hidden md:flex gap-6 items-center flex-1">
           {navItems.map((item) => (
             <Link
@@ -35,6 +30,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+        */}
 
         <div className="flex flex-1 items-center justify-end space-x-4">
           <Button variant="ghost" size="sm" asChild>
@@ -54,9 +50,11 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
                 <VisuallyHidden> 
-                  <SheetTitle>Navigation Menu</SheetTitle>
+                  <SheetTitle>Menu</SheetTitle> {/* Changed from "Navigation Menu" for brevity */}
                 </VisuallyHidden>
               </SheetHeader>
+              {/* Mobile navigation links removed. This area can be populated with authenticated user links later. */}
+              {/* 
               <nav className="flex flex-col gap-4 mt-8">
                 {navItems.map((item) => (
                   <Link
@@ -68,6 +66,16 @@ export function SiteHeader() {
                   </Link>
                 ))}
               </nav>
+              */}
+               <div className="mt-8 flex flex-col gap-4">
+                <Button variant="outline" asChild>
+                    <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                    <Link href="/signup">Sign Up</Link>
+                </Button>
+                {/* Placeholder for future authenticated links like "My Dashboard", "Logout" */}
+               </div>
             </SheetContent>
           </Sheet>
         </div>
