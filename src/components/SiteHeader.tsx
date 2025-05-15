@@ -10,7 +10,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 const navItems = [
   { label: 'Home', href: '/' },
   { label: 'Find Trucks', href: '/map' },
-  { label: 'My Dashboard', href: '/dashboard' },
+  { label: 'My Dashboard', href: '/dashboard' }, // This is for customers
   { label: 'Notifications', href: '/notifications' },
   { label: 'Help', href: '/help' },
 ];
@@ -21,7 +21,7 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Utensils className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
+          <span className="font-bold sm:inline-block text-lg">FindATruck</span>
         </Link>
         
         <nav className="hidden md:flex gap-6 items-center flex-1">
@@ -53,7 +53,6 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
-                {/* VisuallyHidden is Radix UI's way to hide content visually but keep it for screen readers */}
                 <VisuallyHidden> 
                   <SheetTitle>Navigation Menu</SheetTitle>
                 </VisuallyHidden>

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
+  title: 'FindATruck - Find Your Next Favorite Food Truck!',
   description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
   manifest: '/manifest.json',
 };

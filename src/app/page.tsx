@@ -2,20 +2,19 @@
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Testimonial } from "@/lib/types"; // FoodTruck type removed as featuredTrucksData is empty
+import type { Testimonial } from "@/lib/types";
 import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// featuredTrucksData is already empty, so no need to declare it
 
 const testimonialsData: Testimonial[] = [
   {
     id: "1",
     name: "Sarah L.",
-    quote: "Truck Tracker helped me find the most amazing tacos right around the corner! So easy to use.",
+    quote: "FindATruck helped me find the most amazing tacos right around the corner! So easy to use.",
     avatarUrl: "https://placehold.co/100x100.png",
     dataAiHint: "person avatar"
   },
@@ -70,9 +69,9 @@ export default function HomePage() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      toast({ title: "Installation Successful!", description: "Truck Tracker added to your home screen."});
+      toast({ title: "Installation Successful!", description: "FindATruck added to your home screen."});
     } else {
-      toast({ title: "Installation Dismissed", description: "You can add Truck Tracker later from your browser menu."});
+      toast({ title: "Installation Dismissed", description: "You can add FindATruck later from your browser menu."});
     }
     setDeferredPrompt(null);
     setShowInstallButton(false);
@@ -85,10 +84,10 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <Truck className="mx-auto h-24 w-24 mb-6 text-background" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Your Hub for Amazing Street Food!
+            Welcome to FindATruck!
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-            Whether you're craving your next meal or you're a food truck owner ready to connect with customers, Truck Tracker is for you.
+            Your destination for discovering local food trucks or showcasing your own culinary creations on wheels.
           </p>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Button size="lg" variant="secondary" className="bg-background text-primary hover:bg-background/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
@@ -125,7 +124,7 @@ export default function HomePage() {
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Why You'll Love <span className="text-primary">Truck Tracker</span>
+            Why You'll Love <span className="text-primary">FindATruck</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -147,7 +146,7 @@ export default function HomePage() {
                 <CardTitle className="text-2xl">Mobile Ordering (Soon)</CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Browse menus and place your order ahead of time. Skip the line!
+                Browse menus and place your order ahead of time. Skip the line! (Account required)
               </CardContent>
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -158,7 +157,7 @@ export default function HomePage() {
                 <CardTitle className="text-2xl">Reviews & Ratings</CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Discover top-rated trucks and share your own foodie experiences.
+                Discover top-rated trucks and share your own foodie experiences. (Account required)
               </CardContent>
             </Card>
           </div>
@@ -177,7 +176,7 @@ export default function HomePage() {
             </p>
             <p>
               As our community grows, this is where you'll find the latest culinary delights on wheels.
-              Check back soon for new additions!
+              Check back soon for new additions! (This will be populated from the database).
             </p>
             {/* Placeholder for listing newest trucks - actual implementation would involve data fetching */}
             <div className="mt-8">
@@ -195,9 +194,8 @@ export default function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Featured Food Trucks
           </h2>
-          {/* featuredTrucksData is empty, so the else condition will render */}
           <p className="text-center text-muted-foreground">
-            No featured trucks at the moment. Check the map to find delicious options near you!
+            No featured trucks at the moment. Check the map to find delicious options near you! (This will be populated from the database).
           </p>
         </div>
       </section>
