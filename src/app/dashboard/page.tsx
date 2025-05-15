@@ -78,7 +78,7 @@ export default function DashboardPage() {
       
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Profile Information */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Notification Preferences */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Bell className="mr-2 h-6 w-6 text-primary" /> Notification Preferences
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Past Orders Placeholder */}
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center"><ShoppingBag className="mr-2 h-6 w-6 text-primary" /> Past Orders</CardTitle>
           </CardHeader>
@@ -187,7 +187,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Favorite Trucks Placeholder */}
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center"><Heart className="mr-2 h-6 w-6 text-primary" /> Favorite Trucks</CardTitle>
           </CardHeader>

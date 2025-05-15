@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Removed redundant body font-family rule, Geist Sans from layout.tsx will take precedence */
 
 @layer base {
   :root {
@@ -107,7 +105,7 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), Arial, sans-serif;
+    font-family: var(--font-geist-sans), Arial, sans-serif; /* Geist Sans is primary */
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;

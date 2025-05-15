@@ -43,7 +43,7 @@ export default function HelpPage() {
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-2xl">Frequently Asked Questions</CardTitle>
             </CardHeader>
@@ -63,7 +63,7 @@ export default function HelpPage() {
         </div>
 
         <div className="md:col-span-1 space-y-8">
-          <Card className="shadow-lg">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center">
                 <MessageSquare className="mr-2 h-6 w-6 text-primary" /> Contact Us
@@ -90,7 +90,7 @@ export default function HelpPage() {
             </CardContent>
           </Card>
           
-          <Card className="shadow-lg">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-xl">Live Chat (Coming Soon)</CardTitle>
             </CardHeader>

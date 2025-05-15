@@ -205,7 +205,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-2">
-                    {truck.cuisine} - Rated {truck.rating} <Star className="inline h-4 w-4 text-yellow-400" />
+                    {truck.cuisine} - Rated {truck.rating} <Star className="inline h-4 w-4 text-yellow-400 fill-yellow-400" />
                   </p>
                   <p className="text-sm mb-4">{truck.description}</p>
                   <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10" asChild>
@@ -226,7 +226,7 @@ export default function HomePage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {testimonialsData.map((testimonial) => (
-              <Card key={testimonial.id} className="shadow-lg">
+              <Card key={testimonial.id} className="shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-center mb-4">
                     {testimonial.avatarUrl && (
