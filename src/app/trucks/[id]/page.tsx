@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { FoodTruck, MenuItem as MenuItemType } from '@/lib/types';
 import { MenuItemCard } from '@/components/MenuItemCard';
-import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info, Loader2 } from 'lucide-react';
+import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+import { db } from '@/lib/firebase';
+import { doc, getDoc, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
@@ -26,34 +27,49 @@ export default function FoodTruckProfilePage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (params.id) {
+    const truckId = params.id as string;
+
+    if (truckId) {
       const fetchTruckDetails = async () => {
         setIsLoading(true);
         setError(null);
         try {
-          // In a real app, you would fetch truck data from your backend API here
-          // For example: const response = await fetch(`/api/trucks/${params.id}`);
-          // if (!response.ok) {
-          //   if (response.status === 404) throw new Error('Food truck not found');
-          //   throw new Error('Failed to fetch truck details');
-          // }
-          // const data = await response.json();
-          // setTruck(data);
+          const truckDocRef = doc(db, "trucks", truckId);
+          const docSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-          // Simulate truck not found for now, as we don't have a backend
-          setTruck(null); 
-          if (!truck) { //
-             setError(`Food truck with ID "${params.id}" not found.`);
-          }
-
-
-        } catch (err) {
-          if (err instanceof Error) {
-            setError(err.message);
+          if (docSnap.exists()) {
+            const data = docSnap.data() as Partial<FoodTruck>;
+            const fetchedTruck: FoodTruck = {
+              id: docSnap.id,
+              name: data.name || 'Unnamed Truck',
+              cuisine: data.cuisine || 'Unknown Cuisine',
+              description: data.description || 'No description available.',
+              imageUrl: data.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
+              ownerUid: data.ownerUid || '',
+              location: data.location,
+              operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
+              isOpen: data.isOpen,
+              rating: data.rating,
+              menu: data.menu || [], // Assume menu might be part of truck doc or fetched separately later
+              testimonials: data.testimonials || [],
+              // Add other fields with defaults if necessary
+            };
+            setTruck(fetchedTruck);
           } else {
-            setError('An unknown error occurred');
+            setError(`Food truck with ID "${truckId}" not found.`);
           }
+        } catch (err) {
+          console.error("Error fetching truck details:", err);
+          let errorMessage = "Failed to fetch truck details. Please try again later.";
+          if (err instanceof Error) {
+            errorMessage = err.message;
+          }
+          setError(errorMessage);
+          toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
         } finally {
           setIsLoading(false);
         }
@@ -63,8 +79,7 @@ export default function FoodTruckProfilePage() {
       setError("No truck ID provided.");
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id]);
+  }, [params.id, toast]);
 
   const handleNotifyNearby = () => {
     toast({
@@ -109,6 +124,7 @@ export default function FoodTruckProfilePage() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -120,6 +136,7 @@ export default function FoodTruckProfilePage() {
      return (
       <div className="container mx-auto px-4 py-8 text-center">
         <Alert className="max-w-md mx-auto">
+            <Info className="h-4 w-4" />
             <AlertTitle>Truck Not Found</AlertTitle>
             <AlertDescription>The food truck you are looking for could not be found.</AlertDescription>
         </Alert>
@@ -127,8 +144,7 @@ export default function FoodTruckProfilePage() {
     );
   }
 
-
-  const menuCategories = Array.from(new Set(truck.menu.map(item => item.category)));
+  const menuCategories = Array.from(new Set(truck.menu?.map(item => item.category) || []));
   const totalCartItems = cart.reduce((sum, current) => sum + current.quantity, 0);
   const totalCartPrice = cart.reduce((sum, current) => sum + (current.item.price * current.quantity), 0);
 
@@ -137,7 +153,7 @@ export default function FoodTruckProfilePage() {
       <Card className="overflow-hidden shadow-xl">
         <div className="relative h-64 md:h-96">
           <Image
-            src={truck.imageUrl || "https://placehold.co/800x400.png"}
+            src={truck.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(truck.name)}`}
             alt={truck.name}
             layout="fill"
             objectFit="cover"
@@ -158,14 +174,16 @@ export default function FoodTruckProfilePage() {
               </h2>
               <p className="text-muted-foreground mb-4">{truck.description}</p>
               <div className="space-y-2 text-muted-foreground">
+                {truck.rating !== undefined && (
+                  <div className="flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" /> {truck.rating.toFixed(1)} stars
+                  </div>
+                )}
                 <div className="flex items-center">
-                  <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" /> {truck.rating} stars
+                  <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.location?.address || 'Location not specified'}
                 </div>
                 <div className="flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.location?.address || 'Location not available'}
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-secondary" /> {truck.hours}
+                  <Clock className="w-5 h-5 mr-2 text-secondary" /> {truck.operatingHoursSummary || 'Hours not specified'}
                 </div>
                 {truck.isOpen !== undefined && (
                   <Badge variant={truck.isOpen ? "default" : "destructive"} className={`mt-2 ${truck.isOpen ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
@@ -175,8 +193,8 @@ export default function FoodTruckProfilePage() {
               </div>
             </div>
             <div className="md:col-span-1 space-y-3">
-              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={!truck.isOpen || truck.menu.length === 0}>
-                <ShoppingCart className="mr-2 h-5 w-5" /> Order Now
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={truck.isOpen === false || (truck.menu?.length || 0) === 0}>
+                <ShoppingCart className="mr-2 h-5 w-5" /> Order Now (Coming Soon)
               </Button>
               <Button size="lg" variant="outline" className="w-full" onClick={handleNotifyNearby}>
                 <Bell className="mr-2 h-5 w-5" /> Notify Me When Nearby
@@ -186,46 +204,61 @@ export default function FoodTruckProfilePage() {
 
           <Separator className="my-8" />
           
-          {truck.menu.length > 0 ? (
+          {(truck.menu?.length || 0) > 0 ? (
             <Tabs defaultValue={menuCategories[0] || 'all'} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                   <h2 className="text-2xl font-semibold text-primary flex items-center mb-4 sm:mb-0">
                       <Utensils className="mr-2 h-6 w-6" /> Menu
                   </h2>
-                  <TabsList>
-                  {menuCategories.map(category => (
-                      <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                  ))}
-                  </TabsList>
+                  {menuCategories.length > 0 && (
+                    <TabsList>
+                    {menuCategories.map(category => (
+                        <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                    ))}
+                    </TabsList>
+                  )}
               </div>
 
               {menuCategories.map(category => (
                 <TabsContent key={category} value={category}>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {truck.menu.filter(item => item.category === category).map(item => (
+                    {truck.menu!.filter(item => item.category === category).map(item => (
                       <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
                     ))}
                   </div>
                 </TabsContent>
               ))}
+              {menuCategories.length === 0 && ( // Fallback if menu exists but categories are empty for some reason
+                 <TabsContent value="all">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {truck.menu!.map(item => (
+                            <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
+                        ))}
+                    </div>
+                </TabsContent>
+              )}
             </Tabs>
           ) : (
             <Card className="my-6">
-              <CardContent className="pt-6 text-center text-muted-foreground">
+              <CardHeader>
+                <CardTitle className="text-xl text-primary flex items-center">
+                  <Utensils className="mr-2 h-6 w-6" /> Menu
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 text-center text-muted-foreground">
                 This truck's menu is not available at the moment. Please check back later!
               </CardContent>
             </Card>
           )}
 
-
-          {truck.testimonials && truck.testimonials.length > 0 && (
+          {(truck.testimonials?.length || 0) > 0 && (
             <>
               <Separator className="my-8" />
               <h2 className="text-2xl font-semibold mb-6 text-primary">
                 What Customers Say
               </h2>
               <div className="grid md:grid-cols-2 gap-6">
-                {truck.testimonials.map(testimonial => (
+                {truck.testimonials!.map(testimonial => (
                   <Card key={testimonial.id} className="bg-muted/50">
                     <CardContent className="pt-6">
                       <p className="italic text-foreground mb-2">"{testimonial.quote}"</p>
@@ -261,12 +294,11 @@ export default function FoodTruckProfilePage() {
                 </CardContent>
                 <CardFooter>
                     <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleOrderNow}>
-                        Checkout
+                        Checkout (Coming Soon)
                     </Button>
                 </CardFooter>
              </Card>
           )}
-
         </CardContent>
       </Card>
     </div>

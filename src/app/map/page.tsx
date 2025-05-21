@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { List, Map as MapIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
 
 export default function MapPage() {
   const [trucks, setTrucks] = useState<FoodTruck[]>([]);
@@ -24,27 +26,38 @@ export default function MapPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // In a real app, you'd fetch from your actual API endpoint
-        // For now, simulating a delay and an empty response
-        // const response = await fetch('/api/trucks'); // Replace with your actual API
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch trucks');
-        // }
-        // const data = await response.json();
-        // setTrucks(data);
-
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-        setTrucks([]); // Simulate fetching and getting no trucks initially
-
+        const trucksCollectionRef = collection(db, "trucks");
+        const querySnapshot = await getDocs(trucksCollectionRef);
+        const fetchedTrucks: FoodTruck[] = [];
+        querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+          // Explicitly cast doc.data() to a partial FoodTruck type, then build the full FoodTruck object
+          const data = doc.data() as Partial<FoodTruck>;
+          fetchedTrucks.push({
+            id: doc.id,
+            name: data.name || 'Unnamed Truck',
+            cuisine: data.cuisine || 'Unknown Cuisine',
+            description: data.description || 'No description available.',
+            imageUrl: data.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
+            ownerUid: data.ownerUid || '',
+            location: data.location, // This could be undefined
+            operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
+            isOpen: data.isOpen, // This could be undefined
+            rating: data.rating, // This could be undefined
+            // Add other fields with defaults if necessary
+          });
+        });
+        setTrucks(fetchedTrucks);
+        setFilteredTrucks(fetchedTrucks); // Initially, all trucks are shown
       } catch (err) {
+        console.error("Error fetching trucks:", err);
+        let errorMessage = "Could not load food truck data. Please try again later.";
         if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unknown error occurred');
+          errorMessage = err.message;
         }
+        setError(errorMessage);
         toast({
-          title: "Error",
-          description: "Could not load food truck data. Please try again later.",
+          title: "Error Loading Trucks",
+          description: errorMessage,
           variant: "destructive"
         });
       } finally {
@@ -60,10 +73,11 @@ export default function MapPage() {
       currentTrucks = currentTrucks.filter(truck => truck.cuisine.toLowerCase() === filters.cuisine.toLowerCase());
     }
     if (filters.openNow) {
-      currentTrucks = currentTrucks.filter(truck => truck.isOpen);
+      // Assuming isOpen can be undefined or boolean. If undefined, treat as not matching "openNow".
+      currentTrucks = currentTrucks.filter(truck => truck.isOpen === true);
     }
     if (filters.searchTerm) {
-      currentTrucks = currentTrucks.filter(truck => 
+      currentTrucks = currentTrucks.filter(truck =>
         truck.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         (truck.description && truck.description.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
         truck.cuisine.toLowerCase().includes(filters.searchTerm.toLowerCase())
@@ -121,9 +135,11 @@ export default function MapPage() {
               {filteredTrucks.length > 0 ? (
                 filteredTrucks.map(truck => <FoodTruckCard key={truck.id} truck={truck} />)
               ) : (
-                <p className="col-span-full text-center text-muted-foreground py-10">
-                  No food trucks match your current filters or are available in your area.
-                </p>
+                <div className="col-span-full text-center text-muted-foreground py-10">
+                  <Utensils className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                  <p className="text-xl font-semibold">No Food Trucks Found</p>
+                  <p className="text-sm">Try adjusting your filters or check back later as new trucks join!</p>
+                </div>
               )}
             </div>
           )}
