@@ -20,13 +20,11 @@ export default function FoodTruckProfilePage() {
   const params = useParams();
   const { toast } = useToast();
   const [truck, setTruck] = useState<FoodTruck | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const [cart, setCart] = useState< { item: MenuItemType, quantity: number }[] >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
     const truckId = params.id as string;
 
     if (truckId) {
@@ -38,7 +36,8 @@ export default function FoodTruckProfilePage() {
           const docSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
           if (docSnap.exists()) {
-            const data = docSnap.data() as Partial<FoodTruck>;
+            const data = docSnap.data() as Partial<FoodTruck>; // Cast to allow partial data
+            // Ensure all required fields have defaults to prevent runtime errors
             const fetchedTruck: FoodTruck = {
               id: docSnap.id,
               name: data.name || 'Unnamed Truck',
@@ -46,12 +45,12 @@ export default function FoodTruckProfilePage() {
               description: data.description || 'No description available.',
               imageUrl: data.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
               ownerUid: data.ownerUid || '',
-              location: data.location,
+              location: data.location, // Can be undefined
               operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
-              isOpen: data.isOpen,
-              rating: data.rating,
-              menu: data.menu || [], // Assume menu might be part of truck doc or fetched separately later
-              testimonials: data.testimonials || [],
+              isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen), // Ensure boolean or undefined
+              rating: typeof data.rating === 'number' ? data.rating : undefined,
+              menu: Array.isArray(data.menu) ? data.menu : [], // Default to empty array if not present
+              testimonials: Array.isArray(data.testimonials) ? data.testimonials : [], // Default to empty array
               // Add other fields with defaults if necessary
             };
             setTruck(fetchedTruck);
@@ -61,7 +60,7 @@ export default function FoodTruckProfilePage() {
         } catch (err) {
           console.error("Error fetching truck details:", err);
           let errorMessage = "Failed to fetch truck details. Please try again later.";
-          if (err instanceof Error) {
+          if (err instanceof Error && err.message) {
             errorMessage = err.message;
           }
           setError(errorMessage);
@@ -82,6 +81,7 @@ export default function FoodTruckProfilePage() {
   }, [params.id, toast]);
 
   const handleNotifyNearby = () => {
+    // TODO: Implement actual notification subscription logic (requires backend & user account)
     toast({
       title: "Notifications Enabled!",
       description: `We'll let you know when ${truck?.name} is nearby. (Account feature)`,
@@ -89,6 +89,7 @@ export default function FoodTruckProfilePage() {
   };
 
   const handleOrderNow = () => {
+    // TODO: Implement order placement logic (requires backend & user account)
     toast({
       title: "Starting Your Order!",
       description: `Proceed to checkout for ${truck?.name}. (Account feature)`,
@@ -111,7 +112,7 @@ export default function FoodTruckProfilePage() {
     });
   };
 
-  if (!isClient || isLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -158,6 +159,7 @@ export default function FoodTruckProfilePage() {
             layout="fill"
             objectFit="cover"
             data-ai-hint={`${truck.cuisine || 'food'} truck`}
+            priority // Consider adding priority for LCP
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 md:p-8">
@@ -193,7 +195,7 @@ export default function FoodTruckProfilePage() {
               </div>
             </div>
             <div className="md:col-span-1 space-y-3">
-              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={truck.isOpen === false || (truck.menu?.length || 0) === 0}>
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={truck.isOpen === false || !truck.menu || truck.menu.length === 0}>
                 <ShoppingCart className="mr-2 h-5 w-5" /> Order Now (Coming Soon)
               </Button>
               <Button size="lg" variant="outline" className="w-full" onClick={handleNotifyNearby}>
@@ -204,22 +206,26 @@ export default function FoodTruckProfilePage() {
 
           <Separator className="my-8" />
           
-          {(truck.menu?.length || 0) > 0 ? (
-            <Tabs defaultValue={menuCategories[0] || 'all'} className="w-full">
+          {truck.menu && truck.menu.length > 0 ? (
+            <Tabs defaultValue={menuCategories[0] || 'all-items'} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                   <h2 className="text-2xl font-semibold text-primary flex items-center mb-4 sm:mb-0">
                       <Utensils className="mr-2 h-6 w-6" /> Menu
                   </h2>
-                  {menuCategories.length > 0 && (
+                  {menuCategories.length > 0 ? (
                     <TabsList>
                     {menuCategories.map(category => (
                         <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
                     ))}
                     </TabsList>
+                  ) : (
+                    <TabsList>
+                        <TabsTrigger value="all-items">All Items</TabsTrigger>
+                    </TabsList>
                   )}
               </div>
 
-              {menuCategories.map(category => (
+              {menuCategories.length > 0 ? menuCategories.map(category => (
                 <TabsContent key={category} value={category}>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {truck.menu!.filter(item => item.category === category).map(item => (
@@ -227,9 +233,8 @@ export default function FoodTruckProfilePage() {
                     ))}
                   </div>
                 </TabsContent>
-              ))}
-              {menuCategories.length === 0 && ( // Fallback if menu exists but categories are empty for some reason
-                 <TabsContent value="all">
+              )) : (
+                 <TabsContent value="all-items">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {truck.menu!.map(item => (
                             <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
@@ -251,7 +256,7 @@ export default function FoodTruckProfilePage() {
             </Card>
           )}
 
-          {(truck.testimonials?.length || 0) > 0 && (
+          {truck.testimonials && truck.testimonials.length > 0 && (
             <>
               <Separator className="my-8" />
               <h2 className="text-2xl font-semibold mb-6 text-primary">

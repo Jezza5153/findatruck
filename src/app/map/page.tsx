@@ -6,7 +6,7 @@ import { MapPlaceholder } from '@/components/MapPlaceholder';
 import { FilterControls } from '@/components/FilterControls';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { List, Map as MapIcon, Loader2 } from 'lucide-react';
+import { List, Map as MapIcon, Loader2, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
@@ -15,7 +15,7 @@ import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } fr
 export default function MapPage() {
   const [trucks, setTrucks] = useState<FoodTruck[]>([]);
   const [filteredTrucks, setFilteredTrucks] = useState<FoodTruck[]>([]);
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<any>({}); // Define a more specific type for filters later
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,28 +30,30 @@ export default function MapPage() {
         const querySnapshot = await getDocs(trucksCollectionRef);
         const fetchedTrucks: FoodTruck[] = [];
         querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-          // Explicitly cast doc.data() to a partial FoodTruck type, then build the full FoodTruck object
-          const data = doc.data() as Partial<FoodTruck>;
+          const data = doc.data();
+          // Ensure all required fields have defaults to prevent runtime errors
           fetchedTrucks.push({
             id: doc.id,
             name: data.name || 'Unnamed Truck',
             cuisine: data.cuisine || 'Unknown Cuisine',
             description: data.description || 'No description available.',
             imageUrl: data.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
-            ownerUid: data.ownerUid || '',
-            location: data.location, // This could be undefined
+            ownerUid: data.ownerUid || '', // Important for linking back to owner
+            location: data.location, // Can be undefined
             operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
-            isOpen: data.isOpen, // This could be undefined
-            rating: data.rating, // This could be undefined
+            isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen), // Ensure boolean or undefined
+            rating: typeof data.rating === 'number' ? data.rating : undefined,
+            menu: Array.isArray(data.menu) ? data.menu : [],
+            testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
             // Add other fields with defaults if necessary
           });
         });
         setTrucks(fetchedTrucks);
-        setFilteredTrucks(fetchedTrucks); // Initially, all trucks are shown
+        setFilteredTrucks(fetchedTrucks); 
       } catch (err) {
         console.error("Error fetching trucks:", err);
         let errorMessage = "Could not load food truck data. Please try again later.";
-        if (err instanceof Error) {
+        if (err instanceof Error && err.message) {
           errorMessage = err.message;
         }
         setError(errorMessage);
@@ -73,16 +75,17 @@ export default function MapPage() {
       currentTrucks = currentTrucks.filter(truck => truck.cuisine.toLowerCase() === filters.cuisine.toLowerCase());
     }
     if (filters.openNow) {
-      // Assuming isOpen can be undefined or boolean. If undefined, treat as not matching "openNow".
       currentTrucks = currentTrucks.filter(truck => truck.isOpen === true);
     }
     if (filters.searchTerm) {
+      const term = filters.searchTerm.toLowerCase();
       currentTrucks = currentTrucks.filter(truck =>
-        truck.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        (truck.description && truck.description.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
-        truck.cuisine.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        truck.name.toLowerCase().includes(term) ||
+        (truck.description && truck.description.toLowerCase().includes(term)) ||
+        truck.cuisine.toLowerCase().includes(term)
       );
     }
+    // Add distance filtering if implemented
     setFilteredTrucks(currentTrucks);
   }, [filters, trucks]);
 
@@ -127,7 +130,7 @@ export default function MapPage() {
           )}
 
           {!isLoading && !error && viewMode === 'map' && (
-             <MapPlaceholder /> // In a real app, pass `filteredTrucks` to your actual map component
+             <MapPlaceholder /> // Pass `filteredTrucks` to actual map component here
           )}
           
           {!isLoading && !error && viewMode === 'list' && (

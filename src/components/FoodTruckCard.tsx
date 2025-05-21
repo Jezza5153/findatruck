@@ -14,14 +14,16 @@ interface FoodTruckCardProps {
 export function FoodTruckCard({ truck }: FoodTruckCardProps) {
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      <Image
-        src={truck.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(truck.name)}`}
-        alt={truck.name}
-        width={400}
-        height={200}
-        className="w-full h-48 object-cover"
-        data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
-      />
+      <div className="relative w-full h-48">
+        <Image
+          src={truck.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(truck.name)}`}
+          alt={truck.name}
+          layout="fill"
+          objectFit="cover"
+          className="w-full h-full"
+          data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
+        />
+      </div>
       <CardHeader>
         <CardTitle className="text-xl md:text-2xl">{truck.name}</CardTitle>
         <CardDescription className="text-sm text-primary flex items-center">
@@ -29,7 +31,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-1.5">
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-3 h-[3.75rem]">{truck.description}</p>
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-3 min-h-[3.75rem]">{truck.description}</p>
         {truck.rating !== undefined && (
           <div className="flex items-center text-sm text-muted-foreground">
             <Star className="w-4 h-4 mr-1 text-yellow-400 fill-yellow-400" /> {truck.rating.toFixed(1)} stars
