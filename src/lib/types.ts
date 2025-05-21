@@ -27,7 +27,7 @@ export type FoodTruck = {
   }[];
 
   // Menu - likely a subcollection in Firestore for scalability
-  // menu?: MenuItem[]; // For simplicity, we might start with it embedded if small
+  menu?: MenuItem[]; // For simplicity, we might start with it embedded if small
 
   // Rating - could be an aggregation
   rating?: number;
@@ -52,7 +52,7 @@ export type FoodTruck = {
 
 export type MenuItem = {
   id: string; // Document ID in a menu subcollection
-  truckId: string; // Foreign key to the truck
+  // truckId: string; // Foreign key to the truck - Menus will be a subcollection of a truck
   name: string;
   description?: string;
   price: number;
@@ -74,13 +74,14 @@ export type CustomizationOption = {
 
 export type Testimonial = {
   id: string;
-  truckId: string;
+  // truckId: string; // Testimonials will be a subcollection of a truck
   userId: string;
   userName: string;
   quote: string;
   rating: number; // 1-5 stars
   avatarUrl?: string;
   createdAt?: Timestamp;
+  dataAiHint?: string;
 };
 
 export type UserRole = 'customer' | 'owner';
@@ -92,9 +93,10 @@ export type UserDocument = {
   name?: string; // For customers or owner's personal name
   createdAt: Timestamp;
   // Owner-specific fields if role is 'owner'
-  ownerName?: string; // Business contact name / owner name
-  truckName?: string; // Initial truck name from signup
-  cuisineType?: string; // Initial cuisine type from signup
+  ownerName?: string; // Business contact name / owner name (already in signup)
+  truckName?: string; // Initial truck name from signup (already in signup)
+  cuisineType?: string; // Initial cuisine type from signup (already in signup)
+  truckId?: string; // ID of the truck document in 'trucks' collection for this owner
   // Customer-specific fields if role is 'customer'
   favoriteTrucks?: string[]; // Array of truck IDs
   notificationPreferences?: NotificationPreferences;
