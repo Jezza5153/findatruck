@@ -10,21 +10,60 @@ import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import type { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase"; // Import Firebase auth
+
+// Define Zod schema for form validation
+import * as zGlobal from 'zod'; // Use a different name to avoid conflict
+const signupSchema = zGlobal.object({
+  name: zGlobal.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: zGlobal.string().email({ message: "Invalid email address." }),
+  password: zGlobal.string().min(6, { message: "Password must be at least 6 characters." }),
+  confirmPassword: zGlobal.string(),
+  terms: zGlobal.boolean().refine(val => val === true, { message: "You must accept the terms and conditions." })
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"], // path of error
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+        terms: false,
+    }
+  });
 
-  const handleSignup = (event: React.FormEvent) => {
-    event.preventDefault();
-    // In a real app, you would register the user here.
-    // Backend should ensure email uniqueness and handle password hashing.
-    // For simulation, we'll just show a toast and redirect.
-    toast({
-      title: "Signup Successful (Simulated)",
-      description: "Redirecting to login...",
-    });
-    router.push('/login'); 
+  const handleSignup: SubmitHandler<SignupFormValues> = async (data) => {
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      // TODO: Could also update profile with name here using updateProfile from firebase/auth
+      toast({
+        title: "Signup Successful!",
+        description: "Your account has been created. Please login.",
+      });
+      router.push('/login'); 
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email is already registered. Please login or use a different email.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "The password is too weak. Please choose a stronger password.";
+      }
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -35,63 +74,49 @@ export default function SignupPage() {
           <CardTitle className="text-3xl font-bold tracking-tight">Create Your Customer Account</CardTitle>
           <CardDescription>Join FindATruck to discover amazing food.</CardDescription>
         </CardHeader>
-        {/* Backend must enforce that one email cannot be used for multiple accounts (customer or owner). */}
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit(handleSignup)}>
+          <CardContent className="space-y-4"> {/* Adjusted space-y */}
+            <div>
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" type="text" autoComplete="name" required placeholder="Your Name" />
+              <Input id="name" {...register("name")} placeholder="Your Name" />
+              {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
             </div>
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="email">Email address</Label>
-              <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
+              <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+              {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" autoComplete="new-password" required placeholder="Create a strong password" />
+              <Input id="password" type="password" {...register("password")} placeholder="Create a strong password" />
+              {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input id="confirm-password" name="confirm-password" type="password" autoComplete="new-password" required placeholder="Confirm your password" />
+              <Input id="confirm-password" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+              {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="terms" required />
-              <Label htmlFor="terms" className="text-sm text-muted-foreground">
-                I agree to the{' '}
-                <Link href="/terms" className="font-medium text-primary hover:underline" target="_blank"> {/* Placeholder for terms page */}
+              <Checkbox id="terms" {...register("terms")} />
+              <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
+                I agree to the FindATruck{' '}
+                <Link href="/terms" className="font-medium text-primary hover:underline" target="_blank">
                   Terms of Service
                 </Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="font-medium text-primary hover:underline" target="_blank"> {/* Placeholder for privacy page */}
+                <Link href="/privacy" className="font-medium text-primary hover:underline" target="_blank">
                   Privacy Policy
                 </Link>
                 .
               </Label>
             </div>
+             {errors.terms && <p className="text-xs text-destructive -mt-2">{errors.terms.message}</p>}
             <div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                <UserPlus className="mr-2 h-5 w-5" /> Sign Up
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? "Signing up..." : <><UserPlus className="mr-2 h-5 w-5" /> Sign Up</>}
               </Button>
             </div>
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or sign up with
-                </span>
-              </div>
-            </div>
-            <div>
-              {/* Placeholder for OAuth buttons */}
-              <Button variant="outline" className="w-full mb-2" type="button" onClick={() => toast({ title: "Feature Coming Soon", description: "Google Sign-Up is not yet implemented."})}>
-                Sign up with Google
-              </Button>
-              <Button variant="outline" className="w-full" type="button" onClick={() => toast({ title: "Feature Coming Soon", description: "Facebook Sign-Up is not yet implemented."})}>
-                Sign up with Facebook
-              </Button>
-            </div>
+            {/* OAuth buttons can be re-added later with Firebase OAuth providers */}
           </CardContent>
         </form>
         <CardFooter className="text-center block">
@@ -103,8 +128,8 @@ export default function SignupPage() {
             </p>
              <p className="mt-1 text-sm text-muted-foreground">
                 Signing up as a Food Truck Owner?{' '}
-                <Link href="/owner/signup" className="font-medium text-accent hover:underline">
-                Owner Signup
+                <Link href="/owner/portal" className="font-medium text-accent hover:underline">
+                Owner Portal
                 </Link>
             </p>
         </CardFooter>

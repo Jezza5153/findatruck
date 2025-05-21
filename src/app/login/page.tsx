@@ -1,5 +1,5 @@
 
-'use client'; // Required for useRouter and onClick handlers
+'use client'; 
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,23 +7,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Utensils } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import type { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase"; // Import Firebase auth
+
+// Define Zod schema for form validation
+import * as zGlobal from 'zod'; // Use a different name to avoid conflict
+const loginSchema = zGlobal.object({
+  email: zGlobal.string().email({ message: "Invalid email address." }),
+  password: zGlobal.string().min(1, { message: "Password is required." }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleLogin = (event: React.FormEvent) => {
-    event.preventDefault();
-    // In a real app, you would authenticate the user here.
-    // For simulation, we'll just show a toast and redirect.
-    toast({
-      title: "Login Successful (Simulated)",
-      description: "Redirecting to your dashboard...",
-    });
-    // Simulate successful customer login
-    router.push('/dashboard'); 
+  const handleLogin: SubmitHandler<LoginFormValues> = async (data) => {
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      toast({
+        title: "Login Successful!",
+        description: "Redirecting to your dashboard...",
+      });
+      router.push('/dashboard'); 
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = "Invalid email or password. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid email or password. Please check your credentials.";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many login attempts. Please try again later or reset your password.";
+      }
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -34,46 +63,29 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold tracking-tight">Welcome Back, Customer!</CardTitle>
           <CardDescription>Log in to manage your FindATruck profile.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit(handleLogin)}>
+          <CardContent className="space-y-4"> {/* Adjusted space-y */}
+            <div>
               <Label htmlFor="email">Email address</Label>
-              <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
+              <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+              {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
-            <div className="space-y-2">
+            <div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 <Link href="#" passHref className="text-sm font-medium text-primary hover:underline">
-                  {/* In a real app, this would link to a password reset page */}
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" name="password" type="password" autoComplete="current-password" required placeholder="••••••••" />
+              <Input id="password" type="password" {...register("password")} placeholder="••••••••" />
+              {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
             <div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                <LogIn className="mr-2 h-5 w-5" /> Log In
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                 {isSubmitting ? "Logging in..." : <><LogIn className="mr-2 h-5 w-5" /> Log In</>}
               </Button>
             </div>
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <div>
-              {/* Placeholder for OAuth buttons */}
-              <Button variant="outline" className="w-full mb-2" type="button" onClick={() => toast({ title: "Feature Coming Soon", description: "Google Sign-In is not yet implemented."})}>
-                Sign in with Google
-              </Button>
-              <Button variant="outline" className="w-full" type="button" onClick={() => toast({ title: "Feature Coming Soon", description: "Facebook Sign-In is not yet implemented."})}>
-                Sign in with Facebook
-              </Button>
-            </div>
+             {/* OAuth buttons can be re-added later with Firebase OAuth providers */}
           </CardContent>
         </form>
         <CardFooter className="text-center block">
@@ -85,8 +97,8 @@ export default function LoginPage() {
             </p>
              <p className="mt-1 text-sm text-muted-foreground">
                 Are you a Food Truck Owner?{' '}
-                <Link href="/owner/login" className="font-medium text-accent hover:underline">
-                Owner Login
+                <Link href="/owner/portal" className="font-medium text-accent hover:underline">
+                Owner Portal
                 </Link>
             </p>
         </CardFooter>

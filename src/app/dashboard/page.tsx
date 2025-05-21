@@ -7,42 +7,59 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { User, ShoppingBag, Heart, Bell, Edit3, Save, LogIn } from 'lucide-react';
+import { User, ShoppingBag, Heart, Bell, Edit3, Save, LogIn, Loader2 } from 'lucide-react';
 import type { UserProfile, NotificationPreferences } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Initial User Profile State for a new user or guest
 const initialUserProfileState: UserProfile = {
-  name: 'New User', // This would typically be populated from auth/signup
-  email: 'user@example.com', // This would be their registered email
-  savedPaymentMethods: [], // Starts empty
-  favoriteTrucks: [], // Starts empty
+  name: 'Guest User', 
+  email: '', // Will be populated by logged-in user
+  savedPaymentMethods: [],
+  favoriteTrucks: [],
   notificationPreferences: {
-    truckNearbyRadius: 2, // miles - default
-    orderUpdates: true, // default
-    promotionalMessages: false, // default - opt-in
+    truckNearbyRadius: 2,
+    orderUpdates: true, 
+    promotionalMessages: false,
   },
 };
 
 export default function DashboardPage() {
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile>(initialUserProfileState);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>(initialUserProfileState);
-  const [isClient, setIsClient] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsClient(true);
-    // In a real app, you would fetch the user's profile if they are logged in.
-    // If not logged in, you might use initialUserProfileState or redirect.
-    // For now, we'll stick to initialUserProfileState as the base.
-    setProfile(initialUserProfileState);
-    setTempProfile(initialUserProfileState);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        // In a real app, fetch profile from Firestore here based on user.uid
+        // For now, just use their email and a default name
+        const fetchedProfile: UserProfile = {
+          ...initialUserProfileState,
+          email: user.email || 'user@example.com',
+          name: user.displayName || 'User', 
+        };
+        setProfile(fetchedProfile);
+        setTempProfile(fetchedProfile);
+      } else {
+        // User is signed out or not logged in
+        setProfile(initialUserProfileState);
+        setTempProfile(initialUserProfileState);
+      }
+      setIsLoadingAuth(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // This effect syncs tempProfile if the main profile data were to change from an external source (e.g., after login)
     setTempProfile(profile);
   }, [profile]);
 
@@ -61,52 +78,67 @@ export default function DashboardPage() {
     }));
   };
 
-  const isDefaultGuestProfile = () => {
-    // Check if current profile is essentially the initial guest state
-    return tempProfile.email === initialUserProfileState.email && tempProfile.name === initialUserProfileState.name;
-  };
-
   const saveProfile = () => {
-    if (isDefaultGuestProfile()) {
+    if (!currentUser) {
         toast({
-            title: "Feature Requires Account",
+            title: "Login Required",
             description: "Please log in or sign up to save your profile changes.",
-            variant: "default",
+            variant: "destructive",
             action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
         });
-        setIsEditingProfile(false);
-        setTempProfile(profile); // Reset tempProfile to actual profile
+        setIsEditingProfile(false); 
+        setTempProfile(profile);
         return;
     }
-    // In a real app, this would send tempProfile to the backend to save
+    // TODO: In a real app, this would send tempProfile to Firestore to save for currentUser.uid
     setProfile(tempProfile);
     setIsEditingProfile(false);
     toast({
       title: "Profile Updated",
-      description: "Your changes have been saved successfully.",
+      description: "Your changes have been saved successfully. (Simulated)",
     });
   };
 
   const saveNotificationPreferences = () => {
-    if (isDefaultGuestProfile()) {
+    if (!currentUser) {
          toast({
-            title: "Feature Requires Account",
+            title: "Login Required",
             description: "Please log in or sign up to save notification preferences.",
-            variant: "default",
+            variant: "destructive",
             action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
         });
         return;
     }
+     // TODO: Save to Firestore for currentUser.uid
      setProfile(prev => ({...prev, notificationPreferences: tempProfile.notificationPreferences }));
      toast({
       title: "Preferences Updated",
-      description: "Notification settings saved.",
+      description: "Notification settings saved. (Simulated)",
     });
   }
 
 
-  if (!isClient) {
-    return <div className="container mx-auto px-4 py-8 text-center">Loading dashboard...</div>;
+  if (isLoadingAuth) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4">Loading dashboard...</p>
+      </div>
+    );
+  }
+  
+  if (!currentUser) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Alert variant="destructive" className="max-w-md mx-auto">
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>You need to be logged in to view your dashboard.</AlertDescription>
+        </Alert>
+        <Button asChild className="mt-6">
+          <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -126,7 +158,7 @@ export default function DashboardPage() {
               </Button>
             </CardTitle>
             <CardDescription>
-              {isDefaultGuestProfile() ? "Log in to personalize your profile." : "Manage your personal details."}
+              Manage your personal details.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -138,7 +170,7 @@ export default function DashboardPage() {
                 value={isEditingProfile ? tempProfile.name : profile.name}
                 readOnly={!isEditingProfile}
                 onChange={handleProfileChange}
-                className={!isEditingProfile ? "border-none px-0" : ""}
+                className={!isEditingProfile ? "border-none px-0 bg-transparent" : ""}
                 placeholder="Your Name"
               />
             </div>
@@ -148,10 +180,9 @@ export default function DashboardPage() {
                 id="email"
                 name="email"
                 type="email"
-                value={isEditingProfile ? tempProfile.email : profile.email}
-                readOnly={!isEditingProfile}
-                onChange={handleProfileChange}
-                className={!isEditingProfile ? "border-none px-0" : ""}
+                value={profile.email} // Email should come from auth, not editable here
+                readOnly // Email is typically not changed directly by user in profile form
+                className={"border-none px-0 bg-transparent"}
                 placeholder="your.email@example.com"
               />
             </div>
@@ -164,25 +195,15 @@ export default function DashboardPage() {
                 profile.savedPaymentMethods.map(method => <p key={method} className="text-sm text-muted-foreground">{method}</p>)
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {isDefaultGuestProfile()
-                    ? "Log in to securely save payment methods for faster checkout later!"
-                    : "No saved payment methods."}
+                 No saved payment methods. Add one for faster checkout!
                 </p>
               )}
               <Button
                 variant="link"
                 className="p-0 h-auto text-primary"
                 onClick={() => {
-                  if (isDefaultGuestProfile()) {
-                    toast({
-                      title: "Feature Requires Account",
-                      description: "Log in to manage payment methods.",
-                      action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
-                    });
-                  } else {
                     // Navigate to payment methods page or open a modal
                     toast({ title: "Coming Soon!", description: "Payment management will be available here." });
-                  }
                 }}
               >
                 Manage Payment Methods
@@ -198,7 +219,7 @@ export default function DashboardPage() {
               <Bell className="mr-2 h-6 w-6 text-primary" /> Notification Preferences
             </CardTitle>
              <CardDescription>
-              {isDefaultGuestProfile() ? "Log in to save your notification preferences." : "Customize how you receive updates."}
+              Customize how you receive updates.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -242,19 +263,10 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><ShoppingBag className="mr-2 h-6 w-6 text-primary" /> Past Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              {isDefaultGuestProfile() ? "Log in to view your order history and reorder your favorites!" : "Your past orders will appear here."}
-            </p>
-            {!isDefaultGuestProfile() &&  (
-              <div className="mt-4 p-3 border rounded-md text-center">
-                <p className="text-sm text-muted-foreground">No orders found yet.</p>
-              </div>
-            )}
-            {isDefaultGuestProfile() && (
-              <Button variant="outline" className="w-full mt-4" asChild>
-                <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to See Orders</Link>
-              </Button>
-            )}
+            <p className="text-muted-foreground">Your past orders will appear here.</p>
+            <div className="mt-4 p-3 border rounded-md text-center">
+              <p className="text-sm text-muted-foreground">No orders found yet.</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -264,7 +276,7 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><Heart className="mr-2 h-6 w-6 text-primary" /> Favorite Trucks</CardTitle>
           </CardHeader>
           <CardContent>
-            {profile.favoriteTrucks?.length && !isDefaultGuestProfile() ? (
+            {profile.favoriteTrucks?.length ? (
                 profile.favoriteTrucks.map(truckId => (
                     <div key={truckId} className="mt-4 p-3 border rounded-md">
                         <p className="font-semibold">Truck ID: {truckId} (Details coming soon)</p>
@@ -273,13 +285,8 @@ export default function DashboardPage() {
                 ))
             ) : (
                 <p className="text-muted-foreground">
-                  {isDefaultGuestProfile() ? "Log in to save your favorite trucks and get notified when they're nearby!" : "No favorite trucks yet. Start exploring!"}
+                  No favorite trucks yet. Start exploring and add some!
                 </p>
-            )}
-            {isDefaultGuestProfile() && (
-                 <Button variant="outline" className="w-full mt-4" asChild>
-                    <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login to Add Favorites</Link>
-                 </Button>
             )}
           </CardContent>
         </Card>
