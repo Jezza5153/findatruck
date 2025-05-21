@@ -1,31 +1,71 @@
 
+'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag, CheckCircle, Truck } from "lucide-react"; // Removed XCircle
+import { ShoppingBag, CheckCircle, Truck, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+interface Order {
+    id: string;
+    customer: string;
+    items: number; // Or perhaps an array of item objects
+    total: number;
+    status: "New" | "Preparing" | "Ready for Pickup" | "Completed" | "Cancelled";
+    timestamp: string; // Or Date object
+}
 
 export default function OwnerOrdersPage() {
-  // Mock order data for placeholder
-  const mockOrders = [
-    { id: "ORD001", customer: "Alice B.", items: 3, total: 25.50, status: "New", timestamp: "5 mins ago" },
-    { id: "ORD002", customer: "Bob C.", items: 1, total: 10.00, status: "Preparing", timestamp: "15 mins ago" },
-    { id: "ORD003", customer: "Charlie D.", items: 5, total: 45.75, status: "Ready for Pickup", timestamp: "30 mins ago" },
-    { id: "ORD004", customer: "Diana E.", items: 2, total: 18.00, status: "Completed", timestamp: "1 hour ago" },
-  ];
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getStatusBadge = (status: string) => {
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // In a real app, fetch from '/api/owner/orders' (requires auth)
+        // For now, simulating a delay and an empty response
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setOrders([]); // Simulate no orders
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  const getStatusBadge = (status: Order['status']) => {
     switch (status) {
-      case "New": return <Badge variant="destructive" className="bg-red-500">New</Badge>;
+      case "New": return <Badge variant="destructive" className="bg-red-500 text-white">New</Badge>;
       case "Preparing": return <Badge variant="default" className="bg-yellow-500 text-black">Preparing</Badge>;
-      case "Ready for Pickup": return <Badge variant="default" className="bg-green-500">Ready</Badge>;
+      case "Ready for Pickup": return <Badge variant="default" className="bg-green-500 text-white">Ready</Badge>;
       case "Completed": return <Badge variant="secondary">Completed</Badge>;
+      case "Cancelled": return <Badge variant="outline" className="bg-gray-500 text-white">Cancelled</Badge>;
       default: return <Badge>{status}</Badge>;
     }
   };
+  
+  // Placeholder for order update logic
+  const handleUpdateOrderStatus = (orderId: string, newStatus: Order['status']) => {
+    console.log(`Updating order ${orderId} to ${newStatus}`);
+    // Here you would call an API to update the order status in your backend
+    // Then, you might refetch orders or update the local state optimistically
+    setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+  };
 
+  const activeOrders = orders.filter(o => o.status === "New" || o.status === "Preparing" || o.status === "Ready for Pickup");
+  const completedOrders = orders.filter(o => o.status === "Completed" || o.status === "Cancelled");
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -38,80 +78,109 @@ export default function OwnerOrdersPage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="active">
-        <TabsList className="grid w-full grid-cols-2 md:w-1/2 mb-6">
-            <TabsTrigger value="active">Active Orders</TabsTrigger>
-            <TabsTrigger value="completed">Completed Orders</TabsTrigger>
-        </TabsList>
-        <TabsContent value="active">
-            <Card className="shadow-lg">
-                <CardHeader>
-                <CardTitle className="text-2xl">Active Orders</CardTitle>
-                <CardDescription>
-                    View incoming orders and update their status (e.g., preparing, ready for pickup).
-                </CardDescription>
-                </CardHeader>
-                <CardContent>
-                {mockOrders.filter(o => o.status !== "Completed").length > 0 ? (
-                    <div className="space-y-4">
-                    {mockOrders.filter(o => o.status !== "Completed").map(order => (
-                        <Card key={order.id} className="bg-muted/30">
-                        <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg">Order {order.id} <span className="text-sm font-normal text-muted-foreground">- {order.customer}</span></CardTitle>
-                            {getStatusBadge(order.status)}
-                            </div>
-                            <CardDescription className="text-xs">{order.timestamp}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex justify-between items-center pt-2">
-                            <p>{order.items} items - Total: ${order.total.toFixed(2)}</p>
-                            <div className="space-x-2">
-                                <Button size="sm" variant="outline"><CheckCircle className="mr-1 h-4 w-4"/> Mark Preparing</Button>
-                                <Button size="sm" variant="outline"><Truck className="mr-1 h-4 w-4"/> Mark Ready</Button>
-                            </div>
-                        </CardContent>
-                        </Card>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground">No active orders at the moment.</p>
-                )}
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="completed">
-            <Card className="shadow-lg">
-                <CardHeader>
-                <CardTitle className="text-2xl">Completed Orders</CardTitle>
-                <CardDescription>
-                    A history of your fulfilled orders.
-                </CardDescription>
-                </CardHeader>
-                <CardContent>
-                {mockOrders.filter(o => o.status === "Completed").length > 0 ? (
-                     <div className="space-y-4">
-                    {mockOrders.filter(o => o.status === "Completed").map(order => (
-                        <Card key={order.id} className="bg-muted/20 opacity-80">
-                        <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg">Order {order.id} <span className="text-sm font-normal text-muted-foreground">- {order.customer}</span></CardTitle>
-                            {getStatusBadge(order.status)}
-                            </div>
-                            <CardDescription className="text-xs">{order.timestamp}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-2">
-                            <p>{order.items} items - Total: ${order.total.toFixed(2)}</p>
-                        </CardContent>
-                        </Card>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground">No completed orders to show yet.</p>
-                )}
-                </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
+      {isLoading && (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-lg">Loading orders...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTitle>Error Loading Orders</AlertTitle>
+          <AlertDescription>{error}. Please ensure you are logged in and try again.</AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && !error && (
+        <Tabs defaultValue="active">
+          <TabsList className="grid w-full grid-cols-2 md:w-1/2 mb-6">
+              <TabsTrigger value="active">Active Orders ({activeOrders.length})</TabsTrigger>
+              <TabsTrigger value="completed">Completed/Cancelled ({completedOrders.length})</TabsTrigger>
+          </TabsList>
+          <TabsContent value="active">
+              <Card className="shadow-lg">
+                  <CardHeader>
+                  <CardTitle className="text-2xl">Active Orders</CardTitle>
+                  <CardDescription>
+                      View incoming orders and update their status.
+                  </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                  {activeOrders.length > 0 ? (
+                      <div className="space-y-4">
+                      {activeOrders.map(order => (
+                          <Card key={order.id} className="bg-muted/30">
+                          <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                              <CardTitle className="text-lg">Order #{order.id.substring(0,6)} <span className="text-sm font-normal text-muted-foreground">- {order.customer}</span></CardTitle>
+                              {getStatusBadge(order.status)}
+                              </div>
+                              <CardDescription className="text-xs">{order.timestamp}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-2 gap-2">
+                              <p>{order.items} items - Total: ${order.total.toFixed(2)}</p>
+                              <div className="space-x-2 flex-shrink-0">
+                                  {order.status === "New" && 
+                                    <Button size="sm" variant="outline" onClick={() => handleUpdateOrderStatus(order.id, "Preparing")}>
+                                        <CheckCircle className="mr-1 h-4 w-4"/> Mark Preparing
+                                    </Button>
+                                  }
+                                  {order.status === "Preparing" &&
+                                    <Button size="sm" variant="outline" onClick={() => handleUpdateOrderStatus(order.id, "Ready for Pickup")}>
+                                        <Truck className="mr-1 h-4 w-4"/> Mark Ready
+                                    </Button>
+                                  }
+                                   {order.status === "Ready for Pickup" &&
+                                    <Button size="sm" className="bg-green-500 hover:bg-green-600" onClick={() => handleUpdateOrderStatus(order.id, "Completed")}>
+                                        <CheckCircle className="mr-1 h-4 w-4"/> Mark Completed
+                                    </Button>
+                                  }
+                              </div>
+                          </CardContent>
+                          </Card>
+                      ))}
+                      </div>
+                  ) : (
+                      <p className="text-muted-foreground py-10 text-center">No active orders at the moment.</p>
+                  )}
+                  </CardContent>
+              </Card>
+          </TabsContent>
+          <TabsContent value="completed">
+              <Card className="shadow-lg">
+                  <CardHeader>
+                  <CardTitle className="text-2xl">Order History</CardTitle>
+                  <CardDescription>
+                      A history of your fulfilled or cancelled orders.
+                  </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                  {completedOrders.length > 0 ? (
+                       <div className="space-y-4">
+                      {completedOrders.map(order => (
+                          <Card key={order.id} className="bg-muted/20 opacity-80">
+                          <CardHeader className="pb-2">
+                              <div className="flex justify-between items-start">
+                              <CardTitle className="text-lg">Order #{order.id.substring(0,6)} <span className="text-sm font-normal text-muted-foreground">- {order.customer}</span></CardTitle>
+                              {getStatusBadge(order.status)}
+                              </div>
+                              <CardDescription className="text-xs">{order.timestamp}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                              <p>{order.items} items - Total: ${order.total.toFixed(2)}</p>
+                          </CardContent>
+                          </Card>
+                      ))}
+                      </div>
+                  ) : (
+                      <p className="text-muted-foreground py-10 text-center">No completed or cancelled orders to show yet.</p>
+                  )}
+                  </CardContent>
+              </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

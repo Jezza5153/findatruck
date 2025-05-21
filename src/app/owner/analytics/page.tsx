@@ -1,23 +1,98 @@
 
+'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LineChart, Star, DollarSign } from "lucide-react"; // Removed Users, Utensils
+import { LineChart, Star, DollarSign, ShoppingBag, Clock, Users, UtensilsIcon as Utensils, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Mock data for placeholders
-const mockAnalyticsData = {
-  totalRevenue: 1250.75,
-  popularItems: [
-    { name: "Spicy Chicken Tacos", orders: 150 },
-    { name: "Cheeseburger Deluxe", orders: 120 },
-    { name: "Vegan Wrap", orders: 90 },
-  ],
-  averageRating: 4.7,
-  totalOrders: 280,
-  peakHours: "6 PM - 8 PM",
-};
+// Define an interface for the analytics data structure
+interface AnalyticsData {
+  totalRevenue: number;
+  popularItems: { name: string; orders: number }[];
+  averageRating: number;
+  totalOrders: number;
+  peakHours: string;
+  // Add other fields as needed, e.g., customerCount: number;
+}
 
 export default function OwnerAnalyticsPage() {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // In a real app, fetch from '/api/owner/analytics' (requires auth)
+        // For now, simulating a delay and an empty/default response
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Simulate some default data or an error if backend is not ready
+        setAnalyticsData({
+            totalRevenue: 0,
+            popularItems: [],
+            averageRating: 0,
+            totalOrders: 0,
+            peakHours: "N/A",
+        }); 
+      } catch (err) {
+         if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-xl text-muted-foreground">Loading analytics data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTitle>Error Loading Analytics</AlertTitle>
+          <AlertDescription>{error}. Please ensure you are logged in and try again.</AlertDescription>
+        </Alert>
+         <div className="mt-6 text-center">
+            <Button asChild variant="outline">
+              <Link href="/owner/dashboard">Back to Dashboard</Link>
+            </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!analyticsData) {
+     return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert className="max-w-lg mx-auto">
+          <AlertTitle>No Analytics Data</AlertTitle>
+          <AlertDescription>Analytics data could not be loaded or is not yet available.</AlertDescription>
+        </Alert>
+         <div className="mt-6 text-center">
+            <Button asChild variant="outline">
+              <Link href="/owner/dashboard">Back to Dashboard</Link>
+            </Button>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -36,8 +111,8 @@ export default function OwnerAnalyticsPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${mockAnalyticsData.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month (simulated)</p>
+            <div className="text-2xl font-bold">${analyticsData.totalRevenue.toFixed(2)}</div>
+            {/* <p className="text-xs text-muted-foreground">+20.1% from last month (simulated)</p> */}
           </CardContent>
         </Card>
         <Card className="shadow-md">
@@ -46,8 +121,8 @@ export default function OwnerAnalyticsPage() {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalyticsData.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">+150 since last week (simulated)</p>
+            <div className="text-2xl font-bold">{analyticsData.totalOrders}</div>
+            {/* <p className="text-xs text-muted-foreground">+150 since last week (simulated)</p> */}
           </CardContent>
         </Card>
         <Card className="shadow-md">
@@ -56,8 +131,8 @@ export default function OwnerAnalyticsPage() {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalyticsData.averageRating}/5</div>
-             <p className="text-xs text-muted-foreground">Based on 50 reviews (simulated)</p>
+            <div className="text-2xl font-bold">{analyticsData.averageRating.toFixed(1)}/5</div>
+             {/* <p className="text-xs text-muted-foreground">Based on 50 reviews (simulated)</p> */}
           </CardContent>
         </Card>
          <Card className="shadow-md">
@@ -66,8 +141,8 @@ export default function OwnerAnalyticsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalyticsData.peakHours}</div>
-             <p className="text-xs text-muted-foreground">Most active time slot (simulated)</p>
+            <div className="text-2xl font-bold">{analyticsData.peakHours}</div>
+             {/* <p className="text-xs text-muted-foreground">Most active time slot (simulated)</p> */}
           </CardContent>
         </Card>
       </div>
@@ -75,32 +150,37 @@ export default function OwnerAnalyticsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="shadow-lg">
             <CardHeader>
-            <CardTitle className="text-xl flex items-center"><UtensilsIcon className="mr-2 h-5 w-5"/>Most Popular Items</CardTitle> {/* Changed to UtensilsIcon to avoid conflict if Utensils was meant for something else */}
+            <CardTitle className="text-xl flex items-center"><Utensils className="mr-2 h-5 w-5"/>Most Popular Items</CardTitle>
             </CardHeader>
             <CardContent>
-            <ul className="space-y-2">
-                {mockAnalyticsData.popularItems.map(item => (
-                <li key={item.name} className="flex justify-between text-sm p-2 bg-muted/30 rounded-md">
-                    <span>{item.name}</span>
-                    <span className="font-semibold">{item.orders} orders</span>
-                </li>
-                ))}
-            </ul>
+            {analyticsData.popularItems.length > 0 ? (
+                <ul className="space-y-2">
+                    {analyticsData.popularItems.map(item => (
+                    <li key={item.name} className="flex justify-between text-sm p-2 bg-muted/30 rounded-md">
+                        <span>{item.name}</span>
+                        <span className="font-semibold">{item.orders} orders</span>
+                    </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-muted-foreground">No popular item data available yet.</p>
+            )}
             </CardContent>
         </Card>
         <Card className="shadow-lg">
             <CardHeader>
-            <CardTitle className="text-xl">Sales Over Time (Placeholder)</CardTitle>
+            <CardTitle className="text-xl">Sales Over Time</CardTitle>
             <CardDescription>Visual representation of sales trends.</CardDescription>
             </CardHeader>
             <CardContent>
             <div className="h-[200px] w-full bg-muted rounded-md flex items-center justify-center text-muted-foreground">
-                Chart will be displayed here
+                Chart will be displayed here (Requires Charting Library & Data)
             </div>
-            <p className="text-xs text-muted-foreground mt-2">This section will feature charts showing revenue, order volume, etc. (Under Construction)</p>
+            <p className="text-xs text-muted-foreground mt-2">This section will feature charts showing revenue, order volume, etc.</p>
             </CardContent>
         </Card>
       </div>
+      {/*
       <Card className="mt-6 shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl">Further Analytics</CardTitle>
@@ -108,24 +188,10 @@ export default function OwnerAnalyticsPage() {
         <CardContent>
           <p className="text-muted-foreground">
             More detailed reports on customer demographics, item performance, and peak times will be available here.
-            Full analytics functionality is under construction.
           </p>
         </CardContent>
       </Card>
+      */}
     </div>
   );
 }
-
-// Helper icons not directly in lucide-react, so define or use alternatives
-const ShoppingBag = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-);
-const Clock = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-);
-// Adding UtensilsIcon as a local SVG component as 'Utensils' from lucide was removed assuming it was unused.
-// If 'Utensils' from lucide-react IS needed for something else, this avoids a name clash.
-// If it was indeed for 'Most Popular Items', this local version can be used.
-const UtensilsIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>
-);

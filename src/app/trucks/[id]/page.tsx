@@ -1,19 +1,19 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { FoodTruck, MenuItem as MenuItemType } from '@/lib/types';
 import { MenuItemCard } from '@/components/MenuItemCard';
-import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info } from 'lucide-react';
+import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Mock data - in a real app, this would be fetched based on `id` from a database
-const mockTrucksData: FoodTruck[] = []; // No more mock data
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
@@ -21,28 +21,62 @@ export default function FoodTruckProfilePage() {
   const [truck, setTruck] = useState<FoodTruck | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [cart, setCart] = useState< { item: MenuItemType, quantity: number }[] >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     if (params.id) {
-      // In a real app, you would fetch truck data from your backend API here
-      // For example: fetch(`/api/trucks/${params.id}`).then(res => res.json()).then(data => setTruck(data));
-      const foundTruck = mockTrucksData.find(t => t.id === params.id); // This will be undefined
-      setTruck(foundTruck || null);
+      const fetchTruckDetails = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          // In a real app, you would fetch truck data from your backend API here
+          // For example: const response = await fetch(`/api/trucks/${params.id}`);
+          // if (!response.ok) {
+          //   if (response.status === 404) throw new Error('Food truck not found');
+          //   throw new Error('Failed to fetch truck details');
+          // }
+          // const data = await response.json();
+          // setTruck(data);
+
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+          // Simulate truck not found for now, as we don't have a backend
+          setTruck(null); 
+          if (!truck) { //
+             setError(`Food truck with ID "${params.id}" not found.`);
+          }
+
+
+        } catch (err) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('An unknown error occurred');
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchTruckDetails();
+    } else {
+      setError("No truck ID provided.");
+      setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const handleNotifyNearby = () => {
     toast({
       title: "Notifications Enabled!",
-      description: `We'll let you know when ${truck?.name} is nearby. (Feature coming soon!)`,
+      description: `We'll let you know when ${truck?.name} is nearby. (Account feature)`,
     });
   };
 
   const handleOrderNow = () => {
     toast({
       title: "Starting Your Order!",
-      description: `Proceed to checkout for ${truck?.name}. (Feature coming soon!)`,
+      description: `Proceed to checkout for ${truck?.name}. (Account feature)`,
     });
   };
   
@@ -62,30 +96,52 @@ export default function FoodTruckProfilePage() {
     });
   };
 
-  if (!isClient) {
-    return <div className="container mx-auto px-4 py-8 text-center">Loading truck details...</div>;
+  if (!isClient || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+        <p className="text-xl text-muted-foreground">Loading truck details...</p>
+      </div>
+    );
   }
 
-  if (!truck) {
-    return <div className="container mx-auto px-4 py-8 text-center">Food truck not found or not available.</div>;
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
+  
+  if (!truck) {
+     return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Alert className="max-w-md mx-auto">
+            <AlertTitle>Truck Not Found</AlertTitle>
+            <AlertDescription>The food truck you are looking for could not be found.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
 
   const menuCategories = Array.from(new Set(truck.menu.map(item => item.category)));
-
   const totalCartItems = cart.reduce((sum, current) => sum + current.quantity, 0);
   const totalCartPrice = cart.reduce((sum, current) => sum + (current.item.price * current.quantity), 0);
-
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden shadow-xl">
         <div className="relative h-64 md:h-96">
           <Image
-            src={truck.imageUrl} // This will need a default if truck.imageUrl is empty
+            src={truck.imageUrl || "https://placehold.co/800x400.png"}
             alt={truck.name}
             layout="fill"
             objectFit="cover"
-            data-ai-hint={`${truck.cuisine || 'food'} truck`} // Added fallback for cuisine
+            data-ai-hint={`${truck.cuisine || 'food'} truck`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 md:p-8">
@@ -154,7 +210,11 @@ export default function FoodTruckProfilePage() {
               ))}
             </Tabs>
           ) : (
-            <p className="text-center text-muted-foreground">This truck's menu is not available at the moment.</p>
+            <Card className="my-6">
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                This truck's menu is not available at the moment. Please check back later!
+              </CardContent>
+            </Card>
           )}
 
 

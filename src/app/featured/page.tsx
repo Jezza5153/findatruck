@@ -1,47 +1,40 @@
 
-import { Star } from 'lucide-react';
+'use client';
+import { Star, Loader2 } from 'lucide-react';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-// Placeholder data for featured trucks - replace with actual data fetching
-const mockFeaturedTrucks: FoodTruck[] = [
-  {
-    id: "ft001",
-    name: "Gourmet Grill Masters",
-    cuisine: "American Fusion",
-    rating: 4.9,
-    imageUrl: "https://placehold.co/400x200.png?text=Gourmet+Grill",
-    dataAiHint: "gourmet food",
-    description: "Sizzling steaks, gourmet burgers, and unique fusion dishes. A premium experience on wheels!",
-    menu: [], // Simplified for placeholder
-    hours: "Mon-Fri: 11am-8pm, Sat: 12pm-10pm",
-    isOpen: true,
-    distance: "1.2 miles",
-    location: { lat: 34.0522, lng: -118.2437, address: "123 Gourmet St, Los Angeles" },
-    features: ["Online Ordering", "Accepts Cards", "Loyalty Program"],
-    testimonials: [{id: "t1", name: "FoodieFan", quote: "Best steak sandwich ever!"}]
-  },
-  {
-    id: "ft002",
-    name: "The Wandering Wok",
-    cuisine: "Asian Street Food",
-    rating: 4.7,
-    imageUrl: "https://placehold.co/400x200.png?text=Wandering+Wok",
-    dataAiHint: "asian food",
-    description: "Authentic noodles, flavorful rice bowls, and spicy delights from across Asia.",
-    menu: [],
-    hours: "Tue-Sun: 12pm-9pm",
-    isOpen: false,
-    distance: "3.5 miles",
-    location: { lat: 34.0522, lng: -118.2437, address: "456 Spice Ln, Los Angeles" },
-    features: ["Vegetarian Options", "Accepts Cards"],
-  },
-];
-
+import { useState, useEffect } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function FeaturedTrucksPage() {
+  const [featuredTrucks, setFeaturedTrucks] = useState<FoodTruck[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFeaturedTrucks = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // In a real app, fetch from '/api/trucks/featured'
+        // For now, simulating a delay and an empty response
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setFeaturedTrucks([]); // Simulate no featured trucks
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFeaturedTrucks();
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
@@ -52,13 +45,29 @@ export default function FeaturedTrucksPage() {
         </p>
       </div>
 
-      {mockFeaturedTrucks.length > 0 ? (
+      {isLoading && (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-lg">Loading featured trucks...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTitle>Error Loading Featured Trucks</AlertTitle>
+          <AlertDescription>{error}. Please try again later.</AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && !error && featuredTrucks.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {mockFeaturedTrucks.map(truck => (
+          {featuredTrucks.map(truck => (
             <FoodTruckCard key={truck.id} truck={truck} />
           ))}
         </div>
-      ) : (
+      )}
+
+      {!isLoading && !error && featuredTrucks.length === 0 && (
         <div className="text-center py-10">
           <Star className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
           <p className="text-xl font-semibold text-muted-foreground mb-4">No featured trucks at the moment.</p>

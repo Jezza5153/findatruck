@@ -1,40 +1,21 @@
-import { Bell, MessageSquare, ShoppingBag } from 'lucide-react';
+
+'use client';
+import { Bell, MessageSquare, ShoppingBag, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type NotificationItem = {
   id: string;
   type: 'truck_nearby' | 'order_update' | 'promotion';
   title: string;
   message: string;
-  timestamp: string; // e.g., "2 hours ago" or a Date object
+  timestamp: string;
   read: boolean;
   truckName?: string;
   orderId?: string;
 };
-
-const mockNotifications: NotificationItem[] = [
-  {
-    id: '1', type: 'truck_nearby', title: "Taco 'Bout Delicious is Nearby!",
-    message: "Your favorite truck, Taco 'Bout Delicious, is now within 2 miles of your location.",
-    truckName: "Taco 'Bout Delicious", timestamp: "15 mins ago", read: false
-  },
-  {
-    id: '2', type: 'order_update', title: "Order Ready for Pickup",
-    message: "Your order #12345 from Pizza Wheels is ready for pickup.",
-    orderId: "#12345", truckName: "Pizza Wheels", timestamp: "1 hour ago", read: false
-  },
-  {
-    id: '3', type: 'promotion', title: "Special Offer!",
-    message: "Get 20% off all burgers at Burger Bliss today only!",
-    truckName: "Burger Bliss", timestamp: "3 hours ago", read: true
-  },
-  {
-    id: '4', type: 'order_update', title: "Order Confirmed",
-    message: "Your order #67890 from Curry Up Now has been confirmed and is being prepared.",
-    orderId: "#67890", truckName: "Curry Up Now", timestamp: "Yesterday", read: true
-  },
-];
 
 const getIconForNotificationType = (type: NotificationItem['type']) => {
   switch (type) {
@@ -46,15 +27,55 @@ const getIconForNotificationType = (type: NotificationItem['type']) => {
 };
 
 export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // In a real app, fetch from '/api/notifications' or similar, likely requiring authentication
+        // For now, simulating a delay and an empty response
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setNotifications([]); // Simulate no notifications
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary flex items-center">
         <Bell className="mr-3 h-8 w-8" /> Notifications
       </h1>
 
-      {mockNotifications.length > 0 ? (
+      {isLoading && (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-lg">Loading notifications...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
+         <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTitle>Error Loading Notifications</AlertTitle>
+          <AlertDescription>{error}. Please try again later.</AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && !error && notifications.length > 0 && (
         <div className="space-y-4">
-          {mockNotifications.map(notification => (
+          {notifications.map(notification => (
             <Card key={notification.id} className={`shadow-md ${notification.read ? 'bg-card' : 'bg-primary/5 border-primary/50'}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -74,12 +95,14 @@ export default function NotificationsPage() {
             </Card>
           ))}
         </div>
-      ) : (
-        <Card className="text-center py-10">
+      )}
+      
+      {!isLoading && !error && notifications.length === 0 && (
+         <Card className="text-center py-10">
           <CardContent>
             <Bell className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-xl font-semibold text-muted-foreground">No new notifications</p>
-            <p className="text-sm text-muted-foreground">Check back later for updates!</p>
+            <p className="text-sm text-muted-foreground">Check back later for updates! (Login required for most notifications)</p>
           </CardContent>
         </Card>
       )}
