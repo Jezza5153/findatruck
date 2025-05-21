@@ -11,13 +11,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import type { z } from "zod";
+import type { z as zod } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase"; // Import Firebase auth
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import type { UserDocument } from "@/lib/types";
 
-// Define Zod schema for form validation
-import * as zGlobal from 'zod'; // Use a different name to avoid conflict
+import * as zGlobal from 'zod';
 const signupSchema = zGlobal.object({
   name: zGlobal.string().min(2, { message: "Name must be at least 2 characters." }),
   email: zGlobal.string().email({ message: "Invalid email address." }),
@@ -26,10 +27,10 @@ const signupSchema = zGlobal.object({
   terms: zGlobal.boolean().refine(val => val === true, { message: "You must accept the terms and conditions." })
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
-  path: ["confirmPassword"], // path of error
+  path: ["confirmPassword"],
 });
 
-type SignupFormValues = z.infer<typeof signupSchema>;
+type SignupFormValues = zod.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
@@ -43,8 +44,29 @@ export default function SignupPage() {
 
   const handleSignup: SubmitHandler<SignupFormValues> = async (data) => {
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
-      // TODO: Could also update profile with name here using updateProfile from firebase/auth
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      // Update Firebase Auth profile (optional, but good for display name)
+      await updateProfile(user, { displayName: data.name });
+
+      // Create user document in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocumentData: Partial<UserDocument> = { // Use Partial to allow omitting optional fields
+        uid: user.uid,
+        email: user.email,
+        role: 'customer',
+        name: data.name,
+        createdAt: serverTimestamp(),
+        favoriteTrucks: [],
+        notificationPreferences: { // Sensible defaults
+            truckNearbyRadius: 2,
+            orderUpdates: true,
+            promotionalMessages: false,
+        }
+      };
+      await setDoc(userDocRef, userDocumentData);
+      
       toast({
         title: "Signup Successful!",
         description: "Your account has been created. Please login.",
@@ -75,7 +97,7 @@ export default function SignupPage() {
           <CardDescription>Join FindATruck to discover amazing food.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignup)}>
-          <CardContent className="space-y-4"> {/* Adjusted space-y */}
+          <CardContent className="space-y-4">
             <div>
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" {...register("name")} placeholder="Your Name" />
@@ -116,7 +138,6 @@ export default function SignupPage() {
                 {isSubmitting ? "Signing up..." : <><UserPlus className="mr-2 h-5 w-5" /> Sign Up</>}
               </Button>
             </div>
-            {/* OAuth buttons can be re-added later with Firebase OAuth providers */}
           </CardContent>
         </form>
         <CardFooter className="text-center block">

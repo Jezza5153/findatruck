@@ -18,12 +18,12 @@ export function SiteHeader() {
   const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true); // Set client to true once component mounts
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
+  }, []); // Empty dependency array - runs once on mount
 
   const handleLogout = async () => {
     try {
@@ -64,26 +64,42 @@ export function SiteHeader() {
         </Link>
         
         <div className="flex flex-1 items-center justify-end space-x-4">
-          {user ? (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard"><UserCircle className="mr-1 h-5 w-5" />My Dashboard</Link>
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-1 h-5 w-5" />Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button size="sm" asChild className="bg-primary hover:bg-primary/90">
-                <Link href="/signup">Sign Up</Link>
-              </Button>
-            </>
-          )}
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex gap-2 items-center">
+            {user ? (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/dashboard"><UserCircle className="mr-1 h-5 w-5" />My Dashboard</Link>
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleLogout}>
+                  <LogOut className="mr-1 h-5 w-5" />Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button size="sm" asChild className="bg-primary hover:bg-primary/90">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
+             <Button variant="ghost" size="sm" asChild>
+                <Link href="/map">Find Trucks</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+                <Link href="/help">Help</Link>
+            </Button>
+             <Button variant="ghost" size="sm" asChild>
+                <Link href="/notifications">Notifications</Link>
+            </Button>
+             <Button variant="ghost" size="sm" asChild>
+                <Link href="/rewards">Rewards</Link>
+            </Button>
+          </nav>
 
+          {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2">
@@ -109,6 +125,9 @@ export function SiteHeader() {
                      <Button variant="outline" asChild>
                       <Link href="/rewards"><Menu className="mr-2 h-5 w-5" />Rewards</Link>
                     </Button>
+                     <Button variant="outline"asChild>
+                        <Link href="/map">Find Trucks</Link>
+                    </Button>
                      <Button variant="outline" asChild>
                       <Link href="/help"><Menu className="mr-2 h-5 w-5" />Help</Link>
                     </Button>
@@ -130,6 +149,12 @@ export function SiteHeader() {
                     </Button>
                      <Button variant="ghost" asChild>
                         <Link href="/help">Help</Link>
+                    </Button>
+                      <Button variant="ghost" asChild>
+                        <Link href="/notifications">Notifications</Link>
+                    </Button>
+                     <Button variant="ghost" asChild>
+                        <Link href="/rewards">Rewards</Link>
                     </Button>
                   </>
                 )}

@@ -1,51 +1,106 @@
 
+import type { Timestamp } from 'firebase/firestore';
+
 export type FoodTruck = {
-  id: string;
+  id: string; // Corresponds to Document ID in Firestore trucks collection
+  ownerUid: string; // UID of the owner from Firebase Auth
   name: string;
   cuisine: string;
-  rating: number;
-  imageUrl: string;
   description: string;
-  menu: MenuItem[];
-  hours: string;
-  location?: { lat: number; lng: number; address: string };
-  isOpen?: boolean;
-  distance?: string; // e.g. "0.5 miles"
-  features?: string[]; // e.g. ["Real-time location", "Mobile ordering"]
-  testimonials?: Testimonial[];
+  imageUrl?: string;
+  phoneNumber?: string;
+  operatingHoursSummary?: string; // e.g., "Mon-Fri 11AM-7PM"
+  
+  // Location - can be a GeoPoint in Firestore
+  location?: { lat: number; lng: number; address?: string; geohash?: string }; 
+  
+  // Live Status & Hours - Can be part of the main truck doc or a subcollection
+  isOpen?: boolean; 
+  regularHours?: {
+    [day: string]: { openTime: string; closeTime: string; isClosed: boolean }; // "Monday", "Tuesday", etc.
+  };
+  specialHours?: {
+    date: string; // YYYY-MM-DD
+    status: 'open-custom' | 'closed';
+    openTime?: string;
+    closeTime?: string;
+  }[];
+
+  // Menu - likely a subcollection in Firestore for scalability
+  // menu?: MenuItem[]; // For simplicity, we might start with it embedded if small
+
+  // Rating - could be an aggregation
+  rating?: number;
+  numberOfRatings?: number;
+
+  // Features for filtering or display
+  features?: string[]; 
+  socialMediaLinks?: { [platform: string]: string }; // e.g., { instagram: "url", facebook: "url" }
+
+  // Timestamps
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+
+  // For premium features
+  isFeatured?: boolean;
+  subscriptionTier?: string; // e.g., 'free', 'premium'
+  
+  // UI specific, not necessarily in DB
+  distance?: string; 
+  testimonials?: Testimonial[]; // Could be a subcollection
 };
 
 export type MenuItem = {
-  id: string;
+  id: string; // Document ID in a menu subcollection
+  truckId: string; // Foreign key to the truck
   name: string;
   description?: string;
   price: number;
   imageUrl?: string;
-  category: string;
+  category: string; // e.g., "Appetizers", "Main Courses", "Desserts"
+  isSpecial?: boolean;
+  availability?: 'available' | 'unavailable';
   customizations?: CustomizationOption[];
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 };
 
 export type CustomizationOption = {
   id: string;
-  name: string;
+  name: string; // e.g., "Size", "Toppings"
   options: { name: string; additionalPrice?: number }[];
-  type: 'radio' | 'checkbox' | 'select';
+  type: 'radio' | 'checkbox' | 'select'; // How the options are presented
 };
 
 export type Testimonial = {
   id: string;
-  name: string;
+  truckId: string;
+  userId: string;
+  userName: string;
   quote: string;
+  rating: number; // 1-5 stars
   avatarUrl?: string;
+  createdAt?: Timestamp;
 };
 
-export type UserProfile = {
-  name: string;
-  email: string;
-  savedPaymentMethods?: string[]; // Simplified
+export type UserRole = 'customer' | 'owner';
+
+export type UserDocument = {
+  uid: string; // Firebase Auth UID
+  email: string | null;
+  role: UserRole;
+  name?: string; // For customers or owner's personal name
+  createdAt: Timestamp;
+  // Owner-specific fields if role is 'owner'
+  ownerName?: string; // Business contact name / owner name
+  truckName?: string; // Initial truck name from signup
+  cuisineType?: string; // Initial cuisine type from signup
+  // Customer-specific fields if role is 'customer'
   favoriteTrucks?: string[]; // Array of truck IDs
-  notificationPreferences: NotificationPreferences;
+  notificationPreferences?: NotificationPreferences;
+  // loyaltyPoints?: { [truckId: string]: number }; // Example
 };
+
 
 export type NotificationPreferences = {
   truckNearbyRadius: number; // in miles
