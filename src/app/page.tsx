@@ -80,25 +80,25 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/80 via-primary to-accent/60 text-primary-foreground py-20 md:py-32">
+      <section className="bg-gradient-to-br from-primary via-blue-500 to-accent text-primary-foreground py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
           <Truck className="mx-auto h-24 w-24 mb-6 text-background" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Welcome to FindATruck!
+            Find Food Trucks Near You!
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-            Your destination for discovering local food trucks or showcasing your own culinary creations on wheels.
+            Discover local food trucks in real-time or showcase your culinary creations.
           </p>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <Button size="lg" variant="secondary" className="bg-background text-primary hover:bg-background/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
+            <Button size="lg" variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
                 <Link href="/map">
                     <Users className="h-10 w-10 mb-2" />
                     I'm a Customer
-                    <span className="text-sm font-normal mt-1 block">(Find Food Trucks)</span>
+                    <span className="text-sm font-normal mt-1 block">(Explore the Map)</span>
                 </Link>
             </Button>
             <Button size="lg" variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
-                <Link href="/owner/portal"> {/* Updated Link */}
+                <Link href="/owner/portal"> 
                     <ChefHat className="h-10 w-10 mb-2" />
                     I'm a Food Truck Owner
                     <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
@@ -178,7 +178,6 @@ export default function HomePage() {
               As our community grows, this is where you'll find the latest culinary delights on wheels.
               Check back soon for new additions! (This will be populated from the database).
             </p>
-            {/* Placeholder for listing newest trucks - actual implementation would involve data fetching */}
             <div className="mt-8">
                 <Button variant="outline" asChild>
                     <Link href="/map">Explore All Trucks</Link>
@@ -189,26 +188,31 @@ export default function HomePage() {
       </section>
 
       {/* Featured Trucks Section (Currently shows placeholder text as data is empty) */}
-      <section className="py-16 md:py-24 bg-secondary/20">
+      <section className="py-16 md:py-24 bg-background"> {/* Changed background for variation */}
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Featured Food Trucks
           </h2>
           <p className="text-center text-muted-foreground">
-            No featured trucks at the moment. Check the map to find delicious options near you! (This will be populated from the database).
+            Our top-rated and premium trucks will be highlighted here. Stay tuned! (This will be populated from the database).
           </p>
+           <div className="mt-8 text-center">
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                    <Link href="/featured">View Featured Trucks</Link>
+                </Button>
+            </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 md:py-24 bg-background">
+      <section className="py-16 md:py-24 bg-muted/30"> {/* Changed background for variation */}
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             What Our Users Say <Smile className="inline h-8 w-8 text-primary" />
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {testimonialsData.map((testimonial) => (
-              <Card key={testimonial.id} className="shadow-lg hover:shadow-xl transition-shadow">
+              <Card key={testimonial.id} className="shadow-lg hover:shadow-xl transition-shadow bg-card">
                 <CardContent className="pt-6">
                   <div className="flex items-center mb-4">
                     {testimonial.avatarUrl && (
@@ -233,4 +237,3 @@ export default function HomePage() {
     </div>
   );
 }
-

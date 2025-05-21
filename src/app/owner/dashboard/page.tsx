@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, LocateFixed, CalendarClock } from "lucide-react"; // Removed DollarSign, Settings
+import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, LocateFixed, CalendarClock, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function OwnerDashboardPage() {
@@ -23,7 +23,6 @@ export default function OwnerDashboardPage() {
           description: "Geolocation is not supported by your browser or not available. Please set location manually or try a different browser.", 
           variant: "destructive" 
       });
-      // Fallback to mock location if real geolocation fails or is denied/unavailable
       const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
       const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
       const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
@@ -48,18 +47,17 @@ export default function OwnerDashboardPage() {
           title: "Location Updated!", 
           description: `Current location set to: ${newLocation.lat}, ${newLocation.lng}. Customers will see this location.` 
         });
-        // Here, you would send `newLocation` to your backend.
       },
       (error) => {
           console.warn("Geolocation error:", error.message, "Falling back to mock location.");
-          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01; // LA coordinates
+          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01; 
           const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
           const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
           setCurrentLocation(mockLocation);
           toast({ 
             title: "Location Updated (Simulated)!", 
             description: `Could not get precise location. Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}.`,
-            variant: "default" // Consider 'warning' or custom variant if available
+            variant: "default"
           });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -81,7 +79,6 @@ export default function OwnerDashboardPage() {
           <p className="text-muted-foreground">Manage your food truck's presence and operations.</p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-            {/* This would ideally come from backend state */}
             <span className="text-sm font-medium text-green-600">Status: Open (Simulated)</span>
             <Button variant="outline" size="sm">
                 <Power className="mr-2 h-4 w-4"/> Toggle Open/Closed
@@ -174,13 +171,27 @@ export default function OwnerDashboardPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
-             <Edit className="mr-2 h-5 w-5 text-primary" /> Truck Profile {/* Changed Icon to Edit, as Settings was removed */}
+             <Edit className="mr-2 h-5 w-5 text-primary" /> Truck Profile
             </CardTitle>
             <CardDescription>Manage truck profile, photos, and description.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" asChild>
               <Link href="/owner/profile">Edit Profile</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+         <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+             <CreditCard className="mr-2 h-5 w-5 text-primary" /> Billing & Subscription
+            </CardTitle>
+            <CardDescription>Manage your premium features and payments.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full" asChild>
+              <Link href="/owner/billing">Manage Billing</Link>
             </Button>
           </CardContent>
         </Card>

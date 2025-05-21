@@ -1,19 +1,14 @@
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google'; // Assuming these are preferred fonts
+import { Inter } from 'next/font/google'; // Using Inter font
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
@@ -31,13 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#FF7A00" />
+        {/* The theme-color will be dynamically picked up by primary color from globals.css. 
+            If a specific static color is desired, it can be set here.
+            For example: <meta name="theme-color" content="#2563EB" /> for a blue.
+            For now, relying on browser heuristics or PWA manifest.
+        */}
       </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          geistSans.variable,
-          geistMono.variable
+          inter.variable
         )}
       >
         <div className="relative flex min-h-screen flex-col">
