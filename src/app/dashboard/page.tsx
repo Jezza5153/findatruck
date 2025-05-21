@@ -33,10 +33,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // In a real app, you would fetch the user's profile here if logged in.
-    // For now, we initialize tempProfile with the (initial or fetched) profile.
+  }, []); // Runs only once on mount to set isClient
+
+  useEffect(() => {
+    // This effect now only handles syncing tempProfile with profile data
+    // In a real app, profile might be fetched asynchronously.
     setTempProfile(profile); 
-  }, [profile]);
+  }, [profile]); // Re-sync tempProfile if the main profile data changes
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
