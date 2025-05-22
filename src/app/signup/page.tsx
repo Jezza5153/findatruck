@@ -73,7 +73,7 @@ export default function SignupPage() {
       });
       router.push('/login'); 
     } catch (error: any) {
-      console.error("Detailed Signup Error:", error); // More detailed logging
+      console.error("Detailed Signup Error:", JSON.stringify(error, null, 2)); // More detailed logging
       let errorMessage = "An unexpected error occurred. Please try again.";
       if (error.code) { // Check if error object has a code property
         switch (error.code) {

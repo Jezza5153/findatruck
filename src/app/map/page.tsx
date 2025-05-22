@@ -1,7 +1,6 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { FoodTruckCard } from '@/components/FoodTruckCard';
 import { MapPlaceholder } from '@/components/MapPlaceholder';
 import { FilterControls } from '@/components/FilterControls';
 import type { FoodTruck } from '@/lib/types';
@@ -11,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { FoodTruckMap } from '@/components/FoodTruckMap';
+import { FoodTruckCard } from '@/components/FoodTruckCard';
 
 export default function MapPage() {
   const [trucks, setTrucks] = useState<FoodTruck[]>([]);
@@ -130,7 +131,7 @@ export default function MapPage() {
           )}
 
           {!isLoading && !error && viewMode === 'map' && (
-             <MapPlaceholder /> // Pass `filteredTrucks` to actual map component here
+             <FoodTruckMap trucks={filteredTrucks} />
           )}
           
           {!isLoading && !error && viewMode === 'list' && (

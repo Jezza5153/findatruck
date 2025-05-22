@@ -85,7 +85,7 @@ export default function OwnerSignupPage() {
       });
       router.push('/owner/login'); 
     } catch (error: any) {
-      console.error("Detailed Owner Signup Error:", error); // More detailed logging
+      console.error("Detailed Owner Signup Error:", JSON.stringify(error, null, 2)); // Log the entire error object clearly
       let errorMessage = "An unexpected error occurred. Please try again.";
       if (error.code) { // Check if error object has a code property
         switch (error.code) {
