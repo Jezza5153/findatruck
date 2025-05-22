@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
-import { FoodTruckMap } from '@/components/FoodTruckMap';
+import FoodTruckMap from '@/components/FoodTruckMap';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
 
 export default function MapPage() {
