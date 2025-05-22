@@ -75,10 +75,10 @@ export type CustomizationOption = {
 export type Testimonial = {
   id: string;
   // truckId: string; // Testimonials will be a subcollection of a truck
-  userId: string;
-  userName: string;
+  userId?: string; // Optional if testimonials can be anonymous or sourced differently
+  name: string;
   quote: string;
-  rating: number; // 1-5 stars
+  rating?: number; // 1-5 stars, optional
   avatarUrl?: string;
   createdAt?: Timestamp;
   dataAiHint?: string;
@@ -93,22 +93,30 @@ export type UserDocument = {
   name?: string; // For customers or owner's personal name
   createdAt: Timestamp;
   // Owner-specific fields if role is 'owner'
-  ownerName?: string; // Business contact name / owner name (already in signup)
-  truckName?: string; // Initial truck name from signup (already in signup)
-  cuisineType?: string; // Initial cuisine type from signup (already in signup)
+  ownerName?: string; 
+  truckName?: string; 
+  cuisineType?: string;
   truckId?: string; // ID of the truck document in 'trucks' collection for this owner
   // Customer-specific fields if role is 'customer'
   favoriteTrucks?: string[]; // Array of truck IDs
   notificationPreferences?: NotificationPreferences;
-  // loyaltyPoints?: { [truckId: string]: number }; // Example
 };
-
 
 export type NotificationPreferences = {
   truckNearbyRadius: number; // in miles
   orderUpdates: boolean;
   promotionalMessages: boolean;
 };
+
+// Define UserProfile based on its usage in dashboard/page.tsx
+export type UserProfile = {
+  name: string;
+  email: string;
+  savedPaymentMethods: string[]; // Assuming array of strings (e.g., "Visa ending in 1234")
+  favoriteTrucks: string[]; // Array of truck IDs
+  notificationPreferences: NotificationPreferences;
+};
+
 
 export type FilterOptions = {
   cuisine: string[];
