@@ -14,7 +14,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import type { z as zod } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase"; // Ensure db is imported
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 
@@ -52,14 +52,14 @@ export default function SignupPage() {
 
       // Create user document in Firestore
       const userDocRef = doc(db, "users", user.uid);
-      const userDocumentData: Partial<UserDocument> = { // Use Partial to allow omitting optional fields
+      const userDocumentData: Partial<UserDocument> = { 
         uid: user.uid,
         email: user.email,
         role: 'customer',
         name: data.name,
         createdAt: serverTimestamp(),
         favoriteTrucks: [],
-        notificationPreferences: { // Sensible defaults
+        notificationPreferences: { 
             truckNearbyRadius: 2,
             orderUpdates: true,
             promotionalMessages: false,
@@ -73,13 +73,27 @@ export default function SignupPage() {
       });
       router.push('/login'); 
     } catch (error: any) {
-      console.error("Signup error:", error);
+      console.error("Detailed Signup Error:", error); // More detailed logging
       let errorMessage = "An unexpected error occurred. Please try again.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already registered. Please login or use a different email.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "The password is too weak. Please choose a stronger password.";
+      if (error.code) { // Check if error object has a code property
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = "This email is already registered. Please login or use a different email.";
+            break;
+          case 'auth/weak-password':
+            errorMessage = "The password is too weak. Please choose a stronger password.";
+            break;
+          case 'auth/invalid-email':
+            errorMessage = "The email address is not valid.";
+            break;
+          // Add more Firebase specific error codes here if needed
+          default:
+            errorMessage = `Signup failed: ${error.message || 'Please try again.'}`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
       toast({
         title: "Signup Failed",
         description: errorMessage,
@@ -104,18 +118,18 @@ export default function SignupPage() {
               {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
             </div>
             <div>
-              <Label htmlFor="email">Email address</Label>
-              <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+              <Label htmlFor="email-customer-signup">Email address</Label>
+              <Input id="email-customer-signup" type="email" {...register("email")} placeholder="you@example.com" />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register("password")} placeholder="Create a strong password" />
+              <Label htmlFor="password-customer-signup">Password</Label>
+              <Input id="password-customer-signup" type="password" {...register("password")} placeholder="Create a strong password" />
               {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
             <div>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input id="confirm-password" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+              <Label htmlFor="confirm-password-customer-signup">Confirm Password</Label>
+              <Input id="confirm-password-customer-signup" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
               {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
             </div>
             <div className="flex items-center space-x-2">

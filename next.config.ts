@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // If you plan to use Firebase Storage for images, you might add its hostname here later
+      // Example for Firebase Storage:
+      // {
+      //   protocol: 'https',
+      //   hostname: 'firebasestorage.googleapis.com',
+      // }
     ],
   },
 };

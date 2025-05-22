@@ -1,7 +1,7 @@
 
-'use client';import { useEffect } from 'react';
+'use client';
+import { useEffect, useState } from 'react'; // Added useState for cuisineType if not already present
 
-import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import type { z as zod } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase"; // Ensure db is imported
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 
@@ -41,6 +41,8 @@ type OwnerSignupFormValues = zod.infer<typeof ownerSignupSchema>;
 export default function OwnerSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [cuisineType, setCuisineType] = useState(""); // For controlled Select component
+
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<OwnerSignupFormValues>({
     resolver: zodResolver(ownerSignupSchema),
     defaultValues: {
@@ -49,10 +51,11 @@ export default function OwnerSignupPage() {
     }
   });
 
-  // Register cuisineType for react-hook-form
+  // Register cuisineType for react-hook-form and sync with local state
   useEffect(() => {
     register("cuisineType");
-  }, [register]);
+    setValue("cuisineType", cuisineType, { shouldValidate: true });
+  }, [register, cuisineType, setValue]);
 
 
   const handleOwnerSignup: SubmitHandler<OwnerSignupFormValues> = async (data) => {
@@ -69,27 +72,38 @@ export default function OwnerSignupPage() {
         uid: user.uid,
         email: user.email,
         role: 'owner',
-        ownerName: data.ownerName, // Store owner's name
-        truckName: data.truckName, // Store initial truck name
-        cuisineType: data.cuisineType, // Store initial cuisine
+        ownerName: data.ownerName, 
+        truckName: data.truckName, 
+        cuisineType: data.cuisineType, 
         createdAt: serverTimestamp()
       };
       await setDoc(userDocRef, userDocumentData);
-
-      // Note: Truck profile itself (description, images etc.) will be created/managed on the /owner/profile page
       
       toast({
         title: "Owner Signup Successful!",
         description: "Your owner account has been created. Please login and complete your truck profile.",
       });
-      router.push('/owner/login'); // Redirect to login, then they can go to dashboard/profile
+      router.push('/owner/login'); 
     } catch (error: any) {
-      console.error("Owner Signup error:", error);
+      console.error("Detailed Owner Signup Error:", error); // More detailed logging
       let errorMessage = "An unexpected error occurred. Please try again.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already registered. Please login or use a different email.";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "The password is too weak. Please choose a stronger password.";
+      if (error.code) { // Check if error object has a code property
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = "This email is already registered. Please login or use a different email.";
+            break;
+          case 'auth/weak-password':
+            errorMessage = "The password is too weak. Please choose a stronger password.";
+            break;
+          case 'auth/invalid-email':
+            errorMessage = "The email address is not valid.";
+            break;
+          // Add more Firebase specific error codes here if needed
+          default:
+            errorMessage = `Owner signup failed: ${error.message || 'Please try again.'}`;
+        }
+      } else if (error.message) {
+          errorMessage = error.message;
       }
       toast({
         title: "Owner Signup Failed",
@@ -124,9 +138,13 @@ export default function OwnerSignupPage() {
              <div className="space-y-1">
                 <Label htmlFor="cuisineType">Primary Cuisine Type</Label>
                 <Select 
-                  onValueChange={(value) => setValue("cuisineType", value, { shouldValidate: true })}
+                  value={cuisineType} // Control Select with local state
+                  onValueChange={(value) => {
+                    setCuisineType(value); // Update local state
+                    setValue("cuisineType", value, { shouldValidate: true }); // Update RHF state
+                  }}
                 >
-                    <SelectTrigger id="cuisineTypeInput"> {/* Changed id to avoid conflict with label */}
+                    <SelectTrigger id="cuisineTypeInput-owner-signup"> 
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
                     <SelectContent>
@@ -138,19 +156,19 @@ export default function OwnerSignupPage() {
                 {errors.cuisineType && <p className="text-xs text-destructive mt-1">{errors.cuisineType.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email">Email address (for login)</Label>
-              <Input id="email" type="email" {...register("email")} placeholder="owner@example.com" />
+              <Label htmlFor="email-owner-signup">Email address (for login)</Label>
+              <Input id="email-owner-signup" type="email" {...register("email")} placeholder="owner@example.com" />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" {...register("password")} placeholder="Create a strong password" />
+                    <Label htmlFor="password-owner-signup">Password</Label>
+                    <Input id="password-owner-signup" type="password" {...register("password")} placeholder="Create a strong password" />
                     {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
                 </div>
                 <div className="space-y-1">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
-                    <Input id="confirm-password" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+                    <Label htmlFor="confirm-password-owner-signup">Confirm Password</Label>
+                    <Input id="confirm-password-owner-signup" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
                     {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
                 </div>
             </div>
