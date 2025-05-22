@@ -108,7 +108,7 @@ export default function HomePage() {
           {showInstallButton && (
             <div className="mt-10 flex justify-center">
                 <Button
-                size="md"
+                size="default"
                 variant="outline"
                 onClick={handleInstallClick}
                 className="border-background text-background hover:bg-background/10"

@@ -1,5 +1,5 @@
 
-'use client';
+'use client';import { useEffect } from 'react';
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ export default function OwnerSignupPage() {
   });
 
   // Register cuisineType for react-hook-form
-  useState(() => {
+  useEffect(() => {
     register("cuisineType");
   }, [register]);
 

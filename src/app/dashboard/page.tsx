@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { User, ShoppingBag, Heart, Bell, Edit3, Save, LogIn, Loader2 } from 'lucide-react';
-import type { UserProfile, NotificationPreferences } from '@/lib/types';
+import type { NotificationPreferences } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
@@ -16,6 +16,15 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Initial User Profile State for a new user or guest
+interface UserProfile {
+  name: string;
+  email: string;
+  savedPaymentMethods: string[]; // Placeholder
+  favoriteTrucks: string[]; // Placeholder: array of truck IDs
+  notificationPreferences: NotificationPreferences;
+  // Add other profile fields as needed
+}
+
 const initialUserProfileState: UserProfile = {
   name: 'Guest User', 
   email: '', // Will be populated by logged-in user

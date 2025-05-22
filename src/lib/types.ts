@@ -1,5 +1,5 @@
 
-import type { Timestamp } from 'firebase/firestore';
+import type { Timestamp, FieldValue } from 'firebase/firestore';
 
 export type FoodTruck = {
   id: string; // Corresponds to Document ID in Firestore trucks collection
@@ -38,8 +38,8 @@ export type FoodTruck = {
   socialMediaLinks?: { [platform: string]: string }; // e.g., { instagram: "url", facebook: "url" }
 
   // Timestamps
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue; // Updated this line
 
   // For premium features
   isFeatured?: boolean;
@@ -91,7 +91,7 @@ export type UserDocument = {
   email: string | null;
   role: UserRole;
   name?: string; // For customers or owner's personal name
-  createdAt: Timestamp;
+  createdAt: Timestamp | FieldValue;
   // Owner-specific fields if role is 'owner'
   ownerName?: string; 
   truckName?: string; 

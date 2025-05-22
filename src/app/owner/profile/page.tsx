@@ -13,7 +13,7 @@ import NextImage from "next/image";
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, FieldValue } from 'firebase/firestore';
 import type { UserDocument, FoodTruck } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -115,13 +115,13 @@ export default function OwnerProfilePage() {
 
     setIsSaving(true);
     try {
-      const dataToSave: Partial<FoodTruck> = {
+      const dataToSave: Partial<FoodTruck> & { updatedAt: FieldValue } = {
         name: truckProfile.name,
         cuisine: truckProfile.cuisine,
         description: truckProfile.description || '',
         imageUrl: truckProfile.imageUrl || '', // If using URL input
         phoneNumber: truckProfile.phoneNumber || '',
-        operatingHoursSummary: truckProfile.operatingHoursSummary || '',
+        operatingHoursSummary: truckProfile.operatingHoursSummary || '', 
         ownerUid: currentUser.uid, // Always ensure ownerUid is set
         updatedAt: serverTimestamp(),
       };
@@ -133,7 +133,7 @@ export default function OwnerProfilePage() {
         toast({ title: "Profile Updated", description: "Your truck profile has been saved." });
       } else {
         // Create new truck profile
-        dataToSave.createdAt = serverTimestamp();
+        const dataToCreate: Partial<FoodTruck> & { createdAt: FieldValue, updatedAt: FieldValue } = { ...dataToSave, createdAt: serverTimestamp() };
         const truckCollectionRef = collection(db, "trucks");
         const newTruckDocRef = await addDoc(truckCollectionRef, dataToSave);
         
@@ -141,7 +141,7 @@ export default function OwnerProfilePage() {
         const userDocRef = doc(db, "users", currentUser.uid);
         await updateDoc(userDocRef, { truckId: newTruckDocRef.id });
         setUserDoc(prev => ({ ...prev!, truckId: newTruckDocRef.id })); // Update local userDoc state
-        setTruckProfile(prev => ({...prev, id: newTruckDocRef.id})); // Set ID on local truck profile state
+        setTruckProfile(prev => ({ ...prev, id: newTruckDocRef.id })); // Set ID on local truck profile state
 
         toast({ title: "Profile Created", description: "Your truck profile has been created successfully." });
       }
