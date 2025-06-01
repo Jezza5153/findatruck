@@ -1,63 +1,56 @@
+// src/lib/types.ts
 
 import type { Timestamp, FieldValue } from 'firebase/firestore';
 
 export type FoodTruck = {
-  id: string; // Corresponds to Document ID in Firestore trucks collection
-  ownerUid: string; // UID of the owner from Firebase Auth
+  id: string;
   name: string;
   cuisine: string;
-  description: string;
+  description?: string;
   imageUrl?: string;
-  phoneNumber?: string;
-  operatingHoursSummary?: string; // e.g., "Mon-Fri 11AM-7PM"
-  
-  // Location - can be a GeoPoint in Firestore
-  location?: { lat: number; lng: number; address?: string; geohash?: string }; 
-  
-  // Live Status & Hours - Can be part of the main truck doc or a subcollection
-  isOpen?: boolean; 
+  ownerUid?: string;
+
+  // Location: You can have address, lat, lng, or both.
+  address?: string;
+  lat?: number;
+  lng?: number;
+
+  operatingHoursSummary?: string;
+  isOpen?: boolean;
   regularHours?: {
-    [day: string]: { openTime: string; closeTime: string; isClosed: boolean }; // "Monday", "Tuesday", etc.
+    [day: string]: { openTime: string; closeTime: string; isClosed: boolean };
   };
   specialHours?: {
-    date: string; // YYYY-MM-DD
+    date: string;
     status: 'open-custom' | 'closed';
     openTime?: string;
     closeTime?: string;
   }[];
 
-  // Menu - likely a subcollection in Firestore for scalability
-  menu?: MenuItem[]; // For simplicity, we might start with it embedded if small
-
-  // Rating - could be an aggregation
+  menu?: MenuItem[];
   rating?: number;
   numberOfRatings?: number;
 
-  // Features for filtering or display
-  features?: string[]; 
-  socialMediaLinks?: { [platform: string]: string }; // e.g., { instagram: "url", facebook: "url" }
+  features?: string[];
+  socialMediaLinks?: { [platform: string]: string };
 
-  // Timestamps
   createdAt?: Timestamp | FieldValue;
-  updatedAt?: Timestamp | FieldValue; // Updated this line
+  updatedAt?: Timestamp | FieldValue;
 
-  // For premium features
   isFeatured?: boolean;
-  subscriptionTier?: string; // e.g., 'free', 'premium'
-  
-  // UI specific, not necessarily in DB
-  distance?: string; 
-  testimonials?: Testimonial[]; // Could be a subcollection
+  subscriptionTier?: string;
+
+  distance?: string;
+  testimonials?: Testimonial[];
 };
 
 export type MenuItem = {
-  id: string; // Document ID in a menu subcollection
-  // truckId: string; // Foreign key to the truck - Menus will be a subcollection of a truck
+  id: string;
   name: string;
   description?: string;
   price: number;
   imageUrl?: string;
-  category: string; // e.g., "Appetizers", "Main Courses", "Desserts"
+  category: string;
   isSpecial?: boolean;
   availability?: 'available' | 'unavailable';
   customizations?: CustomizationOption[];
@@ -67,18 +60,17 @@ export type MenuItem = {
 
 export type CustomizationOption = {
   id: string;
-  name: string; // e.g., "Size", "Toppings"
+  name: string;
   options: { name: string; additionalPrice?: number }[];
-  type: 'radio' | 'checkbox' | 'select'; // How the options are presented
+  type: 'radio' | 'checkbox' | 'select';
 };
 
 export type Testimonial = {
   id: string;
-  // truckId: string; // Testimonials will be a subcollection of a truck
-  userId?: string; // Optional if testimonials can be anonymous or sourced differently
+  userId?: string;
   name: string;
   quote: string;
-  rating?: number; // 1-5 stars, optional
+  rating?: number;
   avatarUrl?: string;
   createdAt?: Timestamp;
   dataAiHint?: string;
@@ -87,45 +79,41 @@ export type Testimonial = {
 export type UserRole = 'customer' | 'owner';
 
 export type UserDocument = {
-  uid: string; // Firebase Auth UID
+  uid: string;
   email: string | null;
   role: UserRole;
-  name?: string; // For customers or owner's personal name
+  name?: string;
   createdAt: Timestamp | FieldValue;
-  // Owner-specific fields if role is 'owner'
-  ownerName?: string; 
-  truckName?: string; 
+  ownerName?: string;
+  truckName?: string;
   cuisineType?: string;
-  truckId?: string; // ID of the truck document in 'trucks' collection for this owner
-  // Customer-specific fields if role is 'customer'
-  favoriteTrucks?: string[]; // Array of truck IDs
+  truckId?: string;
+  favoriteTrucks?: string[];
   notificationPreferences?: NotificationPreferences;
 };
 
 export type NotificationPreferences = {
-  truckNearbyRadius: number; // in miles
+  truckNearbyRadius: number;
   orderUpdates: boolean;
   promotionalMessages: boolean;
 };
 
-// Define UserProfile based on its usage in dashboard/page.tsx
 export type UserProfile = {
   name: string;
   email: string;
-  savedPaymentMethods: string[]; // Assuming array of strings (e.g., "Visa ending in 1234")
-  favoriteTrucks: string[]; // Array of truck IDs
+  savedPaymentMethods: string[];
+  favoriteTrucks: string[];
   notificationPreferences: NotificationPreferences;
 };
 
-
 export type FilterOptions = {
   cuisine: string[];
-  distance: number[]; // e.g. [0, 1, 5, 10] miles
+  distance: number[];
   openNow: boolean;
 };
 
 export type Cuisine = {
   id: string;
   name: string;
-  icon?: React.ElementType; // For Lucide icons
+  icon?: React.ElementType;
 };

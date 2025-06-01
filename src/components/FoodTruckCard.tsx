@@ -1,4 +1,3 @@
-
 import type { FoodTruck } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,9 +36,9 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
             <Star className="w-4 h-4 mr-1 text-yellow-400 fill-yellow-400" /> {truck.rating.toFixed(1)} stars
           </div>
         )}
-        {truck.location?.address && (
+        {truck.address && (
           <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 mr-1 text-secondary" /> {truck.distance ? `${truck.distance} away` : truck.location.address}
+            <MapPin className="w-4 h-4 mr-1 text-secondary" /> {truck.distance ? `${truck.distance} away` : truck.address}
           </div>
         )}
         {truck.operatingHoursSummary && (

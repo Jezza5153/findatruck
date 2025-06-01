@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -36,8 +35,7 @@ export default function FoodTruckProfilePage() {
           const docSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
           if (docSnap.exists()) {
-            const data = docSnap.data() as Partial<FoodTruck>; // Cast to allow partial data
-            // Ensure all required fields have defaults to prevent runtime errors
+            const data = docSnap.data() as Partial<FoodTruck>;
             const fetchedTruck: FoodTruck = {
               id: docSnap.id,
               name: data.name || 'Unnamed Truck',
@@ -45,13 +43,14 @@ export default function FoodTruckProfilePage() {
               description: data.description || 'No description available.',
               imageUrl: data.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
               ownerUid: data.ownerUid || '',
-              location: data.location, // Can be undefined
+              lat: typeof data.lat === 'number' ? data.lat : undefined,
+              lng: typeof data.lng === 'number' ? data.lng : undefined,
+              address: data.address || undefined,
               operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
-              isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen), // Ensure boolean or undefined
+              isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
               rating: typeof data.rating === 'number' ? data.rating : undefined,
-              menu: Array.isArray(data.menu) ? data.menu : [], // Default to empty array if not present
-              testimonials: Array.isArray(data.testimonials) ? data.testimonials : [], // Default to empty array
-              // Add other fields with defaults if necessary
+              menu: Array.isArray(data.menu) ? data.menu : [],
+              testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
             };
             setTruck(fetchedTruck);
           } else {
@@ -81,7 +80,6 @@ export default function FoodTruckProfilePage() {
   }, [params.id, toast]);
 
   const handleNotifyNearby = () => {
-    // TODO: Implement actual notification subscription logic (requires backend & user account)
     toast({
       title: "Notifications Enabled!",
       description: `We'll let you know when ${truck?.name} is nearby. (Account feature)`,
@@ -89,7 +87,6 @@ export default function FoodTruckProfilePage() {
   };
 
   const handleOrderNow = () => {
-    // TODO: Implement order placement logic (requires backend & user account)
     toast({
       title: "Starting Your Order!",
       description: `Proceed to checkout for ${truck?.name}. (Account feature)`,
@@ -159,7 +156,7 @@ export default function FoodTruckProfilePage() {
             layout="fill"
             objectFit="cover"
             data-ai-hint={`${truck.cuisine || 'food'} truck`}
-            priority // Consider adding priority for LCP
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 md:p-8">
@@ -182,7 +179,7 @@ export default function FoodTruckProfilePage() {
                   </div>
                 )}
                 <div className="flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.location?.address || 'Location not specified'}
+                  <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.address || 'Location not specified'}
                 </div>
                 <div className="flex items-center">
                   <Clock className="w-5 h-5 mr-2 text-secondary" /> {truck.operatingHoursSummary || 'Hours not specified'}
