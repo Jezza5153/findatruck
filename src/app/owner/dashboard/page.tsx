@@ -1,78 +1,16 @@
-
 'use client';
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, LocateFixed, CalendarClock, CreditCard } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, CalendarClock, CreditCard } from "lucide-react";
 
 export default function OwnerDashboardPage() {
-  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const updateCurrentLocation = () => {
-    if (!isClient || !navigator.geolocation) {
-      toast({ 
-          title: "Geolocation Error", 
-          description: "Geolocation is not supported by your browser or not available. Please set location manually or try a different browser.", 
-          variant: "destructive" 
-      });
-      const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01;
-      const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
-      const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
-      setCurrentLocation(mockLocation);
-      toast({ 
-        title: "Location Updated (Simulated)!", 
-        description: `Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}. Customers will see this.`,
-        variant: "default"
-      });
-      return;
-    }
-
-    toast({ title: "Fetching Location...", description: "Attempting to get your current location." });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const newLocation = { 
-          lat: parseFloat(position.coords.latitude.toFixed(4)), 
-          lng: parseFloat(position.coords.longitude.toFixed(4)) 
-        };
-        setCurrentLocation(newLocation);
-        toast({ 
-          title: "Location Updated!", 
-          description: `Current location set to: ${newLocation.lat}, ${newLocation.lng}. Customers will see this location.` 
-        });
-      },
-      (error) => {
-          console.warn("Geolocation error:", error.message, "Falling back to mock location.");
-          const mockLat = 34.0522 + (Math.random() - 0.5) * 0.01; 
-          const mockLng = -118.2437 + (Math.random() - 0.5) * 0.01;
-          const mockLocation = { lat: parseFloat(mockLat.toFixed(4)), lng: parseFloat(mockLng.toFixed(4)) };
-          setCurrentLocation(mockLocation);
-          toast({ 
-            title: "Location Updated (Simulated)!", 
-            description: `Could not get precise location. Using simulated location: ${mockLocation.lat}, ${mockLocation.lng}.`,
-            variant: "default"
-          });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
-  
-  const handleSetManualLocation = () => {
-    toast({
-        title: "Set Manual Location",
-        description: "This feature would allow you to pinpoint your location on a map or enter an address. (Not implemented yet)"
-    });
-  }
+  // This status and location can be enhanced with Firestore in the future.
+  // For now, simulate "Open" and link to edit profile for location management.
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* DASHBOARD HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary">Owner Dashboard</h1>
@@ -80,38 +18,36 @@ export default function OwnerDashboardPage() {
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
             <span className="text-sm font-medium text-green-600">Status: Open (Simulated)</span>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled>
                 <Power className="mr-2 h-4 w-4"/> Toggle Open/Closed
             </Button>
         </div>
       </div>
 
+      {/* DASHBOARD GRID */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        {/* Location Management */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <MapPinIcon className="mr-2 h-5 w-5 text-primary" /> Location Management
             </CardTitle>
-            <CardDescription>Share your current location with customers.</CardDescription>
+            <CardDescription>
+              Set your address or share your live location with customers.<br/>
+              (Set in <b>Profile</b>)
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button onClick={updateCurrentLocation} className="w-full bg-primary hover:bg-primary/90">
-              <LocateFixed className="mr-2 h-4 w-4" /> Update My Current Location
+            <Button className="w-full" asChild>
+              <Link href="/owner/profile">
+                Manage Truck Location
+              </Link>
             </Button>
-            <Button onClick={handleSetManualLocation} className="w-full" variant="outline">Set Location Manually</Button>
-            {isClient && currentLocation && (
-              <p className="text-sm text-green-600 text-center">
-                Current Shared Location: {currentLocation.lat}, {currentLocation.lng}
-              </p>
-            )}
-             {isClient && !currentLocation && (
-              <p className="text-sm text-muted-foreground text-center">
-                Share your location to appear on the map.
-              </p>
-            )}
           </CardContent>
         </Card>
 
+        {/* Menu Management */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
@@ -126,6 +62,7 @@ export default function OwnerDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Orders */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
@@ -134,12 +71,13 @@ export default function OwnerDashboardPage() {
             <CardDescription>Track incoming orders and update statuses.</CardDescription>
           </CardHeader>
           <CardContent>
-             <Button className="w-full" asChild>
-              <Link href="/owner/orders">See Orders (Simulated 3 New)</Link>
+            <Button className="w-full" asChild>
+              <Link href="/owner/orders">See Orders</Link>
             </Button>
           </CardContent>
         </Card>
 
+        {/* Schedule/Hours */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
@@ -153,7 +91,8 @@ export default function OwnerDashboardPage() {
             </Button>
           </CardContent>
         </Card>
-        
+
+        {/* Analytics */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
@@ -168,6 +107,7 @@ export default function OwnerDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Profile */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
@@ -182,6 +122,7 @@ export default function OwnerDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Billing */}
          <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">

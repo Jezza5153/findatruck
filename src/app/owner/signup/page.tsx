@@ -16,7 +16,10 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
 
-const availableCuisines = ["Mexican", "Italian", "Indian", "Burgers", "BBQ", "Dessert", "Asian Fusion", "Seafood", "Vegan", "Coffee", "Sandwiches", "Other"];
+const availableCuisines = [
+  "Mexican", "Italian", "Indian", "Burgers", "BBQ", "Dessert",
+  "Asian Fusion", "Seafood", "Vegan", "Coffee", "Sandwiches", "Other"
+];
 
 const ownerSignupSchema = z.object({
   ownerName: z.string().min(2, { message: "Owner name must be at least 2 characters." }),
@@ -67,9 +70,9 @@ export default function OwnerSignupPage() {
       });
       toast({
         title: "Owner Signup Successful!",
-        description: "Your owner account has been created. Please login and complete your truck profile.",
+        description: "Welcome! Please complete your truck profile.",
       });
-      router.push('/owner/login');
+      router.push('/owner/dashboard'); // <-- Go straight to dashboard!
     } catch (error: any) {
       let errorMessage = "An unexpected error occurred. Please try again.";
       if (error.code) {

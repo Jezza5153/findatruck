@@ -1,262 +1,245 @@
-
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings, Utensils, Image as ImageIcon, Info, Phone, Clock, Save, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Loader2, Save, Edit3, Image as ImageIcon } from "lucide-react";
 import NextImage from "next/image";
-import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, FieldValue } from 'firebase/firestore';
-import type { UserDocument, FoodTruck } from '@/lib/types';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
-const availableCuisines = ["Mexican", "Italian", "Indian", "Burgers", "BBQ", "Dessert", "Asian Fusion", "Seafood", "Vegan", "Coffee", "Sandwiches", "Other"];
+import { auth, db, storage } from "@/lib/firebase";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+type TruckProfile = {
+  name: string;
+  bio: string;
+  cuisineType: string;
+  photoUrl?: string;
+  contactEmail?: string;
+  phone?: string;
+};
+
+const initialProfile: TruckProfile = {
+  name: "",
+  bio: "",
+  cuisineType: "",
+  photoUrl: undefined,
+  contactEmail: "",
+  phone: "",
+};
 
 export default function OwnerProfilePage() {
-  const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [userDoc, setUserDoc] = useState<UserDocument | null>(null);
-  const [truckProfile, setTruckProfile] = useState<Partial<FoodTruck>>({
-    name: '',
-    cuisine: '',
-    description: '',
-    phoneNumber: '',
-    operatingHoursSummary: '',
-    imageUrl: '',
-  });
-  const [truckImagePreview, setTruckImagePreview] = useState<string | null>(null);
-  // const [truckImageFile, setTruckImageFile] = useState<File | null>(null); // File upload deferred
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [profile, setProfile] = useState<TruckProfile>(initialProfile);
+  const [editing, setEditing] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
+  const { toast } = useToast();
+  const router = useRouter();
+
+  // Auth + Fetch Profile
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        // Fetch user document to check role and get truckId
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const fetchedUserDoc = userDocSnap.data() as UserDocument;
-          setUserDoc(fetchedUserDoc);
-          if (fetchedUserDoc.role === 'owner') {
-            if (fetchedUserDoc.truckId) {
-              // Fetch existing truck profile
-              const truckDocRef = doc(db, "trucks", fetchedUserDoc.truckId);
-              const truckDocSnap = await getDoc(truckDocRef);
-              if (truckDocSnap.exists()) {
-                const fetchedTruckProfile = truckDocSnap.data() as FoodTruck;
-                setTruckProfile(fetchedTruckProfile);
-                if (fetchedTruckProfile.imageUrl) {
-                  setTruckImagePreview(fetchedTruckProfile.imageUrl);
-                }
-              } else {
-                // TruckId exists but truck doc doesn't - could be an error state or new profile needed
-                console.warn("User has truckId but truck document not found. Allowing profile creation.");
-                setTruckProfile(prev => ({ ...prev, name: fetchedUserDoc.truckName || '', cuisine: fetchedUserDoc.cuisineType || '' }));
-              }
-            } else {
-              // No truckId, new owner or profile not created yet
-              // Pre-fill from userDoc if available (from signup)
-              setTruckProfile(prev => ({ ...prev, name: fetchedUserDoc.truckName || '', cuisine: fetchedUserDoc.cuisineType || '' }));
-            }
-          } else {
-            // Not an owner, redirect or show error (handled by page access logic typically)
-            toast({ title: "Access Denied", description: "You must be a truck owner to access this page.", variant: "destructive" });
-            // router.push('/'); // Or appropriate redirect
-          }
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoadingAuth(false);
+
+      if (firebaseUser) {
+        const truckDoc = await getDoc(doc(db, "trucks", firebaseUser.uid));
+        if (truckDoc.exists()) {
+          setProfile(truckDoc.data() as TruckProfile);
+          setPhotoPreview((truckDoc.data() as TruckProfile).photoUrl);
         } else {
-          // User doc not found, critical error or new user flow issue
-          toast({ title: "Error", description: "User profile not found. Please contact support.", variant: "destructive" });
+          // No profile yet, use initial
+          setProfile({ ...initialProfile, contactEmail: firebaseUser.email || "" });
         }
       } else {
-        setCurrentUser(null);
-        setUserDoc(null);
-        setTruckProfile({ name: '', cuisine: '', description: '' }); // Reset form
+        router.push("/owner/login");
       }
-      setIsLoading(false);
+      setLoading(false);
     });
-    return () => unsubscribe();
-  }, [toast]);
+    return () => unsub();
+  }, [router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setTruckProfile(prev => ({ ...prev, [name]: value }));
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
   };
 
-  const handleCuisineChange = (value: string) => {
-    setTruckProfile(prev => ({ ...prev, cuisine: value }));
-  };
-
-  // Image file upload is deferred. This handles URL input for now.
-  const handleImageURLChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const url = event.target.value;
-    setTruckProfile(prev => ({ ...prev, imageUrl: url }));
-    setTruckImagePreview(url); // Show preview from URL
-  };
-
-
-  const handleSaveChanges = async () => {
-    if (!currentUser || !userDoc || userDoc.role !== 'owner') {
-      toast({ title: "Error", description: "You must be logged in as an owner to save.", variant: "destructive" });
+  const handleSave = async () => {
+    if (!user) {
+      toast({ title: "Not Logged In", description: "Please log in to edit your profile.", variant: "destructive" });
       return;
     }
-    if (!truckProfile.name?.trim() || !truckProfile.cuisine?.trim()) {
-        toast({ title: "Missing Information", description: "Truck Name and Cuisine Type are required.", variant: "destructive"});
-        return;
-    }
-
-    setIsSaving(true);
+    setLoading(true);
     try {
-      const dataToSave: Partial<FoodTruck> & { updatedAt: FieldValue } = {
-        name: truckProfile.name,
-        cuisine: truckProfile.cuisine,
-        description: truckProfile.description || '',
-        imageUrl: truckProfile.imageUrl || '', // If using URL input
-        phoneNumber: truckProfile.phoneNumber || '',
-        operatingHoursSummary: truckProfile.operatingHoursSummary || '', 
-        ownerUid: currentUser.uid, // Always ensure ownerUid is set
-        updatedAt: serverTimestamp(),
-      };
-
-      if (userDoc.truckId) {
-        // Update existing truck profile
-        const truckDocRef = doc(db, "trucks", userDoc.truckId);
-        await setDoc(truckDocRef, dataToSave, { merge: true });
-        toast({ title: "Profile Updated", description: "Your truck profile has been saved." });
-      } else {
-        // Create new truck profile
-        const dataToCreate: Partial<FoodTruck> & { createdAt: FieldValue, updatedAt: FieldValue } = { ...dataToSave, createdAt: serverTimestamp() };
-        const truckCollectionRef = collection(db, "trucks");
-        const newTruckDocRef = await addDoc(truckCollectionRef, dataToSave);
-        
-        // Update user document with the new truckId
-        const userDocRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userDocRef, { truckId: newTruckDocRef.id });
-        setUserDoc(prev => ({ ...prev!, truckId: newTruckDocRef.id })); // Update local userDoc state
-        setTruckProfile(prev => ({ ...prev, id: newTruckDocRef.id })); // Set ID on local truck profile state
-
-        toast({ title: "Profile Created", description: "Your truck profile has been created successfully." });
+      let photoUrl = profile.photoUrl;
+      if (photoFile) {
+        const photoRef = ref(storage, `trucks/${user.uid}/profile.jpg`);
+        await uploadBytes(photoRef, photoFile);
+        photoUrl = await getDownloadURL(photoRef);
       }
-    } catch (error) {
-      console.error("Error saving profile:", error);
-      toast({ title: "Save Failed", description: "Could not save your profile. Please try again.", variant: "destructive" });
-    } finally {
-      setIsSaving(false);
+      const profileData: TruckProfile = {
+        ...profile,
+        photoUrl,
+        contactEmail: profile.contactEmail || user.email || "",
+      };
+      await setDoc(doc(db, "trucks", user.uid), {
+        ...profileData,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      setProfile(profileData);
+      setEditing(false);
+      toast({ title: "Profile Updated", description: "Your truck profile has been saved." });
+    } catch (e) {
+      toast({ title: "Error", description: String(e), variant: "destructive" });
     }
+    setLoading(false);
+    setPhotoFile(null);
   };
 
-  if (isLoading) {
+  if (loadingAuth || loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-         <Alert variant="destructive" className="max-w-md mx-auto">
-          <AlertTitle>Access Denied</AlertTitle>
-          <AlertDescription>You need to be logged in to manage your truck profile.</AlertDescription>
-        </Alert>
-        <Button asChild className="mt-6">
-          <Link href="/owner/login">Login as Owner</Link>
-        </Button>
-      </div>
-    );
-  }
-  
-  if (userDoc && userDoc.role !== 'owner') {
-     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-         <Alert variant="destructive" className="max-w-md mx-auto">
-          <AlertTitle>Incorrect Role</AlertTitle>
-          <AlertDescription>This page is for truck owners. Please check your account type.</AlertDescription>
-        </Alert>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-lg">Loading profile...</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary flex items-center mb-4 sm:mb-0">
-          <Settings className="mr-3 h-8 w-8" /> Truck Profile & Settings
-        </h1>
-        <Button asChild variant="outline">
-          <Link href="/owner/dashboard">Back to Dashboard</Link>
-        </Button>
-      </div>
-      <Card className="shadow-lg">
+      <Card className="max-w-2xl mx-auto shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Edit Your Truck's Profile</CardTitle>
+          <CardTitle className="flex items-center">
+            <ImageIcon className="mr-2 h-6 w-6 text-primary" />
+            My Truck Profile
+          </CardTitle>
           <CardDescription>
-            Update your truck's name, description, cuisine type, photos, contact information, and other settings that customers will see.
+            Update your food truck details, branding, and contact info.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                    <Label htmlFor="truckName"><Info className="inline mr-1 h-4 w-4"/>Truck Name</Label>
-                    <Input id="truckName" name="name" placeholder="e.g., Bob's Burgers" className="mt-1" value={truckProfile.name || ''} onChange={handleInputChange} />
-                </div>
-                <div>
-                    <Label htmlFor="cuisineType"><Utensils className="inline mr-1 h-4 w-4"/>Cuisine Type</Label>
-                    <Select value={truckProfile.cuisine || ''} onValueChange={handleCuisineChange}>
-                        <SelectTrigger id="cuisineType" className="w-full mt-1">
-                        <SelectValue placeholder="Select cuisine" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {availableCuisines.map(cuisine => (
-                            <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            
-            <div>
-                <Label htmlFor="description"><Info className="inline mr-1 h-4 w-4"/>Truck Description</Label>
-                <Textarea id="description" name="description" placeholder="Tell customers about your truck..." className="mt-1" rows={4} value={truckProfile.description || ''} onChange={handleInputChange}/>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                    <Label htmlFor="phoneNumber"><Phone className="inline mr-1 h-4 w-4"/>Contact Phone (Optional)</Label>
-                    <Input id="phoneNumber" name="phoneNumber" type="tel" placeholder="e.g., (555) 123-4567" className="mt-1" value={truckProfile.phoneNumber || ''} onChange={handleInputChange}/>
-                </div>
-                 <div>
-                    <Label htmlFor="operatingHoursSummary"><Clock className="inline mr-1 h-4 w-4"/>General Operating Hours (Display Text)</Label>
-                    <Input id="operatingHoursSummary" name="operatingHoursSummary" placeholder="e.g., Mon-Fri 11AM-8PM, Sat 12PM-10PM" className="mt-1" value={truckProfile.operatingHoursSummary || ''} onChange={handleInputChange}/>
-                     <p className="text-xs text-muted-foreground mt-1">This is a summary for customers. Detailed daily/special hours are managed on the <Link href="/owner/schedule" className="underline text-primary">Schedule page</Link>.</p>
-                </div>
-            </div>
-
-            <div>
-                <Label htmlFor="truckImageURL"><ImageIcon className="inline mr-1 h-4 w-4"/>Truck Image / Logo URL</Label>
-                <Input id="truckImageURL" name="imageUrl" type="url" placeholder="https://example.com/image.png" className="mt-1" value={truckProfile.imageUrl || ''} onChange={handleImageURLChange}/>
-                {/* <Input id="truckImageFile" type="file" className="mt-1" accept="image/*" onChange={handleImageFileUpload} disabled/> */}
-                {/* <p className="text-xs text-muted-foreground mt-1">Image file upload coming soon. For now, please provide a URL.</p> */}
-                {truckImagePreview && (
-                    <NextImage src={truckImagePreview} alt="Truck image preview" width={300} height={200} className="mt-2 rounded-md border object-cover" data-ai-hint="food truck photo"/>
+        <CardContent>
+          <form className="space-y-5" onSubmit={e => { e.preventDefault(); handleSave(); }}>
+            {/* Truck Photo */}
+            <div className="flex items-center gap-6">
+              <div className="relative w-24 h-24">
+                {photoPreview ? (
+                  <NextImage
+                    src={photoPreview}
+                    alt="Truck Photo"
+                    width={96}
+                    height={96}
+                    className="rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-xl text-muted-foreground border">
+                    <ImageIcon className="h-8 w-8" />
+                  </div>
                 )}
-            </div>
-            
-            <div className="flex justify-end">
-                <Button size="lg" onClick={handleSaveChanges} disabled={isSaving || isLoading}>
-                    {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Save className="mr-2 h-5 w-5"/>}
-                    {isSaving ? 'Saving...' : 'Save Profile Changes'}
+                {editing && (
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    className="absolute bottom-0 left-0 opacity-70 cursor-pointer"
+                    onChange={handlePhotoChange}
+                    style={{ width: "100%", height: "100%" }}
+                    aria-label="Upload truck photo"
+                  />
+                )}
+              </div>
+              <div>
+                <Label className="font-bold">{profile.name || "Truck Name"}</Label>
+                <div className="text-xs text-muted-foreground">{profile.cuisineType || "Cuisine Type"}</div>
+              </div>
+              {!editing && (
+                <Button type="button" variant="ghost" className="ml-auto" onClick={() => setEditing(true)}>
+                  <Edit3 className="mr-1 h-4 w-4" /> Edit
                 </Button>
+              )}
             </div>
+            {/* Profile Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="truck-name">Truck Name</Label>
+                <Input
+                  id="truck-name"
+                  value={profile.name}
+                  onChange={e => setProfile({ ...profile, name: e.target.value })}
+                  placeholder="e.g., Burrito Bros"
+                  disabled={!editing}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="truck-cuisine">Cuisine Type</Label>
+                <Input
+                  id="truck-cuisine"
+                  value={profile.cuisineType}
+                  onChange={e => setProfile({ ...profile, cuisineType: e.target.value })}
+                  placeholder="e.g., Mexican, Burgers, Vegan"
+                  disabled={!editing}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="truck-bio">Short Description</Label>
+                <Textarea
+                  id="truck-bio"
+                  value={profile.bio}
+                  onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                  placeholder="What makes your food truck special? Your story, menu, philosophy..."
+                  rows={3}
+                  disabled={!editing}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="truck-email">Contact Email</Label>
+                <Input
+                  id="truck-email"
+                  type="email"
+                  value={profile.contactEmail}
+                  onChange={e => setProfile({ ...profile, contactEmail: e.target.value })}
+                  placeholder="youremail@example.com"
+                  disabled={!editing}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="truck-phone">Phone</Label>
+                <Input
+                  id="truck-phone"
+                  value={profile.phone}
+                  onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                  placeholder="Contact number"
+                  disabled={!editing}
+                />
+              </div>
+            </div>
+            {/* Save/Cancel Buttons */}
+            {editing && (
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" type="button" onClick={() => { setEditing(false); setPhotoFile(null); setPhotoPreview(profile.photoUrl); }}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  <Save className="mr-2 h-4 w-4" /> Save Changes
+                </Button>
+              </div>
+            )}
+          </form>
         </CardContent>
       </Card>
     </div>

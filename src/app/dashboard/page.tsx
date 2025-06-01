@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,31 +7,33 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { User, ShoppingBag, Heart, Bell, Edit3, Save, LogIn, Loader2 } from 'lucide-react';
-import type { NotificationPreferences } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+// You may want to refine your type imports for better typing
+import type { NotificationPreferences } from '@/lib/types';
 
 // Initial User Profile State for a new user or guest
 interface UserProfile {
   name: string;
   email: string;
   savedPaymentMethods: string[]; // Placeholder
-  favoriteTrucks: string[]; // Placeholder: array of truck IDs
+  favoriteTrucks: string[]; // Array of truck IDs
   notificationPreferences: NotificationPreferences;
-  // Add other profile fields as needed
 }
 
 const initialUserProfileState: UserProfile = {
-  name: 'Guest User', 
-  email: '', // Will be populated by logged-in user
+  name: 'Guest User',
+  email: '',
   savedPaymentMethods: [],
   favoriteTrucks: [],
   notificationPreferences: {
     truckNearbyRadius: 2,
-    orderUpdates: true, 
+    orderUpdates: true,
     promotionalMessages: false,
   },
 };
@@ -43,27 +44,55 @@ export default function DashboardPage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>(initialUserProfileState);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const { toast } = useToast();
 
+  // Fetch user and Firestore profile on login
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setIsLoadingAuth(false);
       if (user) {
-        // In a real app, fetch profile from Firestore here based on user.uid
-        // For now, just use their email and a default name
-        const fetchedProfile: UserProfile = {
-          ...initialUserProfileState,
-          email: user.email || 'user@example.com',
-          name: user.displayName || 'User', 
-        };
-        setProfile(fetchedProfile);
-        setTempProfile(fetchedProfile);
+        setIsLoadingProfile(true);
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            // Defensive fallback for new fields
+            const fetchedProfile: UserProfile = {
+              ...initialUserProfileState,
+              name: data.ownerName || data.name || user.displayName || "User",
+              email: data.email || user.email || "",
+              savedPaymentMethods: data.savedPaymentMethods || [],
+              favoriteTrucks: data.favoriteTrucks || [],
+              notificationPreferences: data.notificationPreferences || initialUserProfileState.notificationPreferences,
+            };
+            setProfile(fetchedProfile);
+            setTempProfile(fetchedProfile);
+          } else {
+            // No profile doc found, initialize with default
+            const newProfile: UserProfile = {
+              ...initialUserProfileState,
+              name: user.displayName || "User",
+              email: user.email || "",
+            };
+            setProfile(newProfile);
+            setTempProfile(newProfile);
+            // Save default profile to Firestore
+            await setDoc(doc(db, "users", user.uid), newProfile, { merge: true });
+          }
+        } catch (err) {
+          toast({
+            title: "Profile Load Error",
+            description: "Could not fetch your profile data. Please reload.",
+            variant: "destructive",
+          });
+        }
+        setIsLoadingProfile(false);
       } else {
-        // User is signed out or not logged in
         setProfile(initialUserProfileState);
         setTempProfile(initialUserProfileState);
       }
-      setIsLoadingAuth(false);
     });
     return () => unsubscribe();
   }, []);
@@ -87,47 +116,73 @@ export default function DashboardPage() {
     }));
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!currentUser) {
-        toast({
-            title: "Login Required",
-            description: "Please log in or sign up to save your profile changes.",
-            variant: "destructive",
-            action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
-        });
-        setIsEditingProfile(false); 
-        setTempProfile(profile);
-        return;
+      toast({
+        title: "Login Required",
+        description: "Please log in or sign up to save your profile changes.",
+        variant: "destructive",
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
+      });
+      setIsEditingProfile(false);
+      setTempProfile(profile);
+      return;
     }
-    // TODO: In a real app, this would send tempProfile to Firestore to save for currentUser.uid
-    setProfile(tempProfile);
-    setIsEditingProfile(false);
-    toast({
-      title: "Profile Updated",
-      description: "Your changes have been saved successfully. (Simulated)",
-    });
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        name: tempProfile.name,
+        // Add any other editable fields here
+      });
+      setProfile(prev => ({
+        ...prev,
+        name: tempProfile.name,
+      }));
+      setIsEditingProfile(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Could not save profile changes.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const saveNotificationPreferences = () => {
+  const saveNotificationPreferences = async () => {
     if (!currentUser) {
-         toast({
-            title: "Login Required",
-            description: "Please log in or sign up to save notification preferences.",
-            variant: "destructive",
-            action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
-        });
-        return;
+      toast({
+        title: "Login Required",
+        description: "Please log in or sign up to save notification preferences.",
+        variant: "destructive",
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
+      });
+      return;
     }
-     // TODO: Save to Firestore for currentUser.uid
-     setProfile(prev => ({...prev, notificationPreferences: tempProfile.notificationPreferences }));
-     toast({
-      title: "Preferences Updated",
-      description: "Notification settings saved. (Simulated)",
-    });
-  }
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        notificationPreferences: tempProfile.notificationPreferences,
+      });
+      setProfile(prev => ({
+        ...prev,
+        notificationPreferences: tempProfile.notificationPreferences,
+      }));
+      toast({
+        title: "Preferences Updated",
+        description: "Notification settings saved.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Could not save notification preferences.",
+        variant: "destructive",
+      });
+    }
+  };
 
-
-  if (isLoadingAuth) {
+  if (isLoadingAuth || isLoadingProfile) {
     return (
       <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -135,7 +190,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-  
+
   if (!currentUser) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -189,9 +244,9 @@ export default function DashboardPage() {
                 id="email"
                 name="email"
                 type="email"
-                value={profile.email} // Email should come from auth, not editable here
-                readOnly // Email is typically not changed directly by user in profile form
-                className={"border-none px-0 bg-transparent"}
+                value={profile.email}
+                readOnly
+                className="border-none px-0 bg-transparent"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -204,15 +259,14 @@ export default function DashboardPage() {
                 profile.savedPaymentMethods.map(method => <p key={method} className="text-sm text-muted-foreground">{method}</p>)
               ) : (
                 <p className="text-sm text-muted-foreground">
-                 No saved payment methods. Add one for faster checkout!
+                  No saved payment methods. Add one for faster checkout!
                 </p>
               )}
               <Button
                 variant="link"
                 className="p-0 h-auto text-primary"
                 onClick={() => {
-                    // Navigate to payment methods page or open a modal
-                    toast({ title: "Coming Soon!", description: "Payment management will be available here." });
+                  toast({ title: "Coming Soon!", description: "Payment management will be available here." });
                 }}
               >
                 Manage Payment Methods
@@ -227,7 +281,7 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center">
               <Bell className="mr-2 h-6 w-6 text-primary" /> Notification Preferences
             </CardTitle>
-             <CardDescription>
+            <CardDescription>
               Customize how you receive updates.
             </CardDescription>
           </CardHeader>
@@ -272,6 +326,7 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><ShoppingBag className="mr-2 h-6 w-6 text-primary" /> Past Orders</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* TODO: Replace this with a real Firestore orders query */}
             <p className="text-muted-foreground">Your past orders will appear here.</p>
             <div className="mt-4 p-3 border rounded-md text-center">
               <p className="text-sm text-muted-foreground">No orders found yet.</p>
@@ -285,17 +340,18 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center"><Heart className="mr-2 h-6 w-6 text-primary" /> Favorite Trucks</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* TODO: Replace this with a Firestore subcollection or lookup */}
             {profile.favoriteTrucks?.length ? (
-                profile.favoriteTrucks.map(truckId => (
-                    <div key={truckId} className="mt-4 p-3 border rounded-md">
-                        <p className="font-semibold">Truck ID: {truckId} (Details coming soon)</p>
-                        <Button variant="link" className="p-0 h-auto text-destructive">Remove</Button>
-                    </div>
-                ))
+              profile.favoriteTrucks.map(truckId => (
+                <div key={truckId} className="mt-4 p-3 border rounded-md">
+                  <p className="font-semibold">Truck ID: {truckId} (Details coming soon)</p>
+                  <Button variant="link" className="p-0 h-auto text-destructive">Remove</Button>
+                </div>
+              ))
             ) : (
-                <p className="text-muted-foreground">
-                  No favorite trucks yet. Start exploring and add some!
-                </p>
+              <p className="text-muted-foreground">
+                No favorite trucks yet. Start exploring and add some!
+              </p>
             )}
           </CardContent>
         </Card>
