@@ -57,7 +57,6 @@ export default function FoodTruckProfilePage() {
             setError(`Food truck with ID "${truckId}" not found.`);
           }
         } catch (err) {
-          console.error("Error fetching truck details:", err);
           let errorMessage = "Failed to fetch truck details. Please try again later.";
           if (err instanceof Error && err.message) {
             errorMessage = err.message;
@@ -92,7 +91,7 @@ export default function FoodTruckProfilePage() {
       description: `Proceed to checkout for ${truck?.name}. (Account feature)`,
     });
   };
-  
+
   const handleAddToCart = (item: MenuItemType, quantity: number) => {
     setCart(prevCart => {
       const existingItemIndex = prevCart.findIndex(cartItem => cartItem.item.id === item.id);
@@ -129,9 +128,9 @@ export default function FoodTruckProfilePage() {
       </div>
     );
   }
-  
+
   if (!truck) {
-     return (
+    return (
       <div className="container mx-auto px-4 py-8 text-center">
         <Alert className="max-w-md mx-auto">
             <Info className="h-4 w-4" />
@@ -202,7 +201,7 @@ export default function FoodTruckProfilePage() {
           </div>
 
           <Separator className="my-8" />
-          
+
           {truck.menu && truck.menu.length > 0 ? (
             <Tabs defaultValue={menuCategories[0] || 'all-items'} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
