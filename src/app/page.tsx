@@ -3,12 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Testimonial } from "@/lib/types";
-import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat } from "lucide-react";
+import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-
 
 const testimonialsData: Testimonial[] = [
   {
@@ -91,10 +90,10 @@ export default function HomePage() {
           </p>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Button size="lg" variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
-                <Link href="/map">
-                    <Users className="h-10 w-10 mb-2" />
-                    I'm a Customer
-                    <span className="text-sm font-normal mt-1 block">(Explore the Map)</span>
+                <Link href="/customer/signup">
+                    <UserPlus className="h-10 w-10 mb-2" />
+                    I'm a New Customer
+                    <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
                 </Link>
             </Button>
             <Button size="lg" variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
@@ -104,6 +103,11 @@ export default function HomePage() {
                     <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
                 </Link>
             </Button>
+          </div>
+          <div className="mt-8">
+            <Link href="/customer/login" className="text-primary-foreground/90 hover:text-primary-foreground hover:underline text-md">
+                Already have an account? <span className="font-semibold">Log In Here</span> <LogIn className="inline h-5 w-5 ml-1"/>
+            </Link>
           </div>
           {showInstallButton && (
             <div className="mt-10 flex justify-center">
@@ -161,6 +165,11 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
+           <div className="mt-12 text-center">
+                <Button asChild size="lg">
+                    <Link href="/map">Explore the Map</Link>
+                </Button>
+            </div>
         </div>
       </section>
 
@@ -188,7 +197,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Trucks Section (Currently shows placeholder text as data is empty) */}
-      <section className="py-16 md:py-24 bg-background"> {/* Changed background for variation */}
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             Featured Food Trucks
@@ -205,7 +214,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 md:py-24 bg-muted/30"> {/* Changed background for variation */}
+      <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
             What Our Users Say <Smile className="inline h-8 w-8 text-primary" />

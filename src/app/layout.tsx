@@ -15,7 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'FindATruck - Find Your Next Favorite Food Truck!',
   description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
-  manifest: '/manifest.json',
+  manifest: '/manifest.json', // Assuming you might add a PWA manifest later
 };
 
 export default function RootLayout({

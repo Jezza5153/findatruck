@@ -1,3 +1,4 @@
+
 'use client';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
@@ -64,16 +65,17 @@ export default function OwnerSignupPage() {
         email: user.email,
         role: 'owner',
         ownerName: data.ownerName,
-        truckName: data.truckName,
-        cuisineType: data.cuisineType,
+        truckName: data.truckName, // Store truckName from form
+        cuisineType: data.cuisineType, // Store cuisineType from form
         createdAt: serverTimestamp(),
       });
       toast({
         title: "Owner Signup Successful!",
         description: "Welcome! Please complete your truck profile.",
       });
-      router.push('/owner/dashboard'); // <-- Go straight to dashboard!
+      router.push('/owner/dashboard'); 
     } catch (error: any) {
+      console.error("Detailed Owner Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";
       if (error.code) {
         switch (error.code) {
@@ -109,18 +111,18 @@ export default function OwnerSignupPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label htmlFor="ownerName">Your Full Name (or Business Contact)</Label>
-                <Input id="ownerName" {...register("ownerName")} placeholder="Your Name" />
+                <Label htmlFor="ownerName-owner-signup">Your Full Name (or Business Contact)</Label>
+                <Input id="ownerName-owner-signup" {...register("ownerName")} placeholder="Your Name" />
                 {errors.ownerName && <p className="text-xs text-destructive mt-1">{errors.ownerName.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="truckName">Food Truck Name</Label>
-                <Input id="truckName" {...register("truckName")} placeholder="e.g., Bob's Burgers" />
+                <Label htmlFor="truckName-owner-signup">Food Truck Name</Label>
+                <Input id="truckName-owner-signup" {...register("truckName")} placeholder="e.g., Bob's Burgers" />
                 {errors.truckName && <p className="text-xs text-destructive mt-1">{errors.truckName.message}</p>}
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="cuisineType">Primary Cuisine Type</Label>
+              <Label htmlFor="cuisineType-owner-signup">Primary Cuisine Type</Label>
               <Controller
                 control={control}
                 name="cuisineType"
@@ -129,7 +131,7 @@ export default function OwnerSignupPage() {
                     value={field.value}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger id="cuisineTypeInput-owner-signup">
+                    <SelectTrigger id="cuisineTypeInput-owner-signup-form">
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
                     <SelectContent>
@@ -143,19 +145,19 @@ export default function OwnerSignupPage() {
               {errors.cuisineType && <p className="text-xs text-destructive mt-1">{errors.cuisineType.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email-owner-signup">Email address (for login)</Label>
-              <Input id="email-owner-signup" type="email" {...register("email")} placeholder="owner@example.com" />
+              <Label htmlFor="email-owner-signup-form">Email address (for login)</Label>
+              <Input id="email-owner-signup-form" type="email" {...register("email")} placeholder="owner@example.com" />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label htmlFor="password-owner-signup">Password</Label>
-                <Input id="password-owner-signup" type="password" {...register("password")} placeholder="Create a strong password" />
+                <Label htmlFor="password-owner-signup-form">Password</Label>
+                <Input id="password-owner-signup-form" type="password" {...register("password")} placeholder="Create a strong password" />
                 {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="confirm-password-owner-signup">Confirm Password</Label>
-                <Input id="confirm-password-owner-signup" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+                <Label htmlFor="confirm-password-owner-signup-form">Confirm Password</Label>
+                <Input id="confirm-password-owner-signup-form" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
                 {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
               </div>
             </div>
@@ -165,13 +167,13 @@ export default function OwnerSignupPage() {
                 name="terms"
                 render={({ field }) => (
                   <Checkbox
-                    id="terms-owner"
+                    id="terms-owner-signup"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
                 )}
               />
-              <Label htmlFor="terms-owner" className="text-sm text-muted-foreground">
+              <Label htmlFor="terms-owner-signup" className="text-sm text-muted-foreground">
                 I agree to the FindATruck{' '}
                 <Link href="/terms-owner" className="font-medium text-accent hover:underline" target="_blank">
                   Owner Terms of Service
@@ -200,7 +202,7 @@ export default function OwnerSignupPage() {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Not a Food Truck Owner?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
+            <Link href="/customer/signup" className="font-medium text-primary hover:underline">
               Customer Signup
             </Link>
           </p>
@@ -209,3 +211,5 @@ export default function OwnerSignupPage() {
     </div>
   );
 }
+
+    

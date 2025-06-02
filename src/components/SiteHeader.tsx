@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Utensils, LogOut, UserCircle } from 'lucide-react'; 
+import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gift, LogIn as LogInIcon } from 'lucide-react'; 
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
@@ -18,26 +18,38 @@ export function SiteHeader() {
   const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true); // Set client to true once component mounts
+    setIsClient(true); 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []); // Empty dependency array - runs once on mount
+    return () => unsubscribe(); 
+  }, []); 
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push('/'); // Redirect to homepage after logout
+      router.push('/'); 
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "Could not log you out. Please try again.", variant: "destructive" });
     }
   };
 
+  const commonNavLinks = [
+    { href: "/map", label: "Find Trucks", icon: <MapPin className="mr-2 h-5 w-5" /> },
+    { href: "/featured", label: "Featured", icon: <Star className="mr-2 h-5 w-5" /> }, // Assuming Star icon for featured
+    { href: "/help", label: "Help", icon: <HelpCircle className="mr-2 h-5 w-5" /> },
+  ];
+
+  const customerAuthNavLinks = [
+    { href: "/customer/dashboard", label: "My Dashboard", icon: <UserCircle className="mr-2 h-5 w-5" /> },
+    { href: "/customer/notifications", label: "Notifications", icon: <Bell className="mr-2 h-5 w-5" /> },
+    { href: "/customer/rewards", label: "Rewards", icon: <Gift className="mr-2 h-5 w-5" /> },
+  ];
+  
+  // Render a basic header or nothing until client-side hydration to avoid mismatch
   if (!isClient) {
-    // Render a basic header or null during SSR to avoid hydration mismatch potential with auth state
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
@@ -45,10 +57,9 @@ export function SiteHeader() {
             <Utensils className="h-6 w-6 text-primary" />
             <span className="font-bold sm:inline-block text-lg">FindATruck</span>
           </Link>
+           {/* Placeholder for auth buttons to avoid layout shift or to show loading state */}
            <div className="flex flex-1 items-center justify-end space-x-4">
-            {/* Placeholder for buttons to avoid layout shift */}
-             <Button variant="ghost" size="sm" disabled>Login</Button>
-             <Button size="sm" disabled>Sign Up</Button>
+             {/* Optionally, add Skeleton components here if you have them */}
            </div>
         </div>
       </header>
@@ -63,43 +74,38 @@ export function SiteHeader() {
           <span className="font-bold sm:inline-block text-lg">FindATruck</span>
         </Link>
         
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end space-x-2">
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex gap-2 items-center">
+          <nav className="hidden md:flex gap-1 items-center">
+            {commonNavLinks.map(link => (
+              <Button key={link.href} variant="ghost" size="sm" asChild>
+                <Link href={link.href}>{link.icon}{link.label}</Link>
+              </Button>
+            ))}
             {user ? (
               <>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/dashboard"><UserCircle className="mr-1 h-5 w-5" />My Dashboard</Link>
-                </Button>
+                {customerAuthNavLinks.map(link => (
+                  <Button key={link.href} variant="ghost" size="sm" asChild>
+                    <Link href={link.href}>{link.icon}{link.label}</Link>
+                  </Button>
+                ))}
                 <Button size="sm" variant="outline" onClick={handleLogout}>
-                  <LogOut className="mr-1 h-5 w-5" />Logout
+                  <LogOut className="mr-1 h-4 w-4" />Logout
                 </Button>
               </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">Login</Link>
+                  <Link href="/customer/login"><LogInIcon className="mr-1 h-4 w-4"/>Login</Link>
                 </Button>
                 <Button size="sm" asChild className="bg-primary hover:bg-primary/90">
-                  <Link href="/signup">Sign Up</Link>
+                  <Link href="/customer/signup"><UserCircle className="mr-1 h-4 w-4"/>Sign Up</Link>
                 </Button>
               </>
             )}
-             <Button variant="ghost" size="sm" asChild>
-                <Link href="/map">Find Trucks</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-                <Link href="/help">Help</Link>
-            </Button>
-             <Button variant="ghost" size="sm" asChild>
-                <Link href="/notifications">Notifications</Link>
-            </Button>
-             <Button variant="ghost" size="sm" asChild>
-                <Link href="/rewards">Rewards</Link>
-            </Button>
           </nav>
 
-          {/* Mobile Menu */}
+          {/* Mobile Navigation (Sheet) */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2">
@@ -108,53 +114,41 @@ export function SiteHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <SheetHeader>
-                <VisuallyHidden> 
-                  <SheetTitle>Menu</SheetTitle>
-                </VisuallyHidden>
+              <SheetHeader className="mb-4">
+                <Link href="/" className="flex items-center space-x-2">
+                    <Utensils className="h-6 w-6 text-primary" />
+                    <SheetTitle>FindATruck</SheetTitle>
+                </Link>
+                <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
               </SheetHeader>
-               <div className="mt-8 flex flex-col gap-4">
+               <div className="mt-8 flex flex-col gap-3">
+                <Button variant="outline" asChild className="justify-start text-base py-6">
+                    <Link href="/"><Home className="mr-2 h-5 w-5" />Home</Link>
+                </Button>
+                {commonNavLinks.map(link => (
+                    <Button key={link.href} variant="outline" asChild className="justify-start text-base py-6">
+                        <Link href={link.href}>{link.icon}{link.label}</Link>
+                    </Button>
+                ))}
+                <hr className="my-2"/>
                 {user ? (
                   <>
-                    <Button variant="outline" asChild>
-                      <Link href="/dashboard"><UserCircle className="mr-2 h-5 w-5" />My Dashboard</Link>
-                    </Button>
-                     <Button variant="outline" asChild>
-                      <Link href="/notifications"><Menu className="mr-2 h-5 w-5" />Notifications</Link>
-                    </Button>
-                     <Button variant="outline" asChild>
-                      <Link href="/rewards"><Menu className="mr-2 h-5 w-5" />Rewards</Link>
-                    </Button>
-                     <Button variant="outline"asChild>
-                        <Link href="/map">Find Trucks</Link>
-                    </Button>
-                     <Button variant="outline" asChild>
-                      <Link href="/help"><Menu className="mr-2 h-5 w-5" />Help</Link>
-                    </Button>
-                    <Button onClick={handleLogout} className="bg-destructive hover:bg-destructive/90">
+                    {customerAuthNavLinks.map(link => (
+                        <Button key={link.href} variant="outline" asChild className="justify-start text-base py-6">
+                            <Link href={link.href}>{link.icon}{link.label}</Link>
+                        </Button>
+                    ))}
+                    <Button onClick={handleLogout} className="bg-destructive hover:bg-destructive/90 justify-start text-base py-6">
                       <LogOut className="mr-2 h-5 w-5" />Logout
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" asChild>
-                        <Link href="/login">Login</Link>
+                    <Button variant="outline" asChild className="justify-start text-base py-6">
+                        <Link href="/customer/login"><LogInIcon className="mr-2 h-5 w-5" />Login</Link>
                     </Button>
-                    <Button asChild className="bg-primary hover:bg-primary/90">
-                        <Link href="/signup">Sign Up</Link>
-                    </Button>
-                    <hr/>
-                     <Button variant="ghost" asChild>
-                        <Link href="/map">Find Trucks</Link>
-                    </Button>
-                     <Button variant="ghost" asChild>
-                        <Link href="/help">Help</Link>
-                    </Button>
-                      <Button variant="ghost" asChild>
-                        <Link href="/notifications">Notifications</Link>
-                    </Button>
-                     <Button variant="ghost" asChild>
-                        <Link href="/rewards">Rewards</Link>
+                    <Button asChild className="bg-primary hover:bg-primary/90 justify-start text-base py-6">
+                        <Link href="/customer/signup"><UserCircle className="mr-2 h-5 w-5" />Sign Up</Link>
                     </Button>
                   </>
                 )}
