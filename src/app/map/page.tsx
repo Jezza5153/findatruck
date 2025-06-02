@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MapStatsHeader from '@/components/MapStatsHeader';
 import AnimatedLoader from '@/components/AnimatedLoader';
 import { FilterControls } from '@/components/FilterControls';
@@ -22,7 +22,9 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Fetch trucks
   useEffect(() => {
+    let ignore = false;
     const fetchTrucks = async () => {
       setIsLoading(true);
       setError(null);
@@ -49,13 +51,13 @@ export default function MapPage() {
             testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
           });
         });
-        setTrucks(fetchedTrucks);
-        setFilteredTrucks(fetchedTrucks);
+        if (!ignore) {
+          setTrucks(fetchedTrucks);
+          setFilteredTrucks(fetchedTrucks);
+        }
       } catch (err) {
         let errorMessage = "Could not load food truck data. Please try again later.";
-        if (err instanceof Error && err.message) {
-          errorMessage = err.message;
-        }
+        if (err instanceof Error && err.message) errorMessage = err.message;
         setError(errorMessage);
         toast({
           title: "Error Loading Trucks",
@@ -63,12 +65,14 @@ export default function MapPage() {
           variant: "destructive"
         });
       } finally {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       }
     };
     fetchTrucks();
+    return () => { ignore = true; };
   }, [toast]);
 
+  // Filter trucks when filters change
   useEffect(() => {
     let currentTrucks = [...trucks];
     if (filters.cuisine) {
@@ -90,15 +94,13 @@ export default function MapPage() {
     setFilteredTrucks(currentTrucks);
   }, [filters, trucks]);
 
-  const handleFilterChange = (newFilters: any) => setFilters(newFilters);
-
-  // Define this so it works with <FilterControls onLocateMe={handleLocateMe} />
-  const handleLocateMe = () => {
+  const handleFilterChange = useCallback((newFilters: any) => setFilters(newFilters), []);
+  const handleLocateMe = useCallback(() => {
     toast({
       title: "Locating You...",
       description: "Centering map on your current location. (Feature coming soon!)",
     });
-  };
+  }, [toast]);
 
   return (
     <div className="container mx-auto px-4 py-8">
