@@ -34,7 +34,7 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
         const gmap = new google.maps.Map(mapRef.current, {
           center: initial,
           zoom: 12,
-          mapId: "YOUR_CLOUD_CONSOLE_MAP_ID", // <--- Replace with your own mapId!
+          mapId: "9d6a4c3fc6a7abdf44a06eac ", // <--- Replace with your own mapId!
           disableDefaultUI: true,
         });
         setMap(gmap);
