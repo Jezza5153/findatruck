@@ -1,0 +1,28 @@
+<svg width="44" height="56" viewBox="0 0 44 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.9" r="0.7">
+      <stop stop-color="#49fbfc" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#1a356e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#36d1c4"/>
+      <stop offset="1" stop-color="#1866f2"/>
+    </linearGradient>
+    <linearGradient id="grill" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f6fafd"/>
+      <stop offset="1" stop-color="#d2dbe7"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="22" cy="52" rx="15" ry="4" fill="url(#glow)" />
+  <rect x="6" y="18" width="32" height="18" rx="5" fill="url(#body)" stroke="#00ffe7" stroke-width="1.5"/>
+  <rect x="10" y="22" width="24" height="10" rx="2" fill="#191e38" stroke="#64ffda" stroke-width="1"/>
+  <rect x="18" y="14" width="8" height="10" rx="3" fill="url(#grill)" stroke="#98eeff" stroke-width="1"/>
+  <circle cx="14" cy="40" r="3" fill="#0ff" stroke="#77eaff" stroke-width="1"/>
+  <circle cx="30" cy="40" r="3" fill="#0ff" stroke="#77eaff" stroke-width="1"/>
+  <rect x="20" y="32" width="4" height="3" rx="1" fill="#fff" opacity="0.4"/>
+  <rect x="26" y="32" width="4" height="3" rx="1" fill="#fff" opacity="0.2"/>
+  <rect x="14" y="32" width="4" height="3" rx="1" fill="#fff" opacity="0.2"/>
+  <rect x="9" y="14" width="26" height="4" rx="2" fill="#54fbff" opacity="0.12"/>
+  <ellipse cx="22" cy="17" rx="3" ry="1.5" fill="#fff" opacity="0.11"/>
+  <rect x="14" y="26" width="16" height="1" rx="0.5" fill="#fff" opacity="0.13"/>
+</svg>

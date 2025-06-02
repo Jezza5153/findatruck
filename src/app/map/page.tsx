@@ -1,21 +1,17 @@
 'use client';
-import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from 'react';
+import MapStatsHeader from '@/components/MapStatsHeader';
+import AnimatedLoader from '@/components/AnimatedLoader';
 import { FilterControls } from '@/components/FilterControls';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { List, Map as MapIcon, Loader2, Utensils } from 'lucide-react';
+import { List, Map as MapIcon, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
-import dynamic from "next/dynamic";
+import FoodTruckMap from '@/components/FoodTruckMap';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
-
-// Dynamically import map to prevent SSR errors
-const FoodTruckMap = dynamic(() => import('@/components/FoodTruckMap'), {
-  ssr: false,
-});
 
 export default function MapPage() {
   const [trucks, setTrucks] = useState<FoodTruck[]>([]);
@@ -43,7 +39,6 @@ export default function MapPage() {
             description: data.description || 'No description available.',
             imageUrl: data.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
             ownerUid: data.ownerUid || '',
-            // Map compatibility: lat/lng/address are top-level for this UI
             lat: typeof data.lat === 'number' ? data.lat : undefined,
             lng: typeof data.lng === 'number' ? data.lng : undefined,
             address: data.address || undefined,
@@ -53,7 +48,7 @@ export default function MapPage() {
             menu: Array.isArray(data.menu) ? data.menu : [],
             testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
           });
-        });        
+        });
         setTrucks(fetchedTrucks);
         setFilteredTrucks(fetchedTrucks);
       } catch (err) {
@@ -92,13 +87,12 @@ export default function MapPage() {
         truck.cuisine.toLowerCase().includes(term)
       );
     }
-    // Sort open trucks first
-    currentTrucks.sort((a, b) => (b.isOpen ? 1 : 0) - (a.isOpen ? 1 : 0));
     setFilteredTrucks(currentTrucks);
   }, [filters, trucks]);
 
   const handleFilterChange = (newFilters: any) => setFilters(newFilters);
 
+  // Define this so it works with <FilterControls onLocateMe={handleLocateMe} />
   const handleLocateMe = () => {
     toast({
       title: "Locating You...",
@@ -108,11 +102,14 @@ export default function MapPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <MapStatsHeader />
       <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-1/4 lg:w-1/5">
-          <FilterControls onFilterChange={handleFilterChange} onLocateMe={handleLocateMe} />
+          <FilterControls 
+            onFilterChange={handleFilterChange} 
+            onLocateMe={handleLocateMe}
+          />
         </div>
-
         <div className="w-full md:w-3/4 lg:w-4/5">
           <div className="mb-4 flex justify-end">
             <Button
@@ -124,12 +121,7 @@ export default function MapPage() {
               {viewMode === 'map' ? 'List View' : 'Map View'}
             </Button>
           </div>
-          {isLoading && (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="ml-4 text-lg">Loading food trucks...</p>
-            </div>
-          )}
+          {isLoading && <AnimatedLoader />}
           {error && !isLoading && (
             <Alert variant="destructive">
               <AlertTitle>Error Loading Trucks</AlertTitle>
