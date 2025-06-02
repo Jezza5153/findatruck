@@ -21,7 +21,7 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  // Load Google Maps (dark/futuristic)
+  // 1. Load Google Maps with mapId (no custom styles in JS)
   useEffect(() => {
     if (!mapRef.current || map) return;
     const loader = new Loader({
@@ -34,20 +34,15 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
         const gmap = new google.maps.Map(mapRef.current, {
           center: initial,
           zoom: 12,
-          mapId: "DEMO_MAP_ID", // Set your own for custom styles
+          mapId: "YOUR_CLOUD_CONSOLE_MAP_ID", // <--- Replace with your own mapId!
           disableDefaultUI: true,
-          styles: [
-            { elementType: "geometry", stylers: [{ color: "#181a20" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#d8f6ff" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#1a2233" }] },
-          ],
         });
         setMap(gmap);
       }
     });
   }, [mapRef, map]);
 
-  // Place truck markers
+  // 2. Place truck markers
   useEffect(() => {
     if (!map) return;
     (map as any).__truckMarkers?.forEach((marker: google.maps.Marker) => marker.setMap(null));
@@ -72,7 +67,7 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
     (map as any).__truckMarkers = markers;
   }, [map, trucks, onTruckClick]);
 
-  // Live locate me
+  // 3. Live locate me
   useEffect(() => {
     if (!map) return;
     const geo = navigator.geolocation;
