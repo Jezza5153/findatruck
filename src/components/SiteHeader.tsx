@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gift, LogIn as LogInIcon } from 'lucide-react'; 
+import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gift, LogIn as LogInIcon, Star } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
@@ -18,18 +18,18 @@ export function SiteHeader() {
   const router = useRouter();
 
   useEffect(() => {
-    setIsClient(true); 
+    setIsClient(true);
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    return () => unsubscribe(); 
-  }, []); 
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push('/'); 
+      router.push('/');
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "Could not log you out. Please try again.", variant: "destructive" });
@@ -38,7 +38,7 @@ export function SiteHeader() {
 
   const commonNavLinks = [
     { href: "/map", label: "Find Trucks", icon: <MapPin className="mr-2 h-5 w-5" /> },
-    { href: "/featured", label: "Featured", icon: <Star className="mr-2 h-5 w-5" /> }, // Assuming Star icon for featured
+    { href: "/featured", label: "Featured", icon: <Star className="mr-2 h-5 w-5" /> },
     { href: "/help", label: "Help", icon: <HelpCircle className="mr-2 h-5 w-5" /> },
   ];
 
@@ -47,7 +47,7 @@ export function SiteHeader() {
     { href: "/customer/notifications", label: "Notifications", icon: <Bell className="mr-2 h-5 w-5" /> },
     { href: "/customer/rewards", label: "Rewards", icon: <Gift className="mr-2 h-5 w-5" /> },
   ];
-  
+
   // Render a basic header or nothing until client-side hydration to avoid mismatch
   if (!isClient) {
     return (
@@ -55,9 +55,8 @@ export function SiteHeader() {
         <div className="container flex h-16 items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Utensils className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block text-lg">FindATruck</span>
+            <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
           </Link>
-           {/* Placeholder for auth buttons to avoid layout shift or to show loading state */}
            <div className="flex flex-1 items-center justify-end space-x-4">
              {/* Optionally, add Skeleton components here if you have them */}
            </div>
@@ -71,9 +70,9 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Utensils className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block text-lg">FindATruck</span>
+          <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
         </Link>
-        
+
         <div className="flex flex-1 items-center justify-end space-x-2">
           {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-1 items-center">
@@ -117,7 +116,7 @@ export function SiteHeader() {
               <SheetHeader className="mb-4">
                 <Link href="/" className="flex items-center space-x-2">
                     <Utensils className="h-6 w-6 text-primary" />
-                    <SheetTitle>FindATruck</SheetTitle>
+                    <SheetTitle>Truck Tracker</SheetTitle>
                 </Link>
                 <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
               </SheetHeader>
