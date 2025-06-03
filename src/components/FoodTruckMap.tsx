@@ -3,8 +3,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Crosshair, WifiOff } from 'lucide-react'; // Added WifiOff
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
+import { Crosshair, WifiOff, Loader as LoaderIcon } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Props = {
   trucks: FoodTruck[];
@@ -14,12 +14,12 @@ type Props = {
 const mapContainerStyle: React.CSSProperties = {
   width: '100%',
   height: '65vh',
-  borderRadius: '1rem', // Updated from 1rem to match theme
+  borderRadius: '1rem',
   overflow: 'hidden',
-  boxShadow: '0 8px 24px hsl(var(--primary) / 0.1)', // Use theme variable
-  border: '1px solid hsl(var(--border))', // Use theme variable
+  boxShadow: '0 8px 24px hsl(var(--primary) / 0.1)',
+  border: '1px solid hsl(var(--border))',
   position: 'relative',
-  backgroundColor: 'hsl(var(--muted))', // Background for loading/error states
+  backgroundColor: 'hsl(var(--muted))',
 };
 
 export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
@@ -29,13 +29,12 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
   const [isLoadingMap, setIsLoadingMap] = useState(true);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  // 1. Load Google Maps
   useEffect(() => {
     if (!mapRef.current || map) return;
 
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
-        setMapError("Google Maps API Key is missing. Please configure it in your environment variables.");
+        setMapError("Google Maps API Key is missing. Please configure it in your .env.local file (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).");
         setIsLoadingMap(false);
         return;
     }
@@ -46,39 +45,38 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
     const loader = new Loader({
       apiKey: apiKey,
       version: "weekly",
-      libraries: ["marker"], // Using AdvancedMarkerElement
+      libraries: ["marker"], 
     });
 
     loader.load().then(async () => {
       if (mapRef.current && !map) {
         const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
-        // const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
-
-        const initial = { lat: 34.0522, lng: -118.2437 }; // Default to Los Angeles
+        
+        const initial = { lat: 34.0522, lng: -118.2437 }; 
         const gmap = new Map(mapRef.current, {
           center: initial,
           zoom: 10,
-          mapId: "YOUR_MAP_ID_HERE", // Replace with your actual Map ID if you have one
+          mapId: "FINDATRUCK_MAP_ID", // Replace with your actual Map ID if you have one or remove if not styling with cloud console
           disableDefaultUI: true,
           zoomControl: true,
+          clickableIcons: false, // Disable POI clicks for a cleaner map focused on trucks
         });
         setMap(gmap);
       }
     }).catch(e => {
       console.error("Failed to load Google Maps:", e);
-      setMapError("Failed to load Google Maps. Check your API key and network connection.");
+      setMapError("Failed to load Google Maps. Check your API key, network connection, and browser console for more details.");
     }).finally(() => {
       setIsLoadingMap(false);
     });
-  }, [mapRef, map]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapRef]); // map dependency was removed to prevent re-init after map is set.
 
-  // 2. Place truck markers
   useEffect(() => {
     if (!map || !google.maps.marker) return;
 
-    // Clear previous markers
     (map as any).__truckMarkers?.forEach((marker: google.maps.marker.AdvancedMarkerElement) => {
-      marker.map = null; // Correct way to remove AdvancedMarkerElement
+      marker.map = null; 
     });
     
     const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
@@ -87,11 +85,10 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
       if (typeof truck.lat === "number" && typeof truck.lng === "number") {
         
         const truckIcon = document.createElement('img');
-        truckIcon.src = truck.isOpen ? '/truck-marker-open.svg' : '/truck-marker-closed.svg'; // SVGs should be in /public
+        truckIcon.src = truck.isOpen ? '/truck-marker-open.svg' : '/truck-marker-closed.svg';
         truckIcon.style.width = '38px';
         truckIcon.style.height = '44px';
-        // truckIcon.style.transform = 'translateY(-50%)'; // Adjust anchor if needed
-
+        
         const marker = new google.maps.marker.AdvancedMarkerElement({
           position: { lat: truck.lat, lng: truck.lng },
           map,
@@ -107,7 +104,6 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
 
   }, [map, trucks, onTruckClick]);
 
-  // 3. Handle "Locate Me"
   const handleLocateMe = useCallback(() => {
     if (!map || !navigator.geolocation) {
         setMapError("Geolocation is not supported by your browser or map is not loaded.");
@@ -121,7 +117,7 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
 
         if (!userMarker) {
            const userIcon = document.createElement('img');
-           userIcon.src = '/user-marker.svg'; // User marker SVG in /public
+           userIcon.src = '/user-marker.svg'; 
            userIcon.style.width = '30px';
            userIcon.style.height = '30px';
 
@@ -130,16 +126,16 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
             map,
             content: userIcon,
             title: 'You are here',
-            zIndex: 1000, // Ensure user marker is on top
+            zIndex: 1000, 
           });
-          setUserMarker(marker as any); // Cast as any if types conflict, or ensure correct type
+          setUserMarker(marker as any);
         } else {
           (userMarker as google.maps.marker.AdvancedMarkerElement).position = coords;
         }
       },
       error => {
         console.error("Geolocation error:", error);
-        setMapError("Could not access your location. Please allow location access.");
+        setMapError("Could not access your location. Please allow location access in your browser settings.");
       },
       { enableHighAccuracy: true }
     );
@@ -162,7 +158,7 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20 p-4">
           {isLoadingMap && !mapError && (
             <div className="text-center">
-              <Loader className="h-12 w-12 animate-spin text-primary mx-auto mb-3" />
+              <LoaderIcon className="h-12 w-12 animate-spin text-primary mx-auto mb-3" />
               <p className="text-lg text-muted-foreground">Loading map…</p>
             </div>
           )}

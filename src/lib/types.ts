@@ -41,6 +41,8 @@ export type FoodTruck = {
 
   distance?: string; // Calculated client-side
   testimonials?: Testimonial[];
+  contactEmail?: string; // Added from owner profile form
+  phone?: string; // Added from owner profile form
 };
 
 export type MenuItem = {
@@ -89,7 +91,7 @@ export type UserDocument = {
   truckId?: string; // Specific for owners: ID of the truck document in the 'trucks' collection
   createdAt: Timestamp | FieldValue;
   favoriteTrucks?: string[]; // For customers
-  notificationPreferences?: NotificationPreferences; // For customers
+  notificationPreferences: NotificationPreferences; // For customers (ensure this is not partial if always present)
 };
 
 // Represents the profile data structure often used in client-side state for dashboards

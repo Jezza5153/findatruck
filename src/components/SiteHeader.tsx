@@ -48,13 +48,10 @@ export function SiteHeader() {
     { href: "/customer/rewards", label: "Rewards", icon: <Gift className="mr-2 h-5 w-5" /> },
   ];
   
-  // Placeholder for owner-specific links, assuming they'd go to /owner/dashboard
   const ownerAuthNavLinks = [
     { href: "/owner/dashboard", label: "Owner Dashboard", icon: <ChefHat className="mr-2 h-5 w-5" /> },
-    // Add other owner-specific links here if needed, e.g., /owner/menu, /owner/analytics
   ];
 
-  // Render a basic header or nothing until client-side hydration to avoid mismatch
   if (!isClient) {
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -64,7 +61,6 @@ export function SiteHeader() {
             <span className="font-bold sm:inline-block text-lg">FindATruck</span>
           </Link>
            <div className="flex flex-1 items-center justify-end space-x-4">
-             {/* Optionally, add Skeleton components here if you have them */}
            </div>
         </div>
       </header>
@@ -80,7 +76,6 @@ export function SiteHeader() {
         </Link>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-1 items-center">
             {commonNavLinks.map(link => (
               <Button key={link.href} variant="ghost" size="sm" asChild>
@@ -89,8 +84,7 @@ export function SiteHeader() {
             ))}
             {user ? (
               <>
-                {/* Here, you might check user role to show customer OR owner links */}
-                {/* For now, showing customer links if logged in, and an Owner Dashboard link */}
+                {/* TODO: Check user role from Firestore to conditionally render customerAuthNavLinks or ownerAuthNavLinks */}
                 {customerAuthNavLinks.map(link => (
                   <Button key={link.href} variant="ghost" size="sm" asChild>
                     <Link href={link.href}>{link.icon}{link.label}</Link>
@@ -115,7 +109,6 @@ export function SiteHeader() {
             )}
           </nav>
 
-          {/* Mobile Navigation (Sheet) */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2">
@@ -143,7 +136,7 @@ export function SiteHeader() {
                 <hr className="my-2"/>
                 {user ? (
                   <>
-                    {/* Example: Show customer links. Adapt based on actual role if available */}
+                    {/* TODO: Check user role from Firestore to conditionally render customerAuthNavLinks or ownerAuthNavLinks */}
                     {customerAuthNavLinks.map(link => (
                         <Button key={link.href} variant="outline" asChild className="justify-start text-base py-6">
                             <Link href={link.href}>{link.icon}{link.label}</Link>
