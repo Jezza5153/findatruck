@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChefHat, LogIn, UserPlus, Map } from "lucide-react";
+import { ChefHat, LogIn, UserPlus, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 
@@ -20,7 +20,7 @@ export default function OwnerPortalPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
-            onClick={() => router.push('/login')} // Points to unified login
+            onClick={() => router.push('/login?role=owner')} // Use unified login, hint role if needed for specific logic
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6"
             size="lg"
           >
@@ -35,10 +35,22 @@ export default function OwnerPortalPage() {
             <UserPlus className="mr-2 h-6 w-6" /> Register Your Truck
           </Button>
         </CardContent>
-        <CardContent className="mt-0 pt-0 text-center">
-            <Link href="/map" className="text-sm font-medium text-primary hover:underline flex items-center justify-center">
-                <Map className="mr-1 h-4 w-4" /> Not an owner? Find Food Trucks
-            </Link>
+        <CardContent className="mt-2 pt-0 text-center border-t border-border/50">
+             <p className="mt-4 text-sm text-muted-foreground">
+                Not an owner?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 w-full mt-2">
+                <Button variant="outline" asChild className="w-full">
+                    <Link href="/map" className="flex items-center justify-center">
+                        <MapPin className="mr-2 h-4 w-4" /> Find Food Trucks
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full">
+                    <Link href="/customer/signup" className="flex items-center justify-center">
+                        <UserPlus className="mr-2 h-4 w-4" /> Customer Signup
+                    </Link>
+                </Button>
+            </div>
         </CardContent>
       </Card>
     </div>

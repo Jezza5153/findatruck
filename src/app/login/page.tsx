@@ -5,28 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Utensils, UserPlus, ChefHat } from "lucide-react";
+import { LogIn, Utensils, UserPlus, ChefHat, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import type { z as zod } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
+import * as z from "zod";
 
-import * as zGlobal from 'zod';
-const loginSchema = zGlobal.object({
-  email: zGlobal.string().email({ message: "Invalid email address." }),
-  password: zGlobal.string().min(1, { message: "Password is required." }),
+const loginSchema = z.object({
+  email: z.string().email({ message: "Invalid email address." }),
+  password: z.string().min(1, { message: "Password is required." }),
 });
 
-type LoginFormValues = zod.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -37,46 +37,48 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
+      // Fetch user document from Firestore to determine role
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as UserDocument;
-        if (userData.role === 'customer') {
-          toast({
-            title: "Login Successful!",
-            description: "Redirecting to your dashboard...",
-          });
-          router.push('/customer/dashboard');
-        } else if (userData.role === 'owner') {
-          toast({
-            title: "Owner Login Successful!",
-            description: "Redirecting to your owner dashboard...",
-          });
-          router.push('/owner/dashboard');
-        } else {
-          await signOut(auth);
-          toast({
-            title: "Login Failed",
-            description: "User role not recognized. Please contact support.",
-            variant: "destructive",
-          });
-        }
+        const redirectUrl = searchParams.get('redirect') || (userData.role === 'owner' ? '/owner/dashboard' : '/customer/dashboard');
+        
+        toast({
+          title: "Login Successful!",
+          description: `Welcome back, ${userData.name || userData.ownerName || 'User'}! Redirecting...`,
+        });
+        router.push(redirectUrl);
       } else {
+        // This case should ideally not happen if signup creates a user doc.
+        // But as a fallback:
         await signOut(auth);
         toast({
           title: "Login Failed",
-          description: "Account details not found. Please try signing up or contact support if you believe this is an error.",
+          description: "User profile not found. Please try signing up or contact support.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      let errorMessage = "Invalid email or password. Please try again.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = "Invalid email or password. Please check your credentials.";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Too many login attempts. Please try again later or reset your password.";
+      let errorMessage = "An error occurred during login. Please try again.";
+      if (error.code) {
+        switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential': // Covers both wrong password and user not found in newer SDK versions
+            errorMessage = "Invalid email or password. Please check your credentials.";
+            break;
+            case 'auth/too-many-requests':
+            errorMessage = "Too many login attempts. Please try again later or reset your password.";
+            break;
+            case 'auth/user-disabled':
+            errorMessage = "This account has been disabled. Please contact support.";
+            break;
+            default:
+            errorMessage = `Login failed: ${error.message || "Please try again."}`;
+        }
       }
       toast({
         title: "Login Failed",
@@ -87,7 +89,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-primary/10">
+    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-primary/5">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <Utensils className="mx-auto h-12 w-12 text-primary mb-4" />
@@ -98,22 +100,37 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="email-login">Email address</Label>
-              <Input id="email-login" type="email" {...register("email")} placeholder="you@example.com" />
+              <Input 
+                id="email-login" 
+                type="email" 
+                {...register("email")} 
+                placeholder="you@example.com" 
+                autoComplete="email"
+              />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="password-login">Password</Label>
-                <Link href="#" passHref className="text-sm font-medium text-primary hover:underline">
-                  Forgot your password?
+                <Link href="#" passHref legacyBehavior>
+                  <a className="text-sm font-medium text-primary hover:underline">
+                    Forgot your password?
+                  </a>
                 </Link>
               </div>
-              <Input id="password-login" type="password" {...register("password")} placeholder="••••••••" />
+              <Input 
+                id="password-login" 
+                type="password" 
+                {...register("password")} 
+                placeholder="••••••••" 
+                autoComplete="current-password"
+              />
               {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
             <div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
-                 {isSubmitting ? "Logging in..." : <><LogIn className="mr-2 h-5 w-5" /> Log In</>}
+                 {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+                 {isSubmitting ? "Logging in..." : "Log In"}
               </Button>
             </div>
           </CardContent>

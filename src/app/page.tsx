@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Testimonial } from "@/lib/types";
-import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus } from "lucide-react";
+import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,21 +14,21 @@ const testimonialsData: Testimonial[] = [
     id: "1",
     name: "Sarah L.",
     quote: "FindATruck helped me find the most amazing tacos right around the corner! So easy to use.",
-    avatarUrl: "https://placehold.co/100x100.png",
+    avatarUrl: "https://placehold.co/100x100.png?text=SL",
     dataAiHint: "person avatar"
   },
   {
     id: "2",
     name: "Mike P.",
     quote: "I love getting notifications when my favorite burger truck is nearby. Game changer!",
-    avatarUrl: "https://placehold.co/100x100.png",
+    avatarUrl: "https://placehold.co/100x100.png?text=MP",
     dataAiHint: "person avatar"
   },
   {
     id: "3",
     name: "Chen W.",
     quote: "The menus are always up-to-date, and ordering ahead is super convenient.",
-    avatarUrl: "https://placehold.co/100x100.png",
+    avatarUrl: "https://placehold.co/100x100.png?text=CW",
     dataAiHint: "person avatar"
   },
 ];
@@ -77,26 +77,38 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-dvh"> {/* Use dvh for dynamic viewport height */}
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary via-blue-500 to-accent text-primary-foreground py-20 md:py-32">
+      <section className="bg-gradient-to-br from-primary via-blue-600 to-accent text-primary-foreground py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
-          <Truck className="mx-auto h-24 w-24 mb-6 text-background" />
+          <Truck className="mx-auto h-20 w-20 md:h-24 md:w-24 mb-6 text-background animate-bounce" />
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Find Food Trucks Near You!
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-            Discover local food trucks in real-time or showcase your culinary creations.
+            Discover local food trucks in real-time or showcase your culinary creations on FindATruck.
           </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+            <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow" asChild>
+                <Link href="/map">
+                    <Search className="mr-2 h-5 w-5" /> Explore Map
+                </Link>
+            </Button>
+             <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow border-background text-background hover:bg-background/10" asChild>
+                <Link href="/featured">
+                    <Star className="mr-2 h-5 w-5" /> View Featured
+                </Link>
+            </Button>
+          </div>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <Button size="lg" variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
+            <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
                 <Link href="/customer/signup">
                     <UserPlus className="h-10 w-10 mb-2" />
-                    I'm a New Customer
+                    I'm a Hungry Customer
                     <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
                 </Link>
             </Button>
-            <Button size="lg" variant="default" className="bg-accent text-accent-foreground hover:bg-accent/90 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow" asChild>
+            <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
                 <Link href="/owner/portal"> 
                     <ChefHat className="h-10 w-10 mb-2" />
                     I'm a Food Truck Owner
@@ -124,7 +136,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
@@ -133,87 +144,63 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader className="items-center text-center">
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                   <MapPin className="h-10 w-10 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Up-to-Date Locations</CardTitle>
+                <CardTitle className="text-2xl">Real-Time Locations</CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Truck owners share their spot, so you know where to find them.
+                Truck owners update their spot, so you always know where to find fresh food.
               </CardContent>
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader className="items-center text-center">
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                   <UtensilsCrossed className="h-10 w-10 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Mobile Ordering (Soon)</CardTitle>
+                <CardTitle className="text-2xl">Menus & Ordering</CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Browse menus and place your order ahead of time. Skip the line! (Account required)
+                Browse menus and (soon!) place orders ahead of time. Skip the line!
               </CardContent>
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader className="items-center text-center">
-                <div className="p-4 bg-primary/10 rounded-full mb-4">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 inline-block">
                   <Star className="h-10 w-10 text-primary" />
                 </div>
                 <CardTitle className="text-2xl">Reviews & Ratings</CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Discover top-rated trucks and share your own foodie experiences. (Account required)
+                Discover top-rated trucks and share your foodie experiences with the community.
               </CardContent>
             </Card>
           </div>
-           <div className="mt-12 text-center">
-                <Button asChild size="lg">
-                    <Link href="/map">Explore the Map</Link>
-                </Button>
-            </div>
         </div>
       </section>
 
-      {/* Newest Trucks Section */}
       <section className="py-16 md:py-24 bg-secondary/10">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Discover Our <span className="text-accent">Newest Trucks</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            For Food Truck <span className="text-accent">Owners</span>
           </h2>
-          <div className="text-center text-muted-foreground">
-            <p className="mb-4 text-lg">
-              Freshly added food trucks will be showcased here!
-            </p>
-            <p>
-              As our community grows, this is where you'll find the latest culinary delights on wheels.
-              Check back soon for new additions! (This will be populated from the database).
-            </p>
-            <div className="mt-8">
-                <Button variant="outline" asChild>
-                    <Link href="/map">Explore All Trucks</Link>
-                </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Trucks Section (Currently shows placeholder text as data is empty) */}
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Featured Food Trucks
-          </h2>
-          <p className="text-center text-muted-foreground">
-            Our top-rated and premium trucks will be highlighted here. Stay tuned! (This will be populated from the database).
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Join our platform to increase your visibility, manage your menu and schedule, connect with customers, and grow your business.
           </p>
-           <div className="mt-8 text-center">
-                <Button asChild className="bg-primary hover:bg-primary/90">
-                    <Link href="/featured">View Featured Trucks</Link>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <InfoCard icon={<Users className="text-accent"/>} title="Reach More Customers" description="Get discovered by hungry locals and visitors actively searching for food trucks."/>
+            <InfoCard icon={<MenuSquare className="text-accent"/>} title="Easy Menu Management" description="Update your menu items, prices, and availability anytime, anywhere."/>
+            <InfoCard icon={<CalendarClock className="text-accent"/>} title="Flexible Scheduling" description="Set your operating hours, special event schedules, and update your location easily."/>
+            <InfoCard icon={<LineChart className="text-accent"/>} title="Performance Insights" description="Track your popular items, customer ratings, and (soon!) sales analytics."/>
+          </div>
+           <div className="mt-12 text-center">
+                <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Link href="/owner/portal">Get Started as an Owner</Link>
                 </Button>
             </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
@@ -234,9 +221,9 @@ export default function HomePage() {
                         data-ai-hint={testimonial.dataAiHint || "person avatar"}
                       />
                     )}
-                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="font-semibold text-lg">{testimonial.name}</p>
                   </div>
-                  <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
+                  <p className="text-muted-foreground italic text-sm">"{testimonial.quote}"</p>
                 </CardContent>
               </Card>
             ))}
@@ -246,3 +233,25 @@ export default function HomePage() {
     </div>
   );
 }
+
+interface InfoCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+function InfoCard({icon, title, description}: InfoCardProps) {
+  return (
+    <Card className="text-center shadow-md hover:shadow-lg transition-shadow">
+      <CardHeader className="items-center">
+        <div className="p-3 bg-accent/10 rounded-full mb-3 inline-block">
+          {React.cloneElement(icon as React.ReactElement, { className: "h-8 w-8 text-accent"})}
+        </div>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-muted-foreground">
+        {description}
+      </CardContent>
+    </Card>
+  );
+}
+

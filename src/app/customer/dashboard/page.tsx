@@ -44,12 +44,13 @@ export default function CustomerDashboardPage() {
       if (user) {
         setIsLoadingProfile(true);
         try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            const data = userDocSnap.data();
             const fetchedProfile: UserProfile = {
               ...initialUserProfileState,
-              name: data.ownerName || data.name || user.displayName || "User",
+              name: data.name || user.displayName || "User",
               email: data.email || user.email || "",
               savedPaymentMethods: data.savedPaymentMethods || [],
               favoriteTrucks: data.favoriteTrucks || [],
@@ -58,19 +59,22 @@ export default function CustomerDashboardPage() {
             setProfile(fetchedProfile);
             setTempProfile(fetchedProfile);
           } else {
+            // User exists in Auth, but no profile in Firestore. Create one.
             const newProfile: UserProfile = {
               ...initialUserProfileState,
               name: user.displayName || "User",
               email: user.email || "",
             };
+            await setDoc(userDocRef, newProfile, { merge: true });
             setProfile(newProfile);
             setTempProfile(newProfile);
-            await setDoc(doc(db, "users", user.uid), newProfile, { merge: true });
+            toast({ title: "Profile Created", description: "Welcome! Your basic profile has been set up."});
           }
-        } catch (err) {
+        } catch (err: any) {
+          console.error("Profile load error:", err);
           toast({
             title: "Profile Load Error",
-            description: "Could not fetch your profile data. Please reload.",
+            description: err.message || "Could not fetch your profile data. Please reload.",
             variant: "destructive",
           });
         }
@@ -84,6 +88,7 @@ export default function CustomerDashboardPage() {
   }, [toast]);
 
   useEffect(() => {
+    // Ensure tempProfile updates when profile changes (e.g., after initial load or save)
     setTempProfile(profile);
   }, [profile]);
 
@@ -102,35 +107,36 @@ export default function CustomerDashboardPage() {
     }));
   };
 
-  const saveProfile = async () => {
+  const saveProfileChanges = async () => {
     if (!currentUser) {
       toast({
         title: "Login Required",
-        description: "Please log in or sign up to save your profile changes.",
+        description: "Please log in to save profile changes.",
         variant: "destructive",
-        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login</Link></Button>,
       });
-      setIsEditingProfile(false);
-      setTempProfile(profile);
       return;
     }
     try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
+      const userDocRef = doc(db, "users", currentUser.uid);
+      // Only update fields that are directly editable in this section.
+      // For a customer, this is typically just 'name'. Email is usually read-only.
+      await updateDoc(userDocRef, {
         name: tempProfile.name,
+        // Add other fields here if they become editable in this section
       });
-      setProfile(prev => ({
-        ...prev,
-        name: tempProfile.name,
-      }));
+      // Update local state to reflect saved changes
+      setProfile(prev => ({ ...prev, name: tempProfile.name }));
       setIsEditingProfile(false);
       toast({
         title: "Profile Updated",
         description: "Your changes have been saved successfully.",
       });
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Save profile error:", err);
       toast({
-        title: "Error",
-        description: "Could not save profile changes.",
+        title: "Error Saving Profile",
+        description: err.message || "Could not save profile changes.",
         variant: "destructive",
       });
     }
@@ -140,14 +146,15 @@ export default function CustomerDashboardPage() {
     if (!currentUser) {
       toast({
         title: "Login Required",
-        description: "Please log in or sign up to save notification preferences.",
+        description: "Please log in to save notification preferences.",
         variant: "destructive",
-        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login</Link></Button>,
       });
       return;
     }
     try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
+      const userDocRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userDocRef, {
         notificationPreferences: tempProfile.notificationPreferences,
       });
       setProfile(prev => ({
@@ -158,20 +165,21 @@ export default function CustomerDashboardPage() {
         title: "Preferences Updated",
         description: "Notification settings saved.",
       });
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Save notification prefs error:", err);
       toast({
-        title: "Error",
-        description: "Could not save notification preferences.",
+        title: "Error Saving Preferences",
+        description: err.message || "Could not save notification preferences.",
         variant: "destructive",
       });
     }
   };
 
-  if (isLoadingAuth || isLoadingProfile) {
+  if (isLoadingAuth || (currentUser && isLoadingProfile)) {
     return (
       <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4">Loading dashboard...</p>
+        <p className="mt-4">Loading your dashboard...</p>
       </div>
     );
   }
@@ -180,6 +188,7 @@ export default function CustomerDashboardPage() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <Alert variant="destructive" className="max-w-md mx-auto">
+          <Bell className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
           <AlertDescription>You need to be logged in to view your dashboard.</AlertDescription>
         </Alert>
@@ -201,7 +210,7 @@ export default function CustomerDashboardPage() {
               <div className="flex items-center">
                 <User className="mr-2 h-6 w-6 text-primary" /> Profile Information
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(!isEditingProfile)}>
+              <Button variant="ghost" size="icon" onClick={() => setIsEditingProfile(!isEditingProfile)} aria-label={isEditingProfile ? "Cancel edit" : "Edit profile"}>
                 {isEditingProfile ? <Save className="h-5 w-5" /> : <Edit3 className="h-5 w-5" />}
               </Button>
             </CardTitle>
@@ -218,7 +227,7 @@ export default function CustomerDashboardPage() {
                 value={isEditingProfile ? tempProfile.name : profile.name}
                 readOnly={!isEditingProfile}
                 onChange={handleProfileChange}
-                className={!isEditingProfile ? "border-none px-0 bg-transparent" : ""}
+                className={!isEditingProfile ? "border-none px-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" : ""}
                 placeholder="Your Name"
               />
             </div>
@@ -230,27 +239,27 @@ export default function CustomerDashboardPage() {
                 type="email"
                 value={profile.email}
                 readOnly
-                className="border-none px-0 bg-transparent"
+                className="border-none px-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                 placeholder="your.email@example.com"
               />
             </div>
             {isEditingProfile && (
-              <Button onClick={saveProfile} className="w-full">Save Profile Changes</Button>
+              <Button onClick={saveProfileChanges} className="w-full">Save Profile Changes</Button>
             )}
             <div>
-              <p className="text-sm font-medium">Saved Payment Methods:</p>
+              <p className="text-sm font-medium mt-4">Saved Payment Methods:</p>
               {profile.savedPaymentMethods?.length ? (
                 profile.savedPaymentMethods.map(method => <p key={method} className="text-sm text-muted-foreground">{method}</p>)
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {currentUser ? "No saved payment methods. Add one for faster checkout!" : "Log in to manage payment methods for faster checkout!"}
+                  No saved payment methods.
                 </p>
               )}
               <Button
                 variant="link"
                 className="p-0 h-auto text-primary"
                 onClick={() => {
-                  toast({ title: "Coming Soon!", description: "Payment management will be available here." });
+                  toast({ title: "Coming Soon!", description: "Payment method management will be available here." });
                 }}
               >
                 Manage Payment Methods
@@ -265,7 +274,7 @@ export default function CustomerDashboardPage() {
               <Bell className="mr-2 h-6 w-6 text-primary" /> Notification Preferences
             </CardTitle>
             <CardDescription>
-              Customize how you receive updates.
+              Customize how you receive updates from FindATruck.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -281,6 +290,7 @@ export default function CustomerDashboardPage() {
                 value={[tempProfile.notificationPreferences.truckNearbyRadius]}
                 onValueChange={(value) => handleNotificationChange('truckNearbyRadius', value[0])}
                 className="mt-2"
+                aria-label="Truck nearby radius slider"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -289,6 +299,7 @@ export default function CustomerDashboardPage() {
                 id="orderUpdates"
                 checked={tempProfile.notificationPreferences.orderUpdates}
                 onCheckedChange={(checked) => handleNotificationChange('orderUpdates', checked)}
+                aria-label="Toggle order updates notifications"
               />
             </div>
             <div className="flex items-center justify-between">
@@ -297,6 +308,7 @@ export default function CustomerDashboardPage() {
                 id="promotionalMessages"
                 checked={tempProfile.notificationPreferences.promotionalMessages}
                 onCheckedChange={(checked) => handleNotificationChange('promotionalMessages', checked)}
+                aria-label="Toggle promotional messages notifications"
               />
             </div>
             <Button onClick={saveNotificationPreferences} className="w-full">Save Notification Preferences</Button>

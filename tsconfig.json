@@ -1,15 +1,16 @@
 
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es5", // Changed to es5 for broader compatibility if needed, but es2017 is fine too
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": true, // Recommended to keep true for better code quality
+    "forceConsistentCasingInFileNames": true, // Good practice
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "bundler", // Or "node" if you prefer
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

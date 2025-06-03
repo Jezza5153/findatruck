@@ -7,33 +7,59 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function FeaturedTrucksPage() {
   const [featuredTrucks, setFeaturedTrucks] = useState<FoodTruck[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchFeaturedTrucks = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // In a real app, fetch from '/api/trucks/featured'
-        // For now, simulating a delay and an empty response
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setFeaturedTrucks([]); // Simulate no featured trucks
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unknown error occurred');
-        }
+        const trucksCollectionRef = collection(db, "trucks");
+        const q = query(trucksCollectionRef, where("isFeatured", "==", true));
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedTrucks: FoodTruck[] = [];
+        querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+          const data = doc.data() as Partial<FoodTruck>;
+          fetchedTrucks.push({
+            id: doc.id,
+            name: data.name || 'Unnamed Truck',
+            cuisine: data.cuisine || 'Unknown Cuisine',
+            description: data.description || 'No description available.',
+            imageUrl: data.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
+            ownerUid: data.ownerUid || '',
+            address: data.address || undefined,
+            operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
+            isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
+            rating: typeof data.rating === 'number' ? data.rating : undefined,
+            menu: Array.isArray(data.menu) ? data.menu : [],
+            testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+            isFeatured: true,
+          });
+        });
+        setFeaturedTrucks(fetchedTrucks);
+      } catch (err: any) {
+        console.error("Error fetching featured trucks:", err);
+        setError(err.message || 'An unknown error occurred while fetching featured trucks.');
+        toast({
+          title: "Error Loading Trucks",
+          description: err.message || "Could not load featured food trucks.",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
     fetchFeaturedTrucks();
-  }, []);
+  }, [toast]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -85,7 +111,7 @@ export default function FeaturedTrucksPage() {
           Learn about our premium listing options and benefits.
         </p>
         <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
-          <Link href="/owner/portal">Owner Portal & Subscriptions</Link>
+          <Link href="/owner/billing">Owner Portal & Subscriptions</Link>
         </Button>
       </div>
     </div>

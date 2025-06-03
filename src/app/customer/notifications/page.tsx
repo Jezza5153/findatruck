@@ -1,13 +1,13 @@
 
 'use client';
-import { Bell, MessageSquare, ShoppingBag, Loader2 } from 'lucide-react';
+import { Bell, MessageSquare, ShoppingBag, Loader2, LogIn } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { auth } from '@/lib/firebase'; // For checking auth state
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 
 type NotificationItem = {
@@ -15,10 +15,11 @@ type NotificationItem = {
   type: 'truck_nearby' | 'order_update' | 'promotion';
   title: string;
   message: string;
-  timestamp: string;
+  timestamp: string; // ISO string or human-readable
   read: boolean;
   truckName?: string;
   orderId?: string;
+  link?: string; // Optional link for the notification
 };
 
 const getIconForNotificationType = (type: NotificationItem['type']) => {
@@ -37,7 +38,6 @@ export default function CustomerNotificationsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -46,12 +46,11 @@ export default function CustomerNotificationsPage() {
     return () => unsubscribe();
   }, []);
 
-
   useEffect(() => {
-    if (!authChecked) return; // Wait for auth check
+    if (!authChecked) return; 
 
     if (!currentUser) {
-      setIsLoading(false); // Not logged in, no need to fetch
+      setIsLoading(false); 
       return;
     }
 
@@ -59,21 +58,31 @@ export default function CustomerNotificationsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // Simulate API call based on currentUser.uid
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setNotifications([]); 
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unknown error occurred');
-        }
+        // Simulate API call - replace with actual Firestore query
+        // For example, query a 'userNotifications' subcollection under the user's document
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        // Placeholder data
+        const fetchedNotifications: NotificationItem[] = [
+          { id: '1', type: 'truck_nearby', title: 'Taco Titan is Near!', message: 'Your favorite truck, Taco Titan, is now within 2 miles of your location.', timestamp: new Date(Date.now() - 3600000).toLocaleString(), read: false, truckName: 'Taco Titan', link: '/trucks/taco-titan-id' },
+          { id: '2', type: 'order_update', title: 'Order #12345 Confirmed', message: 'Your order from Burger Bliss has been confirmed and is being prepared.', timestamp: new Date(Date.now() - 7200000).toLocaleString(), read: true, orderId: '12345' },
+          { id: '3', type: 'promotion', title: 'Sweet Treat Tuesday!', message: 'Get 10% off all desserts at Cupcake Corner today only!', timestamp: new Date(Date.now() - 86400000).toLocaleString(), read: true, truckName: 'Cupcake Corner', link: '/trucks/cupcake-corner-id' },
+        ];
+        setNotifications(fetchedNotifications);
+      } catch (err: any) {
+        setError(err.message || 'An unknown error occurred');
       } finally {
         setIsLoading(false);
       }
     };
     fetchNotifications();
   }, [currentUser, authChecked]);
+
+  const markAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+    // Here, you would also update the notification's 'read' status in Firestore.
+  };
 
   if (!authChecked || (isLoading && currentUser)) {
      return (
@@ -93,12 +102,11 @@ export default function CustomerNotificationsPage() {
           Please log in to view your notifications.
         </p>
         <Button asChild size="lg">
-          <Link href="/login">Login / Sign Up</Link>
+          <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login / Sign Up</Link>
         </Button>
       </div>
     );
   }
-
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -114,23 +122,35 @@ export default function CustomerNotificationsPage() {
       )}
 
       {!isLoading && !error && notifications.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-2xl mx-auto">
           {notifications.map(notification => (
-            <Card key={notification.id} className={`shadow-md ${notification.read ? 'bg-card' : 'bg-primary/5 border-primary/50'}`}>
+            <Card 
+              key={notification.id} 
+              className={`shadow-md hover:shadow-lg transition-shadow ${notification.read ? 'bg-card' : 'bg-primary/5 border-primary/30'}`}
+              onClick={!notification.read ? () => markAsRead(notification.id) : undefined}
+              role={!notification.read ? "button" : undefined}
+              tabIndex={!notification.read ? 0 : undefined}
+              onKeyDown={!notification.read ? (e) => e.key === 'Enter' && markAsRead(notification.id) : undefined}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center">
                         {getIconForNotificationType(notification.type)}
                         <CardTitle className="ml-2 text-lg">{notification.title}</CardTitle>
                     </div>
-                    {!notification.read && <Badge variant="destructive" className="bg-accent text-accent-foreground text-xs">New</Badge>}
+                    {!notification.read && <Badge variant="destructive" className="bg-accent text-accent-foreground text-xs animate-pulse">New</Badge>}
                 </div>
                 <CardDescription className="text-xs text-muted-foreground pt-1">{notification.timestamp}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground">{notification.message}</p>
                 {notification.truckName && <p className="text-xs text-muted-foreground mt-1">Truck: {notification.truckName}</p>}
-                {notification.orderId && <p className="text-xs text-muted-foreground mt-1">Order: {notification.orderId}</p>}
+                {notification.orderId && <p className="text-xs text-muted-foreground mt-1">Order: #{notification.orderId}</p>}
+                {notification.link && (
+                  <Button variant="link" asChild className="p-0 h-auto text-primary text-xs mt-1">
+                    <Link href={notification.link}>View Details</Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -138,7 +158,7 @@ export default function CustomerNotificationsPage() {
       )}
       
       {!isLoading && !error && notifications.length === 0 && (
-         <Card className="text-center py-10">
+         <Card className="text-center py-10 shadow-md max-w-2xl mx-auto">
           <CardContent>
             <Bell className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-xl font-semibold text-muted-foreground">No new notifications</p>

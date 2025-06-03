@@ -1,3 +1,4 @@
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,37 +10,46 @@ import { LifeBuoy, Mail, MessageSquare } from 'lucide-react';
 const faqItems = [
   {
     value: "item-1",
-    question: "How does real-time GPS tracking work?",
-    answer: "Food truck owners can update their location through their dashboard, either manually or by enabling live GPS tracking. This location is then displayed on the map for users to see."
+    question: "How does real-time GPS tracking work for food trucks?",
+    answer: "Food truck owners can update their location through their owner dashboard, either by manually inputting an address or (in future updates) by enabling live GPS tracking. This location is then displayed on the map for users to see in real-time."
   },
   {
     value: "item-2",
-    question: "How do I place an order?",
-    answer: "Find a food truck on the map or list, view their menu on their profile page, select your items, customize if needed, and add to cart. Then proceed to checkout to complete your order."
+    question: "How do I place an order with a food truck?",
+    answer: "Once you find a food truck on the map or through search, you can visit their profile page to view their menu. Select your desired items, customize them if options are available, and add them to your cart. Proceed to checkout to complete your order. (Ordering feature coming soon!)"
   },
   {
     value: "item-3",
     question: "What payment methods are accepted?",
-    answer: "Payment methods vary by truck but generally include major credit/debit cards. Some trucks may also support options like Apple Pay or Google Pay. (This is a placeholder, actual payment integration would specify)."
+    answer: "Payment methods will vary by individual food truck but are expected to include major credit/debit cards. Some trucks may also support digital payment options. (Specific payment integrations are planned for future updates)."
   },
   {
     value: "item-4",
-    question: "How do I get notified when a truck is nearby?",
-    answer: "In your user dashboard, you can set notification preferences for your favorite trucks, including a radius for proximity alerts."
+    question: "How can I get notified when my favorite food truck is nearby?",
+    answer: "After creating a customer account and logging in, you can go to your dashboard to set notification preferences. You can favorite trucks and set a radius to receive alerts when they are operating near you."
   },
   {
     value: "item-5",
-    question: "What if there's an issue with my order?",
-    answer: "Please contact the food truck directly if possible. For platform-related issues or if you cannot reach the truck, you can use our contact form or live chat (if available)."
+    question: "What if there's an issue with my order or the platform?",
+    answer: "For order-specific issues, it's best to contact the food truck directly if possible. For platform-related issues, feedback, or if you cannot reach the truck, please use our contact form on this page. Live chat support is also planned."
+  },
+  {
+    value: "item-6",
+    question: "How do I register my food truck on FindATruck?",
+    answer: "Food truck owners can register by navigating to the 'Owner Portal' (link in the site header or footer) and selecting 'Register Your Truck'. You'll need to provide details about your truck, cuisine, and create an owner account."
   }
 ];
 
 export default function HelpPage() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary flex items-center">
-        <LifeBuoy className="mr-3 h-8 w-8" /> Help & FAQ
-      </h1>
+      <div className="text-center mb-12">
+        <LifeBuoy className="mx-auto h-16 w-16 text-primary mb-4" />
+        <h1 className="text-4xl md:text-5xl font-bold text-primary">Help & FAQ</h1>
+        <p className="text-lg text-muted-foreground mt-2">
+          Find answers to common questions and learn how to contact us.
+        </p>
+      </div>
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
@@ -51,8 +61,10 @@ export default function HelpPage() {
               <Accordion type="single" collapsible className="w-full">
                 {faqItems.map(item => (
                   <AccordionItem key={item.value} value={item.value}>
-                    <AccordionTrigger className="text-left hover:text-primary">{item.question}</AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
+                    <AccordionTrigger className="text-left hover:text-primary text-base">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-sm">
                       {item.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -66,25 +78,29 @@ export default function HelpPage() {
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center">
-                <MessageSquare className="mr-2 h-6 w-6 text-primary" /> Contact Us
+                <Mail className="mr-2 h-6 w-6 text-primary" /> Contact Support
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <form action="#" method="POST"> {/* Placeholder action */}
                 <div>
-                  <Label htmlFor="name">Your Name</Label>
-                  <Input id="name" name="name" type="text" placeholder="John Doe" required className="mt-1" />
+                  <Label htmlFor="name-contact">Your Name</Label>
+                  <Input id="name-contact" name="name" type="text" placeholder="John Doe" required className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="email">Your Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="you@example.com" required className="mt-1" />
+                  <Label htmlFor="email-contact">Your Email</Label>
+                  <Input id="email-contact" name="email" type="email" placeholder="you@example.com" required className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" name="message" rows={4} placeholder="How can we help you?" required className="mt-1" />
+                  <Label htmlFor="subject-contact">Subject</Label>
+                  <Input id="subject-contact" name="subject" type="text" placeholder="e.g., Issue with an order" required className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="message-contact">Message</Label>
+                  <Textarea id="message-contact" name="message" rows={4} placeholder="How can we help you?" required className="mt-1" />
                 </div>
                 <Button type="submit" className="w-full mt-4 bg-primary hover:bg-primary/90">
-                  <Mail className="mr-2 h-4 w-4" /> Send Message
+                  Send Message
                 </Button>
               </form>
             </CardContent>
@@ -92,13 +108,15 @@ export default function HelpPage() {
           
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
-              <CardTitle className="text-xl">Live Chat (Coming Soon)</CardTitle>
+              <CardTitle className="text-xl flex items-center">
+                <MessageSquare className="mr-2 h-5 w-5 text-primary" /> Live Chat
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 Need immediate assistance? Our live chat support will be available here soon.
               </p>
-              <Button disabled className="w-full mt-4">Chat Now</Button>
+              <Button disabled className="w-full">Chat Now (Coming Soon)</Button>
             </CardContent>
           </Card>
         </div>

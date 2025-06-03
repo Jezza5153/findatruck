@@ -5,23 +5,26 @@ import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp, writeBatch } from "firebase/firestore"; // Added writeBatch
+import { doc, setDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, ChefHat } from "lucide-react";
+import { UserPlus, ChefHat, Loader2, User } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
-import type { UserDocument } from '@/lib/types'; // Ensure UserDocument is imported
+import type { UserDocument } from '@/lib/types';
 
 const availableCuisines = [
-  "Mexican", "Italian", "Indian", "Burgers", "BBQ", "Dessert",
-  "Asian Fusion", "Seafood", "Vegan", "Coffee", "Sandwiches", "Other"
-];
+  "American", "BBQ", "Brazilian", "Burgers", "Chinese", "Coffee & Tea", "Desserts", 
+  "European", "Fast Food", "French", "Greek", "Halal", "Hawaiian", "Hot Dogs", "Indian", "Italian", 
+  "Japanese", "Korean", "Latin American", "Mediterranean", "Mexican", "Middle Eastern", 
+  "Pizza", "Sandwiches & Subs", "Seafood", "Smoothies & Juices", "Soul Food", "Southern", 
+  "Spanish", "Steakhouse", "Sushi", "Tacos", "Thai", "Vegan", "Vegetarian", "Vietnamese", "Wings", "Other"
+].sort();
 
 const ownerSignupSchema = z.object({
   ownerName: z.string().min(2, { message: "Owner name must be at least 2 characters." }),
@@ -61,47 +64,48 @@ export default function OwnerSignupPage() {
       const user = userCredential.user;
       await updateProfile(user, { displayName: data.ownerName });
 
-      // Use user.uid as the document ID for both the user's document and the truck's document
       const truckId = user.uid; 
-
       const batch = writeBatch(db);
 
-      // User document
       const userDocRef = doc(db, "users", user.uid);
-      const userDocumentData: UserDocument = { // Ensure all fields of UserDocument are covered
+      // Ensure all fields of UserDocument are covered and typed correctly
+      const userDocumentData: UserDocument = {
         uid: user.uid,
         email: user.email,
         role: 'owner',
-        ownerName: data.ownerName,
-        truckName: data.truckName, // Store truck name here for quick access if needed
-        cuisineType: data.cuisineType, // And cuisine type
-        truckId: truckId, // Link to the truck document ID
+        ownerName: data.ownerName, 
+        truckName: data.truckName, 
+        cuisineType: data.cuisineType,
+        truckId: truckId, 
         createdAt: serverTimestamp(),
-        // Initialize optional fields if they are part of UserDocument type
-        name: data.ownerName, 
-        favoriteTrucks: [],
-        notificationPreferences: {
-            truckNearbyRadius: 2,
+        // Initialize customer-specific fields as empty/default for an owner
+        name: data.ownerName, // UserDocument.name can be owner's name too for general display
+        favoriteTrucks: [], 
+        notificationPreferences: { 
+            truckNearbyRadius: 2, // Default, can be changed by user if they also use customer features
             orderUpdates: true,
             promotionalMessages: false,
         }
       };
       batch.set(userDocRef, userDocumentData);
 
-      // Truck document (basic profile)
       const truckDocRef = doc(db, "trucks", truckId);
       batch.set(truckDocRef, {
-        id: truckId, // Storing truckId also in the document itself
+        id: truckId, 
         ownerUid: user.uid,
         name: data.truckName,
         cuisine: data.cuisineType,
-        description: "Welcome to our food truck! Update your profile to tell customers more.",
-        imageUrl: `https://placehold.co/800x400.png?text=${encodeURIComponent(data.truckName)}`, // Default placeholder
+        description: "Welcome to our food truck! Update your profile to tell customers more about your delicious offerings.",
+        imageUrl: `https://placehold.co/800x400.png?text=${encodeURIComponent(data.truckName)}`,
+        contactEmail: data.email, // Pre-fill contact email
         address: "Update in profile",
         operatingHoursSummary: "Update in schedule",
-        isOpen: false, // Default to closed until configured
+        isOpen: false, 
         menu: [],
         testimonials: [],
+        rating: 0, // Initial rating
+        numberOfRatings: 0,
+        isFeatured: false, // Default not featured
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -110,9 +114,9 @@ export default function OwnerSignupPage() {
 
       toast({
         title: "Owner Signup Successful!",
-        description: "Welcome! Please log in and complete your truck profile and menu.",
+        description: "Welcome! Please log in to complete your truck profile and menu.",
       });
-      router.push('/login'); // Redirect to unified login
+      router.push('/login?redirect=/owner/dashboard');
     } catch (error: any) {
       console.error("Detailed Owner Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";
@@ -166,10 +170,7 @@ export default function OwnerSignupPage() {
                 control={control}
                 name="cuisineType"
                 render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <Select value={field.value} onValueChange={field.onChange} >
                     <SelectTrigger id="cuisineTypeInput-owner-signup-form">
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
@@ -185,64 +186,57 @@ export default function OwnerSignupPage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="email-owner-signup-form">Email address (for login)</Label>
-              <Input id="email-owner-signup-form" type="email" {...register("email")} placeholder="owner@example.com" />
+              <Input id="email-owner-signup-form" type="email" {...register("email")} placeholder="owner@example.com" autoComplete="email"/>
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="password-owner-signup-form">Password</Label>
-                <Input id="password-owner-signup-form" type="password" {...register("password")} placeholder="Create a strong password" />
+                <Input id="password-owner-signup-form" type="password" {...register("password")} placeholder="Create a strong password" autoComplete="new-password"/>
                 {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label htmlFor="confirm-password-owner-signup-form">Confirm Password</Label>
-                <Input id="confirm-password-owner-signup-form" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
+                <Input id="confirm-password-owner-signup-form" type="password" {...register("confirmPassword")} placeholder="Confirm your password" autoComplete="new-password"/>
                 {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
               </div>
             </div>
-            <div className="flex items-center space-x-2 pt-2">
-              <Controller
-                control={control}
-                name="terms"
-                render={({ field }) => (
-                  <Checkbox
-                    id="terms-owner-signup"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
+            <div className="flex items-start space-x-2 pt-1">
+              <Controller name="terms" control={control}
+                render={({ field }) => ( <Checkbox id="terms-owner-signup" checked={field.value} onCheckedChange={field.onChange} className="mt-0.5"/> )}
               />
-              <Label htmlFor="terms-owner-signup" className="text-sm text-muted-foreground">
+              <Label htmlFor="terms-owner-signup" className="text-sm text-muted-foreground leading-snug">
                 I agree to the FindATruck{' '}
-                <Link href="/terms-owner" className="font-medium text-accent hover:underline" target="_blank">
+                <Link href="/terms-owner" className="font-medium text-accent hover:underline" target="_blank" rel="noopener noreferrer">
                   Owner Terms of Service
                 </Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="font-medium text-accent hover:underline" target="_blank">
+                <Link href="/privacy" className="font-medium text-accent hover:underline" target="_blank" rel="noopener noreferrer">
                   Privacy Policy
                 </Link>
                 .
               </Label>
             </div>
-            {errors.terms && <p className="text-xs text-destructive -mt-2">{errors.terms.message}</p>}
+            {errors.terms && <p className="text-xs text-destructive -mt-2 pl-8">{errors.terms.message}</p>}
             <div>
               <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90 mt-2" disabled={isSubmitting}>
-                {isSubmitting ? "Signing up..." : <><UserPlus className="mr-2 h-5 w-5" /> Sign Up My Truck</>}
+                {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <UserPlus className="mr-2 h-5 w-5" />}
+                {isSubmitting ? "Signing up your truck..." : "Sign Up My Truck"}
               </Button>
             </div>
           </CardContent>
         </form>
-        <CardFooter className="text-center block">
-          <p className="mt-2 text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col items-center space-y-2 pt-4">
+          <p className="text-sm text-muted-foreground">
             Already have an owner account?{' '}
             <Link href="/login" className="font-medium text-accent hover:underline">
               Log in here
             </Link>
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Not a Food Truck Owner?{' '}
             <Link href="/customer/signup" className="font-medium text-primary hover:underline">
-              Customer Signup
+             <User className="inline mr-1 h-4 w-4" /> Customer Signup
             </Link>
           </p>
         </CardFooter>

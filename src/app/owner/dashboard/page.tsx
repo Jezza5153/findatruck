@@ -1,142 +1,245 @@
+
 'use client';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, CalendarClock, CreditCard } from "lucide-react";
+import { LineChart, Edit, Eye, MapPinIcon, MenuSquare, Power, CalendarClock, CreditCard, Bell, Gift, UserCircle, AlertTriangle, Loader2, LogIn } from "lucide-react";
+import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import type { UserDocument, FoodTruck } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function OwnerDashboardPage() {
-  // This status and location can be enhanced with Firestore in the future.
-  // For now, simulate "Open" and link to edit profile for location management.
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
+  const [truckId, setTruckId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  // Auth check and initial data load
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data() as UserDocument;
+          if (userData.role !== 'owner') {
+            toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
+            router.push('/');
+            return;
+          }
+          const resolvedTruckId = userData.truckId || user.uid; // Use truckId from user doc, fallback to uid
+          setTruckId(resolvedTruckId);
+
+          // Fetch truck data
+          const truckDocRef = doc(db, "trucks", resolvedTruckId);
+          const truckDocSnap = await getDoc(truckDocRef);
+          if (truckDocSnap.exists()) {
+            setTruckData(truckDocSnap.data() as Partial<FoodTruck>);
+          } else {
+            // Truck document doesn't exist, could prompt to complete profile
+            setError("Truck profile not found. Please complete your profile.");
+            setTruckData({ name: "Your Truck (Setup Incomplete)", isOpen: false }); // Basic placeholder
+          }
+        } else {
+          toast({ title: "Error", description: "User profile not found.", variant: "destructive" });
+          router.push('/login');
+        }
+      } else {
+        router.push('/login?redirect=/owner/dashboard');
+      }
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [router, toast]);
+
+  const handleToggleOpenClosed = async (isOpen: boolean) => {
+    if (!currentUser || !truckId) {
+      toast({ title: "Error", description: "Cannot update status. Not logged in or truck ID missing.", variant: "destructive" });
+      return;
+    }
+    try {
+      const truckDocRef = doc(db, "trucks", truckId);
+      await updateDoc(truckDocRef, { isOpen: isOpen });
+      setTruckData(prev => ({ ...prev, isOpen }));
+      toast({
+        title: "Status Updated",
+        description: `Your truck is now marked as ${isOpen ? "Open" : "Closed"}.`,
+      });
+    } catch (err: any) {
+      console.error("Toggle status error:", err);
+      toast({ title: "Error Updating Status", description: err.message || "Could not update truck status.", variant: "destructive" });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4">Loading owner dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) { // Should be caught by onAuthStateChanged, but as a fallback
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Alert variant="destructive" className="max-w-md mx-auto">
+          <LogIn className="h-4 w-4" />
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>You need to be logged in as an owner to view this page.</AlertDescription>
+        </Alert>
+        <Button asChild className="mt-6">
+          <Link href="/login?redirect=/owner/dashboard">Login as Owner</Link>
+        </Button>
+      </div>
+    );
+  }
+  
+  if (error && !truckData?.name?.includes("Setup Incomplete")) { // Show specific errors unless it's the setup incomplete message
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Dashboard Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        {error.includes("profile not found") && (
+          <Button asChild className="mt-4">
+            <Link href="/owner/profile">Complete Your Profile</Link>
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* DASHBOARD HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary">Owner Dashboard</h1>
-          <p className="text-muted-foreground">Manage your food truck's presence and operations.</p>
+          <p className="text-muted-foreground">Manage {truckData?.name || "your food truck"}'s presence and operations.</p>
         </div>
-        <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-            <span className="text-sm font-medium text-green-600">Status: Open (Simulated)</span>
-            <Button variant="outline" size="sm" disabled>
-                <Power className="mr-2 h-4 w-4"/> Toggle Open/Closed
-            </Button>
-        </div>
+        {truckData && truckId && (
+          <div className="mt-4 sm:mt-0 flex items-center space-x-3 p-3 border rounded-lg shadow-sm bg-card">
+              <Label htmlFor="truck-status-toggle" className={`text-sm font-medium ${truckData.isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                Truck Status: {truckData.isOpen ? "Open" : "Closed"}
+              </Label>
+              <Switch
+                id="truck-status-toggle"
+                checked={truckData.isOpen || false}
+                onCheckedChange={handleToggleOpenClosed}
+                aria-label={`Toggle truck status to ${truckData.isOpen ? "closed" : "open"}`}
+              />
+          </div>
+        )}
       </div>
 
-      {/* DASHBOARD GRID */}
+      {error && truckData?.name?.includes("Setup Incomplete") && (
+         <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Profile Incomplete</AlertTitle>
+            <AlertDescription>
+              {error} Some dashboard features may be limited.
+              <Button asChild variant="link" className="p-0 h-auto ml-1 text-destructive hover:underline">
+                <Link href="/owner/profile">Go to Profile Setup</Link>
+              </Button>
+            </AlertDescription>
+         </Alert>
+      )}
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        {/* Location Management */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <MapPinIcon className="mr-2 h-5 w-5 text-primary" /> Location Management
-            </CardTitle>
-            <CardDescription>
-              Set your address or share your live location with customers.<br/>
-              (Set in <b>Profile</b>)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full" asChild>
-              <Link href="/owner/profile">
-                Manage Truck Location
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Menu Management */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <MenuSquare className="mr-2 h-5 w-5 text-primary" /> Manage Menu
-            </CardTitle>
-            <CardDescription>Update items, prices, and availability.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/menu">Edit Menu</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Orders */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <Eye className="mr-2 h-5 w-5 text-primary" /> View Live Orders
-            </CardTitle>
-            <CardDescription>Track incoming orders and update statuses.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/orders">See Orders</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Schedule/Hours */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <CalendarClock className="mr-2 h-5 w-5 text-primary" /> Schedule Hours
-            </CardTitle>
-            <CardDescription>Set your regular and special operating hours.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/schedule">Set Hours</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Analytics */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-              <LineChart className="mr-2 h-5 w-5 text-primary" /> View Analytics
-            </CardTitle>
-            <CardDescription>Track popular items, revenue, and ratings.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/analytics">View Analytics</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Profile */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-             <Edit className="mr-2 h-5 w-5 text-primary" /> Truck Profile
-            </CardTitle>
-            <CardDescription>Manage truck profile, photos, and description.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/profile">Edit Profile</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Billing */}
-         <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl">
-             <CreditCard className="mr-2 h-5 w-5 text-primary" /> Billing & Subscription
-            </CardTitle>
-            <CardDescription>Manage your premium features and payments.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/owner/billing">Manage Billing</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <DashboardCard
+          title="Truck Profile"
+          description="Manage name, cuisine, photos, and description."
+          link="/owner/profile"
+          icon={<Edit className="text-primary" />}
+          buttonText="Edit Profile"
+        />
+        <DashboardCard
+          title="Manage Menu"
+          description="Update items, prices, categories, and availability."
+          link="/owner/menu"
+          icon={<MenuSquare className="text-primary" />}
+          buttonText="Edit Menu"
+        />
+         <DashboardCard
+          title="Set Schedule"
+          description="Define your regular and special operating hours."
+          link="/owner/schedule"
+          icon={<CalendarClock className="text-primary" />}
+          buttonText="Set Hours"
+        />
+        <DashboardCard
+          title="View Live Orders"
+          description="Track incoming orders and update their statuses."
+          link="/owner/orders"
+          icon={<Eye className="text-primary" />}
+          buttonText="See Orders"
+        />
+        <DashboardCard
+          title="Performance Analytics"
+          description="Track sales, popular items, revenue, and ratings."
+          link="/owner/analytics"
+          icon={<LineChart className="text-primary" />}
+          buttonText="View Analytics"
+        />
+        <DashboardCard
+          title="Billing & Subscription"
+          description="Manage premium features, payments, and invoices."
+          link="/owner/billing"
+          icon={<CreditCard className="text-primary" />}
+          buttonText="Manage Billing"
+        />
+        {/* Example for future features */}
+        {/* <DashboardCard
+          title="Customer Interactions"
+          description="View reviews, messages, and loyalty program status."
+          link="#"
+          icon={<UserCircle className="text-primary" />}
+          buttonText="View Interactions (Soon)"
+          disabled
+        /> */}
       </div>
     </div>
+  );
+}
+
+interface DashboardCardProps {
+  title: string;
+  description: string;
+  link: string;
+  icon: React.ReactNode;
+  buttonText: string;
+  disabled?: boolean;
+}
+
+function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
+  return (
+    <Card className="hover:shadow-lg transition-shadow flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center text-xl">
+          <span className="mr-2 h-6 w-6">{icon}</span> {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-grow" /> {/* Pushes footer to bottom */}
+      <CardContent className="pt-0"> {/* No top padding for button area */}
+        <Button className="w-full" asChild disabled={disabled}>
+          <Link href={disabled ? "#" : link}>{buttonText}</Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

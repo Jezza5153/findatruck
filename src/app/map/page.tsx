@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import MapStatsHeader from '@/components/MapStatsHeader';
@@ -5,18 +6,25 @@ import AnimatedLoader from '@/components/AnimatedLoader';
 import { FilterControls } from '@/components/FilterControls';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { List, Map as MapIcon, Utensils } from 'lucide-react';
+import { List, Map as MapIcon, Utensils, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase'; // Firebase should be initialized here
+import { collection, getDocs, query, where, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
 import FoodTruckMap from '@/components/FoodTruckMap';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
+
+type FiltersState = {
+  cuisine?: string;
+  distance?: number;
+  openNow?: boolean;
+  searchTerm?: string;
+};
 
 export default function MapPage() {
   const [trucks, setTrucks] = useState<FoodTruck[]>([]);
   const [filteredTrucks, setFilteredTrucks] = useState<FoodTruck[]>([]);
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<FiltersState>({});
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +34,12 @@ export default function MapPage() {
   useEffect(() => {
     let ignore = false;
     const fetchTrucks = async () => {
+      if (!db) { // Check if db is initialized
+        setError("Database service is not available. Please try again later.");
+        setIsLoading(false);
+        toast({ title: "Database Error", description: "Could not connect to the database.", variant: "destructive"});
+        return;
+      }
       setIsLoading(true);
       setError(null);
       try {
@@ -33,8 +47,7 @@ export default function MapPage() {
         const querySnapshot = await getDocs(trucksCollectionRef);
         const fetchedTrucks: FoodTruck[] = [];
         querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-          const data = doc.data() as Partial<FoodTruck>; // Cast to Partial
-          // Provide defaults for all fields
+          const data = doc.data() as Partial<FoodTruck>;
           fetchedTrucks.push({
             id: doc.id,
             name: data.name || 'Unnamed Truck',
@@ -46,19 +59,21 @@ export default function MapPage() {
             lng: typeof data.lng === 'number' ? data.lng : undefined,
             address: data.address || undefined,
             operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
-            isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
+            isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen), // Ensure boolean
             rating: typeof data.rating === 'number' ? data.rating : undefined,
             menu: Array.isArray(data.menu) ? data.menu : [],
             testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+            isFeatured: data.isFeatured === undefined ? undefined : Boolean(data.isFeatured),
           });
         });
         if (!ignore) {
           setTrucks(fetchedTrucks);
-          setFilteredTrucks(fetchedTrucks);
+          setFilteredTrucks(fetchedTrucks); // Initially, filtered trucks are all trucks
         }
-      } catch (err) {
+      } catch (err: any) {
+        console.error("Error fetching trucks:", err);
         let errorMessage = "Could not load food truck data. Please try again later.";
-        if (err instanceof Error && err.message) errorMessage = err.message;
+        if (err.message) errorMessage = err.message;
         setError(errorMessage);
         toast({
           title: "Error Loading Trucks",
@@ -73,33 +88,40 @@ export default function MapPage() {
     return () => { ignore = true; };
   }, [toast]);
 
-  // Filter trucks when filters change
+  // Filter trucks when filters or base trucks list change
   useEffect(() => {
     let currentTrucks = [...trucks];
-    if (filters.cuisine) {
+    if (filters.cuisine && filters.cuisine !== '') {
       currentTrucks = currentTrucks.filter(truck =>
-        truck.cuisine.toLowerCase() === filters.cuisine.toLowerCase()
+        truck.cuisine.toLowerCase() === filters.cuisine?.toLowerCase()
       );
     }
     if (filters.openNow) {
       currentTrucks = currentTrucks.filter(truck => truck.isOpen === true);
     }
-    if (filters.searchTerm) {
-      const term = filters.searchTerm.toLowerCase();
+    if (filters.searchTerm && filters.searchTerm.trim() !== '') {
+      const term = filters.searchTerm.toLowerCase().trim();
       currentTrucks = currentTrucks.filter(truck =>
         truck.name.toLowerCase().includes(term) ||
         (truck.description && truck.description.toLowerCase().includes(term)) ||
         truck.cuisine.toLowerCase().includes(term)
       );
     }
+    // Note: Distance filtering is more complex and usually done server-side or with map API specific logic.
+    // For client-side, it would require user's location. We'll skip complex client-side distance filtering for now.
     setFilteredTrucks(currentTrucks);
   }, [filters, trucks]);
 
-  const handleFilterChange = useCallback((newFilters: any) => setFilters(newFilters), []);
+  const handleFilterChange = useCallback((newFilters: FiltersState) => {
+    setFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
+  }, []);
+  
   const handleLocateMe = useCallback(() => {
+    // This function is passed to FilterControls and handled by FoodTruckMap
+    // For now, it can just show a toast or be handled by the map component directly
     toast({
       title: "Locating You...",
-      description: "Centering map on your current location. (Feature coming soon!)",
+      description: "Map will attempt to center on your current location.",
     });
   }, [toast]);
 
@@ -107,13 +129,13 @@ export default function MapPage() {
     <div className="container mx-auto px-4 py-8">
       <MapStatsHeader />
       <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/4 lg:w-1/5">
+        <aside className="w-full md:w-1/4 lg:w-1/5 md:sticky md:top-20 h-fit"> {/* Added sticky positioning for desktop */}
           <FilterControls 
             onFilterChange={handleFilterChange} 
             onLocateMe={handleLocateMe}
           />
-        </div>
-        <div className="w-full md:w-3/4 lg:w-4/5">
+        </aside>
+        <main className="w-full md:w-3/4 lg:w-4/5">
           <div className="mb-4 flex justify-end">
             <Button
               variant="outline"
@@ -126,7 +148,8 @@ export default function MapPage() {
           </div>
           {isLoading && <AnimatedLoader />}
           {error && !isLoading && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="mt-6">
+              <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error Loading Trucks</AlertTitle>
               <AlertDescription>{error}. Please try refreshing the page or check back later.</AlertDescription>
             </Alert>
@@ -147,7 +170,7 @@ export default function MapPage() {
               )}
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

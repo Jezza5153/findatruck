@@ -1,38 +1,49 @@
+
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { FoodTruck, MenuItem as MenuItemType } from '@/lib/types';
 import { MenuItemCard } from '@/components/MenuItemCard';
-import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info, Loader2, AlertTriangle } from 'lucide-react';
+import { Clock, MapPin, Star, Utensils, Bell, ShoppingCart, Info, Loader2, AlertTriangle, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, getDocs, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase'; // auth import for user context
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, collection, getDocs, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
   const [truck, setTruck] = useState<FoodTruck | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [cart, setCart] = useState< { item: MenuItemType, quantity: number }[] >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    const truckId = params.id as string;
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
+  const truckId = params.id as string;
+
+  useEffect(() => {
     if (truckId) {
       const fetchTruckDetailsAndMenu = async () => {
         setIsLoading(true);
         setError(null);
         try {
-          // Fetch truck details
           const truckDocRef = doc(db, "trucks", truckId);
           const truckDocSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
@@ -47,60 +58,94 @@ export default function FoodTruckProfilePage() {
               ownerUid: data.ownerUid || '',
               lat: typeof data.lat === 'number' ? data.lat : undefined,
               lng: typeof data.lng === 'number' ? data.lng : undefined,
-              address: data.address || undefined,
-              operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
+              address: data.address || 'Location details not available.',
+              operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified.',
               isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
-              rating: typeof data.rating === 'number' ? data.rating : undefined,
-              // Menu will be fetched from subcollection
+              rating: typeof data.rating === 'number' ? data.rating : 0, // Default to 0 if undefined
+              numberOfRatings: typeof data.numberOfRatings === 'number' ? data.numberOfRatings : 0,
               testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+              contactEmail: data.contactEmail,
+              phone: data.phone,
+              isFeatured: data.isFeatured,
             };
             setTruck(fetchedTruck);
 
-            // Fetch menu items from subcollection
             const menuItemsCollectionRef = collection(db, "trucks", truckId, "menuItems");
             const menuItemsSnap = await getDocs(menuItemsCollectionRef);
-            const fetchedMenuItems: MenuItemType[] = menuItemsSnap.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
+            const fetchedMenuItems: MenuItemType[] = menuItemsSnap.docs.map(docSnap => ({
+                id: docSnap.id, ...docSnap.data()
             } as MenuItemType));
             setMenuItems(fetchedMenuItems);
 
-          } else {
-            setError(`Food truck with ID "${truckId}" not found.`);
-          }
-        } catch (err) {
-          let errorMessage = "Failed to fetch truck details. Please try again later.";
-          if (err instanceof Error && err.message) {
-            errorMessage = err.message;
-          }
-          setError(errorMessage);
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive"
-          });
-        } finally {
-          setIsLoading(false);
-        }
+          } else { setError(`Food truck with ID "${truckId}" not found.`); }
+        } catch (err: any) {
+          console.error("Fetch truck error:", err);
+          setError(err.message || "Failed to fetch truck details.");
+          toast({ title: "Error", description: err.message || "Could not load truck.", variant: "destructive"});
+        } finally { setIsLoading(false); }
       };
       fetchTruckDetailsAndMenu();
-    } else {
-      setError("No truck ID provided.");
-      setIsLoading(false);
+    } else { setError("No truck ID provided."); setIsLoading(false); }
+  }, [truckId, toast]);
+  
+  // Check if truck is favorite when user or truck data loads
+  useEffect(() => {
+    if (currentUser && truck) {
+      const userDocRef = doc(db, "users", currentUser.uid);
+      getDoc(userDocRef).then(userDocSnap => {
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setIsFavorite(userData.favoriteTrucks?.includes(truck.id) || false);
+        }
+      });
     }
-  }, [params.id, toast]);
+  }, [currentUser, truck]);
+
+
+  const handleToggleFavorite = async () => {
+    if (!currentUser) {
+      toast({ title: "Login Required", description: "Please log in to manage favorites.", variant: "default", action: <Button variant="outline" size="sm" onClick={() => router.push(`/login?redirect=/trucks/${truckId}`)}>Login</Button> });
+      return;
+    }
+    if (!truck) return;
+
+    const userDocRef = doc(db, "users", currentUser.uid);
+    try {
+      if (isFavorite) {
+        await updateDoc(userDocRef, { favoriteTrucks: arrayRemove(truck.id) });
+        toast({ title: "Removed from Favorites", description: `${truck.name} is no longer in your favorites.` });
+      } else {
+        await updateDoc(userDocRef, { favoriteTrucks: arrayUnion(truck.id) });
+        toast({ title: "Added to Favorites!", description: `${truck.name} is now in your favorites.` });
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error: any) {
+      toast({ title: "Error Updating Favorites", description: error.message, variant: "destructive" });
+    }
+  };
+
 
   const handleNotifyNearby = () => {
+     if (!currentUser) {
+      toast({ title: "Login Required", description: "Please log in to set up notifications.", variant: "default", action: <Button variant="outline" size="sm" onClick={() => router.push(`/login?redirect=/trucks/${truckId}`)}>Login</Button> });
+      return;
+    }
+    // Logic to enable notifications (likely involves updating user preferences in Firestore)
     toast({
       title: "Notifications Enabled!",
-      description: `We'll let you know when ${truck?.name} is nearby. (Account feature)`,
+      description: `We'll let you know when ${truck?.name} is nearby. (Manage in your dashboard)`,
     });
   };
 
   const handleOrderNow = () => {
+     if (!currentUser) {
+      toast({ title: "Login Required", description: "Please log in to place an order.", variant: "default", action: <Button variant="outline" size="sm" onClick={() => router.push(`/login?redirect=/trucks/${truckId}`)}>Login</Button> });
+      return;
+    }
+    // Further logic to initiate order (e.g., redirect to an order page, or open order modal)
     toast({
-      title: "Starting Your Order!",
-      description: `Proceed to checkout for ${truck?.name}. (Account feature)`,
+      title: "Order Feature Coming Soon!",
+      description: `Online ordering from ${truck?.name} will be available soon.`,
     });
   };
 
@@ -116,10 +161,10 @@ export default function FoodTruckProfilePage() {
     });
     toast({
       title: "Added to Cart!",
-      description: `${quantity} x ${item.name} added to your order.`,
+      description: `${quantity} x ${item.name} added to your order. (Cart is for demo)`,
     });
   };
-
+  
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -153,7 +198,7 @@ export default function FoodTruckProfilePage() {
     );
   }
 
-  const menuCategories = Array.from(new Set(menuItems.map(item => item.category) || []));
+  const menuCategories = Array.from(new Set(menuItems.map(item => item.category).filter(Boolean)));
   const totalCartItems = cart.reduce((sum, current) => sum + current.quantity, 0);
   const totalCartPrice = cart.reduce((sum, current) => sum + (current.item.price * current.quantity), 0);
 
@@ -166,35 +211,42 @@ export default function FoodTruckProfilePage() {
             alt={truck.name}
             layout="fill"
             objectFit="cover"
+            className="bg-muted"
             data-ai-hint={`${truck.cuisine || 'food'} truck`}
             priority
+            onError={(e) => (e.currentTarget.src = `https://placehold.co/800x400.png?text=${encodeURIComponent(truck.name)}`)}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="absolute bottom-0 left-0 p-6 md:p-8">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">{truck.name}</h1>
-            <Badge variant="secondary" className="text-lg bg-white/20 text-white backdrop-blur-sm">{truck.cuisine}</Badge>
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">{truck.name}</h1>
+            <Badge variant="secondary" className="text-lg bg-white/25 text-white backdrop-blur-sm border-white/30 shadow-md">{truck.cuisine}</Badge>
           </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 text-white"
+            onClick={handleToggleFavorite}
+            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            <Star className={`h-6 w-6 ${isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-white'}`} />
+          </Button>
         </div>
 
         <CardContent className="pt-6">
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-x-8 gap-y-6 mb-8">
             <div className="md:col-span-2">
               <h2 className="text-2xl font-semibold mb-3 text-primary flex items-center">
-                <Info className="mr-2 h-6 w-6" /> About Us
+                <Info className="mr-2 h-6 w-6" /> About {truck.name}
               </h2>
-              <p className="text-muted-foreground mb-4">{truck.description}</p>
+              <p className="text-muted-foreground mb-4 whitespace-pre-line">{truck.description || "No description provided."}</p>
               <div className="space-y-2 text-muted-foreground">
-                {truck.rating !== undefined && (
+                {(truck.rating && truck.rating > 0) && (
                   <div className="flex items-center">
-                    <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" /> {truck.rating.toFixed(1)} stars
+                    <Star className="w-5 h-5 mr-2 text-yellow-400 fill-yellow-400" /> {truck.rating.toFixed(1)} stars {truck.numberOfRatings ? `(${truck.numberOfRatings} ratings)` : ''}
                   </div>
                 )}
-                <div className="flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.address || 'Location not specified'}
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-secondary" /> {truck.operatingHoursSummary || 'Hours not specified'}
-                </div>
+                <div className="flex items-center"> <MapPin className="w-5 h-5 mr-2 text-secondary" /> {truck.address} </div>
+                <div className="flex items-center"> <Clock className="w-5 h-5 mr-2 text-secondary" /> {truck.operatingHoursSummary} </div>
                 {truck.isOpen !== undefined && (
                   <Badge variant={truck.isOpen ? "default" : "destructive"} className={`mt-2 ${truck.isOpen ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                     {truck.isOpen ? "Open Now" : "Currently Closed"}
@@ -209,6 +261,13 @@ export default function FoodTruckProfilePage() {
               <Button size="lg" variant="outline" className="w-full" onClick={handleNotifyNearby}>
                 <Bell className="mr-2 h-5 w-5" /> Notify Me When Nearby
               </Button>
+              {(truck.contactEmail || truck.phone) && (
+                 <Card className="bg-muted/50 p-3">
+                    <h3 className="text-sm font-semibold mb-1">Contact Info:</h3>
+                    {truck.contactEmail && <p className="text-xs text-muted-foreground">Email: {truck.contactEmail}</p>}
+                    {truck.phone && <p className="text-xs text-muted-foreground">Phone: {truck.phone}</p>}
+                 </Card>
+              )}
             </div>
           </div>
 
@@ -221,16 +280,12 @@ export default function FoodTruckProfilePage() {
                       <Utensils className="mr-2 h-6 w-6" /> Menu
                   </h2>
                   {menuCategories.length > 0 ? (
-                    <TabsList>
+                    <TabsList className="overflow-x-auto whitespace-nowrap">
                     {menuCategories.map(category => (
                         <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
                     ))}
                     </TabsList>
-                  ) : (
-                    <TabsList>
-                        <TabsTrigger value="all-items">All Items</TabsTrigger>
-                    </TabsList>
-                  )}
+                  ) : ( <TabsList><TabsTrigger value="all-items">All Items</TabsTrigger></TabsList> )}
               </div>
 
               {menuCategories.length > 0 ? menuCategories.map(category => (
@@ -244,36 +299,29 @@ export default function FoodTruckProfilePage() {
               )) : (
                  <TabsContent value="all-items">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {menuItems!.map(item => (
-                            <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
-                        ))}
+                        {menuItems!.map(item => ( <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} /> ))}
                     </div>
                 </TabsContent>
               )}
             </Tabs>
           ) : (
             <Card className="my-6">
-              <CardHeader>
-                <CardTitle className="text-xl text-primary flex items-center">
-                  <Utensils className="mr-2 h-6 w-6" /> Menu
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 text-center text-muted-foreground">
-                This truck's menu is not available at the moment. Please check back later!
-              </CardContent>
+              <CardHeader><CardTitle className="text-xl text-primary flex items-center"><Utensils className="mr-2 h-6 w-6" /> Menu</CardTitle></CardHeader>
+              <CardContent className="pt-0 text-center text-muted-foreground"> This truck's menu is not available at the moment. Please check back later! </CardContent>
             </Card>
           )}
 
           {truck.testimonials && truck.testimonials.length > 0 && (
             <>
               <Separator className="my-8" />
-              <h2 className="text-2xl font-semibold mb-6 text-primary">
-                What Customers Say
+              <h2 className="text-2xl font-semibold mb-6 text-primary flex items-center">
+                <MessageSquare className="mr-2 h-6 w-6" /> What Customers Say
               </h2>
               <div className="grid md:grid-cols-2 gap-6">
                 {truck.testimonials!.map(testimonial => (
                   <Card key={testimonial.id} className="bg-muted/50">
                     <CardContent className="pt-6">
+                      {testimonial.avatarUrl && <Image src={testimonial.avatarUrl} alt={testimonial.name} width={40} height={40} className="rounded-full mb-2 float-left mr-3" data-ai-hint={testimonial.dataAiHint || "user avatar"} />}
                       <p className="italic text-foreground mb-2">"{testimonial.quote}"</p>
                       <p className="text-right font-medium text-primary">- {testimonial.name}</p>
                     </CardContent>
@@ -284,28 +332,30 @@ export default function FoodTruckProfilePage() {
           )}
 
           {cart.length > 0 && (
-             <Card className="mt-8 fixed bottom-4 right-4 w-80 shadow-2xl z-50 bg-background border-primary">
-                <CardHeader>
+             <Card className="mt-8 fixed bottom-4 right-4 w-80 shadow-2xl z-50 bg-background border-primary animate-in fade-in zoom-in-95">
+                <CardHeader className="pb-3 pt-4">
                     <CardTitle className="text-lg text-primary flex items-center">
                         <ShoppingCart className="mr-2 h-5 w-5"/> Your Order ({totalCartItems})
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <ul className="space-y-2 max-h-40 overflow-y-auto mb-3">
-                        {cart.map(cartItem => (
-                            <li key={cartItem.item.id} className="flex justify-between text-sm">
-                                <span>{cartItem.quantity} x {cartItem.item.name}</span>
-                                <span>${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
-                            </li>
-                        ))}
-                    </ul>
+                <CardContent className="py-0">
+                    <ScrollArea className="max-h-40 pr-3"> {/* Added ScrollArea */}
+                        <ul className="space-y-2 mb-3">
+                            {cart.map(cartItem => (
+                                <li key={cartItem.item.id} className="flex justify-between text-sm">
+                                    <span>{cartItem.quantity} x {cartItem.item.name}</span>
+                                    <span>${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </ScrollArea>
                     <Separator />
                     <div className="flex justify-between font-semibold mt-2 text-md">
                         <span>Total:</span>
                         <span>${totalCartPrice.toFixed(2)}</span>
                     </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="pt-3 pb-4">
                     <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleOrderNow}>
                         Checkout (Coming Soon)
                     </Button>
@@ -317,3 +367,14 @@ export default function FoodTruckProfilePage() {
     </div>
   );
 }
+
+// Helper component for ScrollArea (can be moved to ui if used elsewhere)
+const ScrollArea = React.forwardRef<
+  React.ElementRef<typeof import('@radix-ui/react-scroll-area').Root>,
+  React.ComponentPropsWithoutRef<typeof import('@radix-ui/react-scroll-area').Root>
+>(({ className, children, ...props }, ref) => (
+  <div className={cn("relative overflow-hidden", className)} ref={ref as any}>
+    <div className="h-full w-full rounded-[inherit] overflow-y-auto">{children}</div>
+  </div>
+));
+ScrollArea.displayName = "ScrollArea";
