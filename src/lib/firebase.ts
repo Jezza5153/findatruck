@@ -16,6 +16,31 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Enhanced warning for missing API key
+if (!firebaseConfig.apiKey) {
+  console.warn(
+`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Firebase API Key is missing or undefined. 
+Ensure NEXT_PUBLIC_FIREBASE_API_KEY is set in your .env.local file.
+This file should be in the ROOT of your project.
+Example .env.local content:
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+# ... and other Firebase config variables
+
+After adding or modifying .env.local, you MUST restart your Next.js development server.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`
+  );
+} else if (process.env.NODE_ENV === 'development' && firebaseConfig.apiKey === 'YOUR_FIREBASE_API_KEY_HERE') {
+  console.warn(
+`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Firebase API Key is set to the placeholder 'YOUR_FIREBASE_API_KEY_HERE'.
+Please replace it with your actual Firebase API key in .env.local.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`
+  );
+}
+
+
 let app: FirebaseApp;
 let analytics: Analytics | null = null;
 
@@ -31,7 +56,12 @@ const storage = getStorage(app);
 
 if (typeof window !== 'undefined') {
   if (firebaseConfig.measurementId){
-    analytics = getAnalytics(app);
+    // Check if measurementId is not the placeholder
+    if (firebaseConfig.measurementId !== 'YOUR_FIREBASE_MEASUREMENT_ID_HERE' && firebaseConfig.measurementId.startsWith('G-')) {
+      analytics = getAnalytics(app);
+    } else if (firebaseConfig.measurementId) {
+      console.warn("Firebase Measurement ID might be a placeholder or invalid. Analytics not initialized.");
+    }
   }
 }
 
