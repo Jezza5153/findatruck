@@ -19,16 +19,16 @@ export default function OwnerPortalPage() {
           <CardDescription>Welcome! Manage your truck or get started with FindATruck.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Button 
-            onClick={() => router.push('/owner/login')} 
+          <Button
+            onClick={() => router.push('/login')}
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6"
             size="lg"
           >
             <LogIn className="mr-2 h-6 w-6" /> Owner Login
           </Button>
-          <Button 
-            onClick={() => router.push('/owner/signup')} 
-            variant="outline" 
+          <Button
+            onClick={() => router.push('/owner/signup')}
+            variant="outline"
             className="w-full border-accent text-accent hover:bg-accent/10 hover:text-accent text-lg py-6"
             size="lg"
           >
@@ -44,5 +44,3 @@ export default function OwnerPortalPage() {
     </div>
   );
 }
-
-    

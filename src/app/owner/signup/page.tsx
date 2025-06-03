@@ -65,15 +65,15 @@ export default function OwnerSignupPage() {
         email: user.email,
         role: 'owner',
         ownerName: data.ownerName,
-        truckName: data.truckName, // Store truckName from form
-        cuisineType: data.cuisineType, // Store cuisineType from form
+        truckName: data.truckName,
+        cuisineType: data.cuisineType,
         createdAt: serverTimestamp(),
       });
       toast({
         title: "Owner Signup Successful!",
-        description: "Welcome! Please complete your truck profile.",
+        description: "Welcome! Please log in and complete your truck profile.",
       });
-      router.push('/owner/dashboard'); 
+      router.push('/login');
     } catch (error: any) {
       console.error("Detailed Owner Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";
@@ -196,7 +196,7 @@ export default function OwnerSignupPage() {
         <CardFooter className="text-center block">
           <p className="mt-2 text-sm text-muted-foreground">
             Already have an owner account?{' '}
-            <Link href="/owner/login" className="font-medium text-accent hover:underline">
+            <Link href="/login" className="font-medium text-accent hover:underline">
               Log in here
             </Link>
           </p>
@@ -211,5 +211,3 @@ export default function OwnerSignupPage() {
     </div>
   );
 }
-
-    

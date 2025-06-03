@@ -105,7 +105,7 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="mt-8">
-            <Link href="/customer/login" className="text-primary-foreground/90 hover:text-primary-foreground hover:underline text-md">
+            <Link href="/login" className="text-primary-foreground/90 hover:text-primary-foreground hover:underline text-md">
                 Already have an account? <span className="font-semibold">Log In Here</span> <LogIn className="inline h-5 w-5 ml-1"/>
             </Link>
           </div>

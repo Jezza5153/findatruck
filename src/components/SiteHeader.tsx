@@ -95,7 +95,7 @@ export function SiteHeader() {
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/customer/login"><LogInIcon className="mr-1 h-4 w-4"/>Login</Link>
+                  <Link href="/login"><LogInIcon className="mr-1 h-4 w-4"/>Login</Link>
                 </Button>
                 <Button size="sm" asChild className="bg-primary hover:bg-primary/90">
                   <Link href="/customer/signup"><UserCircle className="mr-1 h-4 w-4"/>Sign Up</Link>
@@ -144,10 +144,13 @@ export function SiteHeader() {
                 ) : (
                   <>
                     <Button variant="outline" asChild className="justify-start text-base py-6">
-                        <Link href="/customer/login"><LogInIcon className="mr-2 h-5 w-5" />Login</Link>
+                        <Link href="/login"><LogInIcon className="mr-2 h-5 w-5" />Login</Link>
                     </Button>
                     <Button asChild className="bg-primary hover:bg-primary/90 justify-start text-base py-6">
-                        <Link href="/customer/signup"><UserCircle className="mr-2 h-5 w-5" />Sign Up</Link>
+                        <Link href="/customer/signup"><UserCircle className="mr-2 h-5 w-5" />Customer Sign Up</Link>
+                    </Button>
+                    <Button variant="outline" asChild className="text-accent border-accent hover:bg-accent/10 hover:text-accent justify-start text-base py-6">
+                        <Link href="/owner/signup"><ChefHat className="mr-2 h-5 w-5" />Owner Sign Up</Link>
                     </Button>
                   </>
                 )}

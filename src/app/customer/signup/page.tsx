@@ -50,26 +50,26 @@ export default function CustomerSignupPage() {
       await updateProfile(user, { displayName: data.name });
 
       const userDocRef = doc(db, "users", user.uid);
-      const userDocumentData: Partial<UserDocument> = { 
+      const userDocumentData: Partial<UserDocument> = {
         uid: user.uid,
         email: user.email,
         role: 'customer',
         name: data.name,
         createdAt: serverTimestamp(),
         favoriteTrucks: [],
-        notificationPreferences: { 
+        notificationPreferences: {
             truckNearbyRadius: 2,
             orderUpdates: true,
             promotionalMessages: false,
         }
       };
       await setDoc(userDocRef, userDocumentData);
-      
+
       toast({
         title: "Signup Successful!",
         description: "Your account has been created. Please login.",
       });
-      router.push('/customer/login'); 
+      router.push('/login');
     } catch (error: any) {
       console.error("Detailed Customer Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";
@@ -90,7 +90,7 @@ export default function CustomerSignupPage() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast({
         title: "Signup Failed",
         description: errorMessage,
@@ -98,7 +98,7 @@ export default function CustomerSignupPage() {
       });
     }
   };
-  
+
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-secondary/10">
       <Card className="w-full max-w-md shadow-2xl">
@@ -154,14 +154,14 @@ export default function CustomerSignupPage() {
         <CardFooter className="text-center block">
             <p className="mt-2 text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/customer/login" className="font-medium text-primary hover:underline">
+                <Link href="/login" className="font-medium text-primary hover:underline">
                 Log in here
                 </Link>
             </p>
              <p className="mt-1 text-sm text-muted-foreground">
                 Signing up as a Food Truck Owner?{' '}
-                <Link href="/owner/portal" className="font-medium text-accent hover:underline">
-                Owner Portal
+                <Link href="/owner/signup" className="font-medium text-accent hover:underline">
+                Owner Signup
                 </Link>
             </p>
         </CardFooter>
@@ -169,5 +169,3 @@ export default function CustomerSignupPage() {
     </div>
   );
 }
-
-    
