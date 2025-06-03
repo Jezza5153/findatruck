@@ -72,7 +72,7 @@ export default function GoogleFoodTruckMap({ trucks }: Props) {
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
       (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserLocation(null)
+      () => setUserLocation(null) // Handle case where user denies location
     );
   }, []);
 
@@ -117,14 +117,15 @@ export default function GoogleFoodTruckMap({ trucks }: Props) {
             <Marker
               position={userLocation}
               icon={{
-                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', // replace with your SVG later
-                scaledSize: new window.google.maps.Size(34, 34),
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300E5FF" width="30px" height="30px"><circle cx="12" cy="12" r="10" stroke="%23FFFFFF" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="%23FFFFFF"/></svg>'),
+                scaledSize: new window.google.maps.Size(30, 30),
+                anchor: new window.google.maps.Point(15,15)
               }}
               zIndex={100}
             />
             <Circle
               center={userLocation}
-              radius={1200}
+              radius={1200} // Roughly 0.75 miles
               options={{
                 strokeColor: '#00eaff',
                 fillColor: '#00eaff44',
@@ -143,9 +144,10 @@ export default function GoogleFoodTruckMap({ trucks }: Props) {
               position={{ lat: truck.lat, lng: truck.lng }}
               icon={{
                 url: truck.isOpen
-                  ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' // Your SVG soon!
-                  : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                  ? 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300FFAB" width="38px" height="46px"><path d="M20 8h-3V4H7v4H4c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2V10c0-1.1-.9-2-2-2zm-9 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm7 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM20 11H4V10h16v1zM7 6h10v2H7V6z"/></svg>')
+                  : 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23FF4D6D" width="38px" height="46px"><path d="M20 8h-3V4H7v4H4c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2V10c0-1.1-.9-2-2-2zm-9 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm7 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM20 11H4V10h16v1zM7 6h10v2H7V6z"/></svg>'),
                 scaledSize: new window.google.maps.Size(38, 46),
+                anchor: new window.google.maps.Point(19, 46),
               }}
               onClick={() => setActiveTruck(truck)}
             />
@@ -157,34 +159,27 @@ export default function GoogleFoodTruckMap({ trucks }: Props) {
           <InfoWindow
             position={{ lat: activeTruck.lat, lng: activeTruck.lng }}
             onCloseClick={() => setActiveTruck(null)}
+            options={{
+              pixelOffset: new google.maps.Size(0, -40), // Adjust to position above marker
+              disableAutoPan: true,
+              content: `
+                <div style="background: rgba(24, 26, 34, 0.85); backdrop-filter: blur(10px); border-radius: 1rem; padding: 12px 16px; box-shadow: 0 4px 20px rgba(0, 234, 255, 0.2); border: 1px solid rgba(0, 234, 255, 0.4); color: #e0f7fa; font-family: 'Inter', sans-serif; max-width: 250px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #22d3ee; margin: 0;">${activeTruck.name}</h3>
+                    ${activeTruck.isOpen ? 
+                      '<span style="background: rgba(0, 255, 171, 0.2); color: #00FFAB; padding: 2px 6px; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 500;">Open</span>' :
+                      '<span style="background: rgba(255, 77, 109, 0.2); color: #FF4D6D; padding: 2px 6px; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 500;">Closed</span>'
+                    }
+                  </div>
+                  <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin: 0 0 6px 0;">${activeTruck.cuisine}</p>
+                  ${activeTruck.rating !== undefined ? `<p style="font-size: 0.8rem; color: #facc15; margin: 0 0 8px 0;">${'★'.repeat(Math.round(activeTruck.rating))}${'☆'.repeat(5-Math.round(activeTruck.rating))} (${activeTruck.rating.toFixed(1)})</p>` : ''}
+                  <p style="font-size: 0.85rem; margin: 0 0 10px 0; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis;">${activeTruck.description || 'No description available.'}</p>
+                  <a href="/trucks/${activeTruck.id}" style="display: block; text-align: center; background: linear-gradient(to right, rgba(0, 234, 255, 0.3), rgba(0, 180, 255, 0.4)); border: 1px solid rgba(0, 234, 255, 0.5); color: #ffffff; padding: 6px 10px; border-radius: 0.75rem; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s ease;">View Details</a>
+                </div>
+              `
+            }}
           >
-            <div className="bg-[#181A22cc] rounded-2xl px-4 py-3 shadow-lg border border-cyan-500/40 glassmorphism backdrop-blur-2xl">
-              <div className="flex flex-col gap-1">
-                <div className="font-extrabold text-lg tracking-wide text-cyan-300 flex items-center">
-                  {activeTruck.name}
-                  {activeTruck.isOpen ? (
-                    <span className="ml-3 px-2 py-0.5 text-xs rounded-lg bg-cyan-700/70 text-white glow shadow">Open Now</span>
-                  ) : (
-                    <span className="ml-3 px-2 py-0.5 text-xs rounded-lg bg-pink-800/70 text-white">Closed</span>
-                  )}
-                </div>
-                <div className="text-xs uppercase tracking-widest text-cyan-100/70 mb-1">{activeTruck.cuisine}</div>
-                <div className="flex gap-2 items-center">
-                  {activeTruck.rating !== undefined && (
-                    <span className="text-yellow-400 font-bold tracking-wide">{activeTruck.rating.toFixed(1)}★</span>
-                  )}
-                </div>
-                <div className="text-cyan-50/90 mt-2 line-clamp-2 text-sm font-medium">{activeTruck.description}</div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-3 bg-gradient-to-r from-cyan-400/30 to-cyan-600/50 border border-cyan-400/50 shadow hover:bg-cyan-500/30 text-white font-bold tracking-wide rounded-xl"
-                  asChild
-                >
-                  <a href={`/trucks/${activeTruck.id}`}>View Menu</a>
-                </Button>
-              </div>
-            </div>
+            {/* Content is now set via options.content as HTML string */}
           </InfoWindow>
         )}
 
@@ -201,7 +196,8 @@ export default function GoogleFoodTruckMap({ trucks }: Props) {
               (pos) => {
                 setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                 setRecenter(true);
-              }
+              },
+              () => { /* Handle location denial or error */ }
             );
           }
         }}

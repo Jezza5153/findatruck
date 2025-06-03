@@ -16,12 +16,14 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { auth, db, storage } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import {
-  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp
+  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc as getFirestoreDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useRouter } from 'next/navigation';
+import type { UserDocument } from '@/lib/types';
+
 
 // ----- TYPES -----
 type MenuItem = {
@@ -30,7 +32,7 @@ type MenuItem = {
   description: string;
   price: number;
   category: string;
-  imageUrl?: string; // Now never null, just undefined if missing
+  imageUrl?: string; 
 };
 
 type MenuCategory = {
@@ -43,7 +45,9 @@ export default function OwnerMenuPage() {
   const { toast } = useToast();
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [ownerUid, setOwnerUid] = useState<string | null>(null);
+  
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [truckId, setTruckId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,39 +69,69 @@ export default function OwnerMenuPage() {
 
   const router = useRouter();
 
-  // AUTH & LOAD DATA
+  // AUTH & LOAD USER DATA
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, user => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        router.push('/owner/login');
+        router.push('/login'); // Redirect to unified login
         return;
       }
-      setOwnerUid(user.uid);
+      setCurrentUser(user);
+      // Fetch user document to get truckId
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getFirestoreDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data() as UserDocument;
+        if (userData.role === 'owner' && userData.truckId) {
+          setTruckId(userData.truckId);
+        } else if (userData.role === 'owner' && !userData.truckId) {
+          // This owner might not have completed their truck profile setup yet
+          // or the truckId is not directly on the user doc.
+          // For now, we assume truckId is derived from user.uid for the 'trucks' collection.
+          setTruckId(user.uid); // Assuming truckId is the same as owner's uid
+        } else {
+          toast({ title: "Access Denied", description: "You are not an authorized owner.", variant: "destructive" });
+          router.push('/');
+        }
+      } else {
+         toast({ title: "Error", description: "User profile not found.", variant: "destructive" });
+         router.push('/');
+      }
     });
     return () => unsub();
-  }, [router]);
+  }, [router, toast]);
 
-  // FETCH MENU DATA
+  // FETCH MENU DATA once truckId is set
   useEffect(() => {
-    if (!ownerUid) return;
+    if (!truckId) {
+        // If truckId is null and currentUser exists, it means we are still waiting for userDoc lookup or there's an issue.
+        // If no currentUser, auth useEffect will handle redirect.
+        if(currentUser) setIsLoading(false); // If user is loaded but no truckId, stop loading.
+        return;
+    }
     const fetchMenuData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Categories
-        const catsSnap = await getDocs(collection(db, "trucks", ownerUid, "menuCategories"));
+        const categoriesPath = collection(db, "trucks", truckId, "menuCategories");
+        const itemsPath = collection(db, "trucks", truckId, "menuItems");
+
+        const [catsSnap, itemsSnap] = await Promise.all([
+            getDocs(categoriesPath),
+            getDocs(itemsPath)
+        ]);
+        
         setCategories(catsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuCategory)));
-        // Items
-        const itemsSnap = await getDocs(collection(db, "trucks", ownerUid, "menuItems"));
         setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
       } catch (err: any) {
         setError(err.message || "Failed to load menu data.");
+        toast({ title: "Data Load Error", description: err.message || "Failed to load menu data.", variant: "destructive" });
       } finally {
         setIsLoading(false);
       }
     };
     fetchMenuData();
-  }, [ownerUid]);
+  }, [truckId, toast]);
 
   // IMAGE PREVIEW
   const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,31 +141,32 @@ export default function OwnerMenuPage() {
       setItemImagePreview(URL.createObjectURL(file));
     } else {
       setItemImageFile(null);
-      setItemImagePreview(undefined);
+      setItemImagePreview(editingItem?.imageUrl || undefined); // Revert to original if file removed
     }
   };
 
   // CATEGORY CRUD
   const handleSaveCategory = async () => {
-    if (!currentCategoryName.trim() || !ownerUid) {
+    if (!currentCategoryName.trim() || !truckId) {
       toast({ title: "Error", description: "Category name cannot be empty.", variant: "destructive"});
       return;
     }
     try {
+      const categoryCollectionRef = collection(db, "trucks", truckId, "menuCategories");
       if (editingCategory) {
-        await updateDoc(doc(db, "trucks", ownerUid, "menuCategories", editingCategory.id), { name: currentCategoryName });
+        await updateDoc(doc(categoryCollectionRef, editingCategory.id), { name: currentCategoryName });
         setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, name: currentCategoryName } : c));
         toast({ title: "Category Updated", description: `Category "${currentCategoryName}" updated.` });
       } else {
-        const docRef = await addDoc(collection(db, "trucks", ownerUid, "menuCategories"), {
+        const docRef = await addDoc(categoryCollectionRef, {
           name: currentCategoryName,
           createdAt: serverTimestamp()
         });
         setCategories([...categories, { id: docRef.id, name: currentCategoryName }]);
         toast({ title: "Category Added", description: `Category "${currentCategoryName}" added.` });
       }
-    } catch (e) {
-      toast({ title: "Error", description: String(e), variant: "destructive" });
+    } catch (e:any) {
+      toast({ title: "Error saving category", description: e.message || String(e), variant: "destructive" });
     }
     setCurrentCategoryName('');
     setEditingCategory(null);
@@ -139,81 +174,85 @@ export default function OwnerMenuPage() {
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!ownerUid) return;
+    if (!truckId) return;
+    // Basic confirmation, could be improved with a modal
+    if (!confirm(`Are you sure you want to delete the category "${categoryName}"? This will not delete items in it.`)) return;
+
     try {
-      await deleteDoc(doc(db, "trucks", ownerUid, "menuCategories", categoryId));
-      // Optionally, delete menu items with this category:
-      const newItems = menuItems.filter(item => item.category !== categoryName);
-      setMenuItems(newItems);
+      await deleteDoc(doc(db, "trucks", truckId, "menuCategories", categoryId));
       setCategories(categories.filter(c => c.id !== categoryId));
-      toast({ title: "Category Deleted", description: `Category "${categoryName}" deleted.`, variant: "destructive" });
-    } catch (e) {
-      toast({ title: "Error", description: String(e), variant: "destructive" });
+      // Items in the deleted category remain but might need manual re-categorization by the user.
+      // Or, you could update items to a default/uncategorized state here.
+      toast({ title: "Category Deleted", description: `Category "${categoryName}" deleted. Items may need re-categorizing.`, variant: "destructive" });
+    } catch (e:any) {
+      toast({ title: "Error deleting category", description: e.message || String(e), variant: "destructive" });
     }
   };
 
   // MENU ITEM CRUD
   const handleSaveItem = async () => {
-    if (!itemName || !itemPrice || !itemCategory || !ownerUid) {
+    if (!itemName || !itemPrice || !itemCategory || !truckId) {
       toast({ title: "Missing Fields", description: "Name, price, and category are required.", variant: "destructive"});
       return;
     }
-    let imageUrl: string | undefined = itemImagePreview;
-    try {
-      // If a new image is picked, upload to storage
-      if (itemImageFile) {
-        const imageRef = ref(storage, `trucks/${ownerUid}/menuImages/${editingItem?.id || Date.now()}.jpg`);
+    let imageUrl: string | undefined = editingItem?.imageUrl; // Keep old image if not changed
+
+    if (itemImageFile) { // A new file was selected
+      try {
+        const imageRef = ref(storage, `trucks/${truckId}/menuImages/${itemImageFile.name}_${Date.now()}`);
         await uploadBytes(imageRef, itemImageFile);
         imageUrl = await getDownloadURL(imageRef);
+      } catch (uploadError: any) {
+        toast({ title: "Image Upload Failed", description: uploadError.message || "Could not upload image.", variant: "destructive"});
+        return; // Stop if image upload fails
       }
+    }
+    
+    const itemData: Omit<MenuItem, 'id'> = {
+      name: itemName,
+      description: itemDescription,
+      price: parseFloat(itemPrice),
+      category: itemCategory,
+      imageUrl: imageUrl || undefined, // Ensure it's undefined not null for Firestore if no image
+    };
+
+    try {
+      const itemCollectionRef = collection(db, "trucks", truckId, "menuItems");
       if (editingItem) {
-        await updateDoc(doc(db, "trucks", ownerUid, "menuItems", editingItem.id), {
-          name: itemName,
-          description: itemDescription,
-          price: parseFloat(itemPrice),
-          category: itemCategory,
-          imageUrl: imageUrl ?? undefined,
-        });
+        await updateDoc(doc(itemCollectionRef, editingItem.id), itemData);
         setMenuItems(menuItems.map(item =>
           item.id === editingItem.id
-            ? { ...item, name: itemName, description: itemDescription, price: parseFloat(itemPrice), category: itemCategory, imageUrl: imageUrl ?? undefined }
+            ? { ...item, ...itemData, id: item.id } // Ensure id is preserved
             : item
         ));
         toast({ title: "Item Updated", description: `"${itemName}" updated.` });
       } else {
-        const docRef = await addDoc(collection(db, "trucks", ownerUid, "menuItems"), {
-          name: itemName,
-          description: itemDescription,
-          price: parseFloat(itemPrice),
-          category: itemCategory,
-          imageUrl: imageUrl ?? undefined,
-          createdAt: serverTimestamp()
-        });
-        setMenuItems([...menuItems, {
-          id: docRef.id, name: itemName, description: itemDescription, price: parseFloat(itemPrice), category: itemCategory, imageUrl: imageUrl ?? undefined
-        }]);
+        const docRef = await addDoc(itemCollectionRef, { ...itemData, createdAt: serverTimestamp() });
+        setMenuItems([...menuItems, { ...itemData, id: docRef.id }]);
         toast({ title: "Item Added", description: `"${itemName}" added to ${itemCategory}.` });
       }
-    } catch (e) {
-      toast({ title: "Error", description: String(e), variant: "destructive" });
+    } catch (e:any) {
+      toast({ title: "Error saving item", description: e.message || String(e), variant: "destructive" });
     }
     resetItemForm();
     setEditingItem(null);
     setIsItemDialogOpen(false);
+    setItemImageFile(null); // Clear file after save
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!ownerUid) return;
+    if (!truckId) return;
+    if (!confirm("Are you sure you want to delete this menu item?")) return;
     try {
-      await deleteDoc(doc(db, "trucks", ownerUid, "menuItems", itemId));
+      await deleteDoc(doc(db, "trucks", truckId, "menuItems", itemId));
       setMenuItems(menuItems.filter(item => item.id !== itemId));
       toast({ title: "Item Deleted", variant: "destructive" });
-    } catch (e) {
-      toast({ title: "Error", description: String(e), variant: "destructive" });
+    } catch (e:any) {
+      toast({ title: "Error deleting item", description: e.message || String(e), variant: "destructive" });
     }
   };
 
-  // DIALOG OPEN/CLOSE
+  // DIALOG OPEN/CLOSE & FORM RESET
   const openEditCategoryDialog = (category: MenuCategory) => {
     setEditingCategory(category);
     setCurrentCategoryName(category.name);
@@ -238,7 +277,7 @@ export default function OwnerMenuPage() {
     setItemDescription(item.description);
     setItemPrice(item.price.toString());
     setItemCategory(item.category);
-    setItemImageFile(null);
+    setItemImageFile(null); // Reset file input
     setItemImagePreview(item.imageUrl || undefined);
     setIsItemDialogOpen(true);
   };
@@ -250,7 +289,6 @@ export default function OwnerMenuPage() {
   };
 
   // RENDER
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
@@ -259,12 +297,12 @@ export default function OwnerMenuPage() {
       </div>
     );
   }
-  if (error) {
+  if (error && !truckId) { // Show error prominently if truckId is missing and causing data load failure
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive" className="max-w-lg mx-auto">
           <AlertTitle>Error Loading Menu Data</AlertTitle>
-          <AlertDescription>{error}. Please ensure you are logged in and try refreshing.</AlertDescription>
+          <AlertDescription>{error} Ensure your truck profile is complete.</AlertDescription>
         </Alert>
         <div className="mt-6 text-center">
           <Button asChild variant="outline">
@@ -274,6 +312,18 @@ export default function OwnerMenuPage() {
       </div>
     );
   }
+  if (!currentUser) { // Should be caught by auth listener, but as a fallback
+     return (
+      <div className="container mx-auto px-4 py-8 text-center">
+         <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertTitle>Not Authenticated</AlertTitle>
+            <AlertDescription>Please log in to manage your menu.</AlertDescription>
+         </Alert>
+         <Button asChild className="mt-4"><Link href="/login">Login</Link></Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -342,12 +392,14 @@ export default function OwnerMenuPage() {
               <Label htmlFor="itemImageFile"><ImageIcon className="inline mr-1 h-4 w-4"/>Item Image</Label>
               <Input id="itemImageFile" type="file" accept="image/*" onChange={handleImageFileChange} className="mt-1"/>
               {itemImagePreview && (
-                <NextImage src={itemImagePreview} alt="Preview" width={100} height={100} className="mt-2 rounded object-cover" data-ai-hint="food item"/>
+                <div className="mt-2 relative w-24 h-24">
+                  <NextImage src={itemImagePreview} alt="Preview" layout="fill" className="rounded object-cover" data-ai-hint="food item"/>
+                </div>
               )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsItemDialogOpen(false); setEditingItem(null); resetItemForm(); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setIsItemDialogOpen(false); setEditingItem(null); resetItemForm(); setItemImageFile(null); }}>Cancel</Button>
             <Button onClick={handleSaveItem} disabled={categories.length === 0 && !editingItem}>Save Item</Button>
           </DialogFooter>
         </DialogContent>
@@ -391,17 +443,19 @@ export default function OwnerMenuPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {menuItems.length > 0 ? menuItems.map(item => (
-              <Card key={item.id} className="bg-muted/20 p-0">
+              <Card key={item.id} className="bg-card p-0 overflow-hidden">
                 <div className="flex flex-col sm:flex-row">
                     {item.imageUrl && (
-                        <div className="w-full sm:w-1/3 h-32 sm:h-auto relative">
-                        <NextImage src={item.imageUrl} alt={item.name} layout="fill" className="rounded-t-md sm:rounded-l-md sm:rounded-tr-none object-cover" data-ai-hint="food item" />
+                        <div className="w-full sm:w-1/3 h-40 sm:h-auto relative">
+                          <NextImage src={item.imageUrl} alt={item.name} layout="fill" className="object-cover" data-ai-hint="food item" />
                         </div>
                     )}
-                    <div className={`flex-grow p-4 ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
-                        <CardTitle className="text-lg mb-1">{item.name}</CardTitle>
-                        <CardDescription className="text-xs text-primary mb-1">${item.price.toFixed(2)} - {item.category}</CardDescription>
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
+                    <div className={`flex-1 p-4 flex flex-col justify-between ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
+                        <div>
+                            <CardTitle className="text-lg mb-1">{item.name}</CardTitle>
+                            <CardDescription className="text-xs text-primary mb-1">${item.price.toFixed(2)} - {item.category}</CardDescription>
+                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
+                        </div>
                         <div className="flex justify-end space-x-2 mt-auto">
                             <Button variant="outline" size="sm" onClick={() => openEditItemDialog(item)}> <Edit3 className="mr-1 h-3 w-3"/> Edit </Button>
                             <Button variant="destructive" size="sm" onClick={() => handleDeleteItem(item.id)}> <Trash2 className="mr-1 h-3 w-3"/> Delete </Button>

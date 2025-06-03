@@ -4,16 +4,16 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage"; // <-- ADD THIS
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDrNEnoe6Ql661WwforKkhq6Iai_13NoLI",
-  authDomain: "findatruck-58538.firebaseapp.com",
-  projectId: "findatruck-58538",
-  storageBucket: "findatruck-58538.firebasestorage.app", // <--- Your custom bucket
-  messagingSenderId: "555774884004",
-  appId: "1:555774884004:web:638b0d4f140a8e882ace31",
-  measurementId: "G-H0C04GHKQK"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 let app: FirebaseApp;
@@ -27,10 +27,12 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app); // <-- ADD THIS
+const storage = getStorage(app); 
 
 if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+  if (firebaseConfig.measurementId){
+    analytics = getAnalytics(app);
+  }
 }
 
-export { app, auth, db, storage, analytics, firebaseConfig }; // <-- EXPORT STORAGE
+export { app, auth, db, storage, analytics, firebaseConfig };

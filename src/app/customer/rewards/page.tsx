@@ -97,7 +97,7 @@ export default function CustomerRewardsPage() {
           Log in or create an account to start earning rewards with your favorite food trucks!
         </p>
         <Button asChild size="lg">
-          <Link href="/customer/login">Login / Sign Up</Link>
+          <Link href="/login">Login / Sign Up</Link>
         </Button>
       </div>
     );
@@ -207,5 +207,3 @@ export default function CustomerRewardsPage() {
     </div>
   );
 }
-
-    

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import type { FoodTruck } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Crosshair } from 'lucide-react';
+import { Crosshair, WifiOff } from 'lucide-react'; // Added WifiOff
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
 
 type Props = {
   trucks: FoodTruck[];
@@ -13,11 +14,12 @@ type Props = {
 const mapContainerStyle: React.CSSProperties = {
   width: '100%',
   height: '65vh',
-  borderRadius: '1rem',
+  borderRadius: '1rem', // Updated from 1rem to match theme
   overflow: 'hidden',
-  boxShadow: '0 0 24px #3e7fff22',
-  border: '1px solid #222',
-  position: 'relative'
+  boxShadow: '0 8px 24px hsl(var(--primary) / 0.1)', // Use theme variable
+  border: '1px solid hsl(var(--border))', // Use theme variable
+  position: 'relative',
+  backgroundColor: 'hsl(var(--muted))', // Background for loading/error states
 };
 
 export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
@@ -25,84 +27,119 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
 
-  // 1. Load Google Maps with mapId (do not set styles in JS)
+  // 1. Load Google Maps
   useEffect(() => {
     if (!mapRef.current || map) return;
+
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+        setMapError("Google Maps API Key is missing. Please configure it in your environment variables.");
+        setIsLoadingMap(false);
+        return;
+    }
+    
     setIsLoadingMap(true);
+    setMapError(null);
+
     const loader = new Loader({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+      apiKey: apiKey,
       version: "weekly",
+      libraries: ["marker"], // Using AdvancedMarkerElement
     });
-    loader.load().then(() => {
+
+    loader.load().then(async () => {
       if (mapRef.current && !map) {
-        const initial = { lat: -34.9285, lng: 138.6007 }; // Default to Adelaide
-        const gmap = new google.maps.Map(mapRef.current, {
+        const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
+        // const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+
+        const initial = { lat: 34.0522, lng: -118.2437 }; // Default to Los Angeles
+        const gmap = new Map(mapRef.current, {
           center: initial,
-          zoom: 12,
-          mapId: "9d6a4c3fc6a7abdf44a06eac", // <-- REPLACE WITH YOUR OWN MAP ID!
+          zoom: 10,
+          mapId: "YOUR_MAP_ID_HERE", // Replace with your actual Map ID if you have one
           disableDefaultUI: true,
+          zoomControl: true,
         });
         setMap(gmap);
-        setIsLoadingMap(false);
       }
+    }).catch(e => {
+      console.error("Failed to load Google Maps:", e);
+      setMapError("Failed to load Google Maps. Check your API key and network connection.");
+    }).finally(() => {
+      setIsLoadingMap(false);
     });
   }, [mapRef, map]);
 
   // 2. Place truck markers
   useEffect(() => {
-    if (!map) return;
-    // Remove previous markers
-    (map as any).__truckMarkers?.forEach((marker: google.maps.Marker) => marker.setMap(null));
-    const markers: google.maps.Marker[] = [];
+    if (!map || !google.maps.marker) return;
+
+    // Clear previous markers
+    (map as any).__truckMarkers?.forEach((marker: google.maps.marker.AdvancedMarkerElement) => {
+      marker.map = null; // Correct way to remove AdvancedMarkerElement
+    });
+    
+    const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+
     trucks.forEach(truck => {
       if (typeof truck.lat === "number" && typeof truck.lng === "number") {
-        const marker = new google.maps.Marker({
+        
+        const truckIcon = document.createElement('img');
+        truckIcon.src = truck.isOpen ? '/truck-marker-open.svg' : '/truck-marker-closed.svg'; // SVGs should be in /public
+        truckIcon.style.width = '38px';
+        truckIcon.style.height = '44px';
+        // truckIcon.style.transform = 'translateY(-50%)'; // Adjust anchor if needed
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
           position: { lat: truck.lat, lng: truck.lng },
           map,
           title: truck.name,
-          icon: {
-            url: '/truck-marker-open.svg',
-            scaledSize: new google.maps.Size(38, 44),
-            anchor: new google.maps.Point(19, 44),
-          },
-          animation: google.maps.Animation.DROP,
+          content: truckIcon,
         });
+
         marker.addListener('click', () => onTruckClick?.(truck));
-        markers.push(marker);
+        newMarkers.push(marker);
       }
     });
-    (map as any).__truckMarkers = markers;
+    (map as any).__truckMarkers = newMarkers;
+
   }, [map, trucks, onTruckClick]);
 
-  // 3. Only allow user to locate themselves when they click "Locate Me"
+  // 3. Handle "Locate Me"
   const handleLocateMe = useCallback(() => {
-    if (!map || !navigator.geolocation) return;
+    if (!map || !navigator.geolocation) {
+        setMapError("Geolocation is not supported by your browser or map is not loaded.");
+        return;
+    }
     navigator.geolocation.getCurrentPosition(
-      pos => {
+      async pos => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.panTo(coords);
+        map.setZoom(14);
+
         if (!userMarker) {
-          const marker = new google.maps.Marker({
+           const userIcon = document.createElement('img');
+           userIcon.src = '/user-marker.svg'; // User marker SVG in /public
+           userIcon.style.width = '30px';
+           userIcon.style.height = '30px';
+
+          const marker = new google.maps.marker.AdvancedMarkerElement({
             position: coords,
             map,
-            icon: {
-              url: '/user-marker.svg',
-              scaledSize: new google.maps.Size(30, 30),
-              anchor: new google.maps.Point(15, 15),
-            },
-            zIndex: 1000,
+            content: userIcon,
             title: 'You are here',
-            animation: google.maps.Animation.BOUNCE,
+            zIndex: 1000, // Ensure user marker is on top
           });
-          setUserMarker(marker);
+          setUserMarker(marker as any); // Cast as any if types conflict, or ensure correct type
         } else {
-          userMarker.setPosition(coords);
+          (userMarker as google.maps.marker.AdvancedMarkerElement).position = coords;
         }
       },
       error => {
-        // Optionally handle error (e.g., toast)
-        alert('Could not access your location. Please allow location access.');
+        console.error("Geolocation error:", error);
+        setMapError("Could not access your location. Please allow location access.");
       },
       { enableHighAccuracy: true }
     );
@@ -110,20 +147,32 @@ export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
 
   return (
     <div className="relative w-full h-[65vh] rounded-xl overflow-hidden shadow border" style={mapContainerStyle}>
-      {/* Locate Me Button */}
       <Button
-        className="absolute z-10 top-4 left-4 bg-accent text-white shadow-lg"
+        className="absolute z-10 top-4 left-4 bg-accent text-accent-foreground shadow-lg"
         onClick={handleLocateMe}
         type="button"
         size="sm"
         aria-label="Locate Me"
+        disabled={isLoadingMap || !!mapError}
       >
         <Crosshair className="mr-2 h-4 w-4" /> Locate Me
       </Button>
       <div ref={mapRef} className="w-full h-full" />
-      {isLoadingMap && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-20">
-          <span className="text-lg text-muted-foreground">Loading map…</span>
+      {(isLoadingMap || mapError) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20 p-4">
+          {isLoadingMap && !mapError && (
+            <div className="text-center">
+              <Loader className="h-12 w-12 animate-spin text-primary mx-auto mb-3" />
+              <p className="text-lg text-muted-foreground">Loading map…</p>
+            </div>
+          )}
+          {mapError && (
+            <Alert variant="destructive" className="max-w-md">
+              <WifiOff className="h-5 w-5" />
+              <AlertTitle>Map Error</AlertTitle>
+              <AlertDescription>{mapError}</AlertDescription>
+            </Alert>
+          )}
         </div>
       )}
     </div>

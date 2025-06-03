@@ -1,7 +1,7 @@
 
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LineChart, Star, DollarSign, ShoppingBag, Clock, Users, UtensilsIcon as Utensils, Loader2 } from "lucide-react";
+import { LineChart, Star, DollarSign, ShoppingBag, Clock, Users, Utensils, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";

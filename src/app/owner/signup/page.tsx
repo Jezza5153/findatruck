@@ -5,7 +5,7 @@ import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, writeBatch } from "firebase/firestore"; // Added writeBatch
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { UserPlus, ChefHat } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
+import type { UserDocument } from '@/lib/types'; // Ensure UserDocument is imported
 
 const availableCuisines = [
   "Mexican", "Italian", "Indian", "Burgers", "BBQ", "Dessert",
@@ -59,21 +60,59 @@ export default function OwnerSignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       await updateProfile(user, { displayName: data.ownerName });
+
+      // Use user.uid as the document ID for both the user's document and the truck's document
+      const truckId = user.uid; 
+
+      const batch = writeBatch(db);
+
+      // User document
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
+      const userDocumentData: UserDocument = { // Ensure all fields of UserDocument are covered
         uid: user.uid,
         email: user.email,
         role: 'owner',
         ownerName: data.ownerName,
-        truckName: data.truckName,
-        cuisineType: data.cuisineType,
+        truckName: data.truckName, // Store truck name here for quick access if needed
+        cuisineType: data.cuisineType, // And cuisine type
+        truckId: truckId, // Link to the truck document ID
         createdAt: serverTimestamp(),
+        // Initialize optional fields if they are part of UserDocument type
+        name: data.ownerName, 
+        favoriteTrucks: [],
+        notificationPreferences: {
+            truckNearbyRadius: 2,
+            orderUpdates: true,
+            promotionalMessages: false,
+        }
+      };
+      batch.set(userDocRef, userDocumentData);
+
+      // Truck document (basic profile)
+      const truckDocRef = doc(db, "trucks", truckId);
+      batch.set(truckDocRef, {
+        id: truckId, // Storing truckId also in the document itself
+        ownerUid: user.uid,
+        name: data.truckName,
+        cuisine: data.cuisineType,
+        description: "Welcome to our food truck! Update your profile to tell customers more.",
+        imageUrl: `https://placehold.co/800x400.png?text=${encodeURIComponent(data.truckName)}`, // Default placeholder
+        address: "Update in profile",
+        operatingHoursSummary: "Update in schedule",
+        isOpen: false, // Default to closed until configured
+        menu: [],
+        testimonials: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
+      
+      await batch.commit();
+
       toast({
         title: "Owner Signup Successful!",
-        description: "Welcome! Please log in and complete your truck profile.",
+        description: "Welcome! Please log in and complete your truck profile and menu.",
       });
-      router.push('/login');
+      router.push('/login'); // Redirect to unified login
     } catch (error: any) {
       console.error("Detailed Owner Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";

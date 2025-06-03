@@ -108,7 +108,7 @@ export default function CustomerDashboardPage() {
         title: "Login Required",
         description: "Please log in or sign up to save your profile changes.",
         variant: "destructive",
-        action: <Button asChild variant="outline" size="sm"><Link href="/customer/login">Login / Sign Up</Link></Button>,
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
       });
       setIsEditingProfile(false);
       setTempProfile(profile);
@@ -142,7 +142,7 @@ export default function CustomerDashboardPage() {
         title: "Login Required",
         description: "Please log in or sign up to save notification preferences.",
         variant: "destructive",
-        action: <Button asChild variant="outline" size="sm"><Link href="/customer/login">Login / Sign Up</Link></Button>,
+        action: <Button asChild variant="outline" size="sm"><Link href="/login">Login / Sign Up</Link></Button>,
       });
       return;
     }
@@ -184,7 +184,7 @@ export default function CustomerDashboardPage() {
           <AlertDescription>You need to be logged in to view your dashboard.</AlertDescription>
         </Alert>
         <Button asChild className="mt-6">
-          <Link href="/customer/login"><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</Link>
+          <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</Link>
         </Button>
       </div>
     );
@@ -338,5 +338,3 @@ export default function CustomerDashboardPage() {
     </div>
   );
 }
-
-    

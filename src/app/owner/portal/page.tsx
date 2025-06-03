@@ -20,7 +20,7 @@ export default function OwnerPortalPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/login')} // Points to unified login
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6"
             size="lg"
           >

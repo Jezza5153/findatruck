@@ -69,7 +69,7 @@ export default function CustomerSignupPage() {
         title: "Signup Successful!",
         description: "Your account has been created. Please login.",
       });
-      router.push('/login');
+      router.push('/login'); // Redirect to unified login
     } catch (error: any) {
       console.error("Detailed Customer Signup Error:", JSON.stringify(error, null, 2));
       let errorMessage = "An unexpected error occurred. Please try again.";

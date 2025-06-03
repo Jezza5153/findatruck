@@ -10,7 +10,6 @@ export type FoodTruck = {
   imageUrl?: string;
   ownerUid?: string;
 
-  // Location: You can have address, lat, lng, or both.
   address?: string;
   lat?: number;
   lng?: number;
@@ -27,7 +26,7 @@ export type FoodTruck = {
     closeTime?: string;
   }[];
 
-  menu?: MenuItem[];
+  menu?: MenuItem[]; // This might be deprecated if menu is always fetched from subcollection
   rating?: number;
   numberOfRatings?: number;
 
@@ -40,22 +39,22 @@ export type FoodTruck = {
   isFeatured?: boolean;
   subscriptionTier?: string;
 
-  distance?: string;
+  distance?: string; // Calculated client-side
   testimonials?: Testimonial[];
 };
 
 export type MenuItem = {
-  id: string;
+  id: string; // Document ID from Firestore
   name: string;
   description?: string;
   price: number;
   imageUrl?: string;
-  category: string;
+  category: string; // Name of the category
   isSpecial?: boolean;
   availability?: 'available' | 'unavailable';
   customizations?: CustomizationOption[];
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
 };
 
 export type CustomizationOption = {
@@ -68,28 +67,43 @@ export type CustomizationOption = {
 export type Testimonial = {
   id: string;
   userId?: string;
-  name: string;
+  name: string; // User's display name
   quote: string;
   rating?: number;
-  avatarUrl?: string;
-  createdAt?: Timestamp;
+  avatarUrl?: string; // User's avatar
+  createdAt?: Timestamp | FieldValue;
   dataAiHint?: string;
 };
 
 export type UserRole = 'customer' | 'owner';
 
+// Represents the document structure in the 'users' collection
 export type UserDocument = {
   uid: string;
   email: string | null;
   role: UserRole;
-  name?: string;
+  name?: string; // For customers, this is their display name. For owners, ownerName is preferred.
+  ownerName?: string; // Specific for owners: their full name or business contact name
+  truckName?: string; // Specific for owners: the name of their food truck
+  cuisineType?: string; // Specific for owners: primary cuisine of their truck
+  truckId?: string; // Specific for owners: ID of the truck document in the 'trucks' collection
   createdAt: Timestamp | FieldValue;
-  ownerName?: string;
+  favoriteTrucks?: string[]; // For customers
+  notificationPreferences?: NotificationPreferences; // For customers
+};
+
+// Represents the profile data structure often used in client-side state for dashboards
+export type UserProfile = {
+  name: string; // Display name, could be UserDocument.name or UserDocument.ownerName
+  email: string;
+  // Customer specific fields
+  savedPaymentMethods?: string[];
+  favoriteTrucks?: string[];
+  notificationPreferences: NotificationPreferences;
+  // Owner specific fields
   truckName?: string;
   cuisineType?: string;
   truckId?: string;
-  favoriteTrucks?: string[];
-  notificationPreferences?: NotificationPreferences;
 };
 
 export type NotificationPreferences = {
@@ -98,22 +112,15 @@ export type NotificationPreferences = {
   promotionalMessages: boolean;
 };
 
-export type UserProfile = {
-  name: string;
-  email: string;
-  savedPaymentMethods: string[];
-  favoriteTrucks: string[];
-  notificationPreferences: NotificationPreferences;
-};
-
 export type FilterOptions = {
-  cuisine: string[];
-  distance: number[];
+  cuisine: string[]; // Array of cuisine IDs/names
+  distance: number[]; // Typically a single value array from a slider [maxDistance]
   openNow: boolean;
+  searchTerm?: string;
 };
 
 export type Cuisine = {
-  id: string;
-  name: string;
-  icon?: React.ElementType;
+  id: string; // e.g., 'mexican', 'italian'
+  name: string; // e.g., 'Mexican', 'Italian'
+  icon?: React.ElementType; // Optional: for displaying icons next to cuisine names
 };

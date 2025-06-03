@@ -47,6 +47,12 @@ export function SiteHeader() {
     { href: "/customer/notifications", label: "Notifications", icon: <Bell className="mr-2 h-5 w-5" /> },
     { href: "/customer/rewards", label: "Rewards", icon: <Gift className="mr-2 h-5 w-5" /> },
   ];
+  
+  // Placeholder for owner-specific links, assuming they'd go to /owner/dashboard
+  const ownerAuthNavLinks = [
+    { href: "/owner/dashboard", label: "Owner Dashboard", icon: <ChefHat className="mr-2 h-5 w-5" /> },
+    // Add other owner-specific links here if needed, e.g., /owner/menu, /owner/analytics
+  ];
 
   // Render a basic header or nothing until client-side hydration to avoid mismatch
   if (!isClient) {
@@ -55,7 +61,7 @@ export function SiteHeader() {
         <div className="container flex h-16 items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Utensils className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
+            <span className="font-bold sm:inline-block text-lg">FindATruck</span>
           </Link>
            <div className="flex flex-1 items-center justify-end space-x-4">
              {/* Optionally, add Skeleton components here if you have them */}
@@ -70,7 +76,7 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Utensils className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
+          <span className="font-bold sm:inline-block text-lg">FindATruck</span>
         </Link>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
@@ -83,11 +89,16 @@ export function SiteHeader() {
             ))}
             {user ? (
               <>
+                {/* Here, you might check user role to show customer OR owner links */}
+                {/* For now, showing customer links if logged in, and an Owner Dashboard link */}
                 {customerAuthNavLinks.map(link => (
                   <Button key={link.href} variant="ghost" size="sm" asChild>
                     <Link href={link.href}>{link.icon}{link.label}</Link>
                   </Button>
                 ))}
+                 <Button variant="ghost" size="sm" asChild>
+                    <Link href="/owner/dashboard"><ChefHat className="mr-2 h-4 w-4"/>Owner Area</Link>
+                </Button>
                 <Button size="sm" variant="outline" onClick={handleLogout}>
                   <LogOut className="mr-1 h-4 w-4" />Logout
                 </Button>
@@ -116,7 +127,7 @@ export function SiteHeader() {
               <SheetHeader className="mb-4">
                 <Link href="/" className="flex items-center space-x-2">
                     <Utensils className="h-6 w-6 text-primary" />
-                    <SheetTitle>Truck Tracker</SheetTitle>
+                    <SheetTitle>FindATruck</SheetTitle>
                 </Link>
                 <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
               </SheetHeader>
@@ -132,11 +143,15 @@ export function SiteHeader() {
                 <hr className="my-2"/>
                 {user ? (
                   <>
+                    {/* Example: Show customer links. Adapt based on actual role if available */}
                     {customerAuthNavLinks.map(link => (
                         <Button key={link.href} variant="outline" asChild className="justify-start text-base py-6">
                             <Link href={link.href}>{link.icon}{link.label}</Link>
                         </Button>
                     ))}
+                     <Button variant="outline" asChild className="justify-start text-base py-6 text-accent border-accent hover:bg-accent/10 hover:text-accent">
+                        <Link href="/owner/dashboard"><ChefHat className="mr-2 h-5 w-5" />Owner Dashboard</Link>
+                    </Button>
                     <Button onClick={handleLogout} className="bg-destructive hover:bg-destructive/90 justify-start text-base py-6">
                       <LogOut className="mr-2 h-5 w-5" />Logout
                     </Button>

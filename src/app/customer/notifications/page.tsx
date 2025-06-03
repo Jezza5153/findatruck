@@ -93,7 +93,7 @@ export default function CustomerNotificationsPage() {
           Please log in to view your notifications.
         </p>
         <Button asChild size="lg">
-          <Link href="/customer/login">Login / Sign Up</Link>
+          <Link href="/login">Login / Sign Up</Link>
         </Button>
       </div>
     );
@@ -149,5 +149,3 @@ export default function CustomerNotificationsPage() {
     </div>
   );
 }
-
-    

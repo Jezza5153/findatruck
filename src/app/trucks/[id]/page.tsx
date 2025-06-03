@@ -13,12 +13,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
   const { toast } = useToast();
   const [truck, setTruck] = useState<FoodTruck | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [cart, setCart] = useState< { item: MenuItemType, quantity: number }[] >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,17 +28,18 @@ export default function FoodTruckProfilePage() {
     const truckId = params.id as string;
 
     if (truckId) {
-      const fetchTruckDetails = async () => {
+      const fetchTruckDetailsAndMenu = async () => {
         setIsLoading(true);
         setError(null);
         try {
+          // Fetch truck details
           const truckDocRef = doc(db, "trucks", truckId);
-          const docSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
+          const truckDocSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
-          if (docSnap.exists()) {
-            const data = docSnap.data() as Partial<FoodTruck>;
+          if (truckDocSnap.exists()) {
+            const data = truckDocSnap.data() as Partial<FoodTruck>;
             const fetchedTruck: FoodTruck = {
-              id: docSnap.id,
+              id: truckDocSnap.id,
               name: data.name || 'Unnamed Truck',
               cuisine: data.cuisine || 'Unknown Cuisine',
               description: data.description || 'No description available.',
@@ -49,10 +51,20 @@ export default function FoodTruckProfilePage() {
               operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
               isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
               rating: typeof data.rating === 'number' ? data.rating : undefined,
-              menu: Array.isArray(data.menu) ? data.menu : [],
+              // Menu will be fetched from subcollection
               testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
             };
             setTruck(fetchedTruck);
+
+            // Fetch menu items from subcollection
+            const menuItemsCollectionRef = collection(db, "trucks", truckId, "menuItems");
+            const menuItemsSnap = await getDocs(menuItemsCollectionRef);
+            const fetchedMenuItems: MenuItemType[] = menuItemsSnap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as MenuItemType));
+            setMenuItems(fetchedMenuItems);
+
           } else {
             setError(`Food truck with ID "${truckId}" not found.`);
           }
@@ -71,7 +83,7 @@ export default function FoodTruckProfilePage() {
           setIsLoading(false);
         }
       };
-      fetchTruckDetails();
+      fetchTruckDetailsAndMenu();
     } else {
       setError("No truck ID provided.");
       setIsLoading(false);
@@ -141,7 +153,7 @@ export default function FoodTruckProfilePage() {
     );
   }
 
-  const menuCategories = Array.from(new Set(truck.menu?.map(item => item.category) || []));
+  const menuCategories = Array.from(new Set(menuItems.map(item => item.category) || []));
   const totalCartItems = cart.reduce((sum, current) => sum + current.quantity, 0);
   const totalCartPrice = cart.reduce((sum, current) => sum + (current.item.price * current.quantity), 0);
 
@@ -191,7 +203,7 @@ export default function FoodTruckProfilePage() {
               </div>
             </div>
             <div className="md:col-span-1 space-y-3">
-              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={truck.isOpen === false || !truck.menu || truck.menu.length === 0}>
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90" onClick={handleOrderNow} disabled={truck.isOpen === false || menuItems.length === 0}>
                 <ShoppingCart className="mr-2 h-5 w-5" /> Order Now (Coming Soon)
               </Button>
               <Button size="lg" variant="outline" className="w-full" onClick={handleNotifyNearby}>
@@ -202,7 +214,7 @@ export default function FoodTruckProfilePage() {
 
           <Separator className="my-8" />
 
-          {truck.menu && truck.menu.length > 0 ? (
+          {menuItems && menuItems.length > 0 ? (
             <Tabs defaultValue={menuCategories[0] || 'all-items'} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                   <h2 className="text-2xl font-semibold text-primary flex items-center mb-4 sm:mb-0">
@@ -224,7 +236,7 @@ export default function FoodTruckProfilePage() {
               {menuCategories.length > 0 ? menuCategories.map(category => (
                 <TabsContent key={category} value={category}>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {truck.menu!.filter(item => item.category === category).map(item => (
+                    {menuItems!.filter(item => item.category === category).map(item => (
                       <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
                     ))}
                   </div>
@@ -232,7 +244,7 @@ export default function FoodTruckProfilePage() {
               )) : (
                  <TabsContent value="all-items">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {truck.menu!.map(item => (
+                        {menuItems!.map(item => (
                             <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
                         ))}
                     </div>

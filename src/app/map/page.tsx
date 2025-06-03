@@ -33,7 +33,8 @@ export default function MapPage() {
         const querySnapshot = await getDocs(trucksCollectionRef);
         const fetchedTrucks: FoodTruck[] = [];
         querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-          const data = doc.data();
+          const data = doc.data() as Partial<FoodTruck>; // Cast to Partial
+          // Provide defaults for all fields
           fetchedTrucks.push({
             id: doc.id,
             name: data.name || 'Unnamed Truck',

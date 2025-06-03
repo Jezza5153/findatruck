@@ -31,15 +31,15 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
   };
 
   return (
-    <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col md:flex-row">
+    <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col md:flex-row overflow-hidden">
       {item.imageUrl && (
-        <div className="md:w-1/3 relative">
+        <div className="md:w-1/3 relative h-48 md:h-auto">
           <Image
             src={item.imageUrl}
             alt={item.name}
-            width={200}
-            height={200}
-            className="object-cover w-full h-48 md:h-full md:rounded-l-md md:rounded-r-none rounded-t-md"
+            layout="fill" // Use fill for responsive container
+            objectFit="cover" // Ensures image covers the area
+            className="rounded-t-md md:rounded-l-md md:rounded-tr-none"
             data-ai-hint={`${item.category} food dish`}
           />
         </div>
@@ -51,29 +51,29 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
             ${item.price.toFixed(2)}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 pb-2 flex-grow">
-          <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+        <CardContent className="p-0 pb-3 flex-grow">
+          <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{item.description || "No description available."}</p>
         </CardContent>
-        <CardFooter className="p-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <CardFooter className="p-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-auto">
           {isClient && onAddToCart && (
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)} className="h-8 w-8">
+            <div className="flex items-center space-x-1.5">
+              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)} className="h-9 w-9">
                 <MinusCircle className="h-4 w-4" />
               </Button>
               <Input 
                 type="number" 
                 value={quantity} 
                 readOnly 
-                className="h-8 w-12 text-center px-1" 
+                className="h-9 w-14 text-center px-1" 
               />
-              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)} className="h-8 w-8">
+              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)} className="h-9 w-9">
                 <PlusCircle className="h-4 w-4" />
               </Button>
             </div>
           )}
           {onAddToCart && (
-             <Button onClick={handleAddToCart} className="w-full sm:w-auto bg-accent hover:bg-accent/90">
-              <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+             <Button onClick={handleAddToCart} className="w-full sm:w-auto bg-accent hover:bg-accent/90 flex-grow sm:flex-grow-0 h-9">
+              <ShoppingCart className="mr-2 h-4 w-4" /> Add
             </Button>
           )}
         </CardFooter>
