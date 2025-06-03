@@ -16,6 +16,7 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 import * as z from "zod";
+import { Suspense } from 'react'; // Import Suspense
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -24,7 +25,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() { // Create a new component for the form
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();

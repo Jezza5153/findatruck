@@ -1,41 +1,14 @@
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Testimonial } from "@/lib/types";
-import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search, MenuSquare, CalendarClock, LineChart } from "lucide-react";
+import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search, MenuSquare, CalendarClock, LineChart } from "lucide-react"; // Added MenuSquare, CalendarClock, LineChart
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react"; // Required for React.cloneElement
+import React from "react"; // Import React";
 
-const testimonialsData: Testimonial[] = [
-  {
-    id: "1",
-    name: "Sarah L.",
-    truckId: "truck-123", // Example, ensure this aligns if used
-    quote: "FindATruck helped me find the most amazing tacos right around the corner! So easy to use.",
-    avatarUrl: "https://placehold.co/100x100.png?text=SL",
-    dataAiHint: "person avatar"
-  },
-  {
-    id: "2",
-    name: "Mike P.",
-    truckId: "truck-456", // Example
-    quote: "I love getting notifications when my favorite burger truck is nearby. Game changer!",
-    avatarUrl: "https://placehold.co/100x100.png?text=MP",
-    dataAiHint: "person avatar"
-  },
-  {
-    id: "3",
-    name: "Chen W.",
-    truckId: "truck-789", // Example
-    quote: "The menus are always up-to-date, and ordering ahead is super convenient.",
-    avatarUrl: "https://placehold.co/100x100.png?text=CW",
-    dataAiHint: "person avatar"
-  },
-];
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
