@@ -1,16 +1,15 @@
-
 'use client';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, UtensilsCrossed, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search, MenuSquare, CalendarClock, LineChart } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { 
+  MapPin, UtensilsCrossed, Star, Truck, Download, Users, ChefHat, LogIn, 
+  UserPlus, Search, MenuSquare, CalendarClock, LineChart, ShieldCheck, Trophy, Award
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react"; // Ensured React is imported for React.cloneElement
 
-// Removed Testimonial type import as testimonialsData is also removed
-// import type { Testimonial } from "@/lib/types";
-
+// PWA install prompt interface
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -19,9 +18,6 @@ interface BeforeInstallPromptEvent extends Event {
   }>;
   prompt(): Promise<void>;
 }
-
-// Testimonials section has been removed to resolve the ReferenceError for testimonialsData
-// If testimonials are needed in the future, their data source and rendering logic must be re-implemented.
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -34,62 +30,115 @@ export default function HomePage() {
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowInstallButton(true);
     };
-
     window.addEventListener('beforeinstallprompt', handler);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-    };
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      return;
-    }
+    if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      toast({ title: "Installation Successful!", description: "Truck Tracker added to your home screen."});
+      toast({ title: "Installation Successful!", description: "Truck Tracker added to your home screen." });
     } else {
-      toast({ title: "Installation Dismissed", description: "You can add Truck Tracker later from your browser menu."});
+      toast({ title: "Installation Dismissed", description: "You can add Truck Tracker later from your browser menu." });
     }
     setDeferredPrompt(null);
     setShowInstallButton(false);
   };
 
+  // Simulated "live trucks open" value (replace with live data if you have it)
+  const liveTrucksOpen = 8;
+
   return (
     <div className="flex flex-col min-h-dvh">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary via-blue-600 to-accent text-primary-foreground py-20 md:py-32">
-        <div className="container mx-auto px-4 text-center">
-          <Truck className="mx-auto h-20 w-20 md:h-24 md:w-24 mb-6 text-background animate-bounce" />
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+      <section className="bg-gradient-to-br from-primary via-blue-600 to-accent text-primary-foreground py-20 md:py-32 relative overflow-hidden">
+        <div className="container mx-auto px-4 text-center relative z-10">
+          {/* Truck with animated SVG trail */}
+          <div className="relative mx-auto mb-2 w-fit">
+            <Truck className="mx-auto h-20 w-20 md:h-24 md:w-24 mb-2 text-background animate-bounce drop-shadow-lg relative z-10" />
+            {/* SVG animated trail */}
+            <svg
+              width="120"
+              height="18"
+              viewBox="0 0 120 18"
+              fill="none"
+              className="absolute left-1/2 -translate-x-1/2 top-full"
+              aria-hidden
+            >
+              <path
+                d="M10 10 Q60 25 110 10"
+                stroke="url(#trail-grad)" strokeWidth="3" fill="none"
+              >
+                <animate
+                  attributeName="stroke-dasharray"
+                  from="0,120"
+                  to="120,0"
+                  dur="1.6s"
+                  repeatCount="indefinite"
+                />
+              </path>
+              <defs>
+                <linearGradient id="trail-grad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#60A5FA" />
+                  <stop offset="1" stopColor="#3CD856" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-3">
             Find Food Trucks Near You!
           </h1>
-          <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
+          {/* Live Now Badge */}
+          <p className="text-sm mt-3 flex justify-center items-center gap-2 select-none">
+            <span className="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+            <span className="text-primary font-semibold">{liveTrucksOpen} trucks open now</span>
+          </p>
+          <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto mt-6">
             Discover local food trucks in real-time or showcase your culinary creations on Truck Tracker.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
-            <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow" asChild>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow"
+              asChild
+            >
               <Link href="/map">
                 <Search className="mr-2 h-5 w-5" /> Explore Map
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow border-background text-background hover:bg-background/10" asChild>
-              <Link href="/featured">
-                <Star className="mr-2 h-5 w-5" /> View Featured
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow border-primary text-primary hover:bg-primary/10 border-2 font-semibold group"
+              asChild
+            >
+              <Link href="/featured" className="flex items-center group-hover:text-primary group-focus:text-primary">
+                <Star className="mr-2 h-5 w-5 group-hover:animate-spin-slow" aria-label="Featured Trucks" />
+                View Featured
               </Link>
             </Button>
           </div>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
-              <Link href="/signup"> {/* Changed href to /signup */}
+            <Button
+              size="lg"
+              variant="default"
+              className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm"
+              asChild
+            >
+              <Link href="/signup">
                 <UserPlus className="h-10 w-10 mb-2" />
                 I'm a Hungry Customer
                 <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
               </Link>
             </Button>
-            <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
+            <Button
+              size="lg"
+              variant="default"
+              className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm"
+              asChild
+            >
               <Link href="/owner/portal">
                 <ChefHat className="h-10 w-10 mb-2" />
                 I'm a Food Truck Owner
@@ -174,6 +223,11 @@ export default function HomePage() {
             <InfoCard icon={<CalendarClock />} title="Flexible Scheduling" description="Set your operating hours, special event schedules, and update your location easily."/>
             <InfoCard icon={<LineChart />} title="Performance Insights" description="Track your popular items, customer ratings, and (soon!) sales analytics."/>
           </div>
+          <div className="flex flex-wrap justify-center gap-2 mt-10">
+            <Badge icon={<ShieldCheck className="h-4 w-4 mr-1" />} text="Free to Join" />
+            <Badge icon={<Trophy className="h-4 w-4 mr-1" />} text="No Hidden Fees" />
+            <Badge icon={<Award className="h-4 w-4 mr-1" />} text="For Real Foodies" />
+          </div>
           <div className="mt-12 text-center">
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
               <Link href="/owner/portal">Get Started as an Owner</Link>
@@ -181,13 +235,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-      {/* Testimonials Section is removed. */}
-
     </div>
   );
 }
 
+// InfoCard component
 interface InfoCardProps {
   icon: React.ReactNode;
   title: string;
@@ -208,3 +260,26 @@ function InfoCard({icon, title, description}: InfoCardProps) {
     </Card>
   );
 }
+
+// Feature/benefit badge component
+function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <span className="inline-flex items-center bg-primary/10 text-primary font-medium rounded-full px-4 py-1 text-sm shadow-sm border border-primary/20">
+      {icon}{text}
+    </span>
+  );
+}
+
+// Add the following in your tailwind.config.js for "spin-slow" animation if desired:
+/*
+module.exports = {
+  theme: {
+    extend: {
+      animation: {
+        'spin-slow': 'spin 2s linear infinite',
+      },
+    },
+  },
+};
+*/
+

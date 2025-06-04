@@ -110,3 +110,48 @@
     @apply font-semibold;
   }
 }
+/* --- Sidebar Styles for Owner Dashboard/Menu --- */
+.sidebar-nav {
+  width: 240px;
+  min-height: calc(100vh - 48px);
+  background: #11141b;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 0.5rem 2rem 0.5rem;
+  border-right: 1px solid #252525;
+}
+
+.sidebar-link {
+  color: #d4d7dd;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0.25rem;
+  border-radius: 0.5rem;
+  transition: background 0.12s, color 0.12s;
+  font-weight: 500;
+  font-size: 1.1rem;
+  cursor: pointer;
+  gap: 0.7em;
+}
+
+.sidebar-link.active,
+.sidebar-link:hover {
+  background: #1b2232;
+  color: #19b8ab;
+}
+
+.sidebar-header {
+  color: #fafcff;
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding-left: 1.25rem;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 768px) {
+  .sidebar-nav {
+    display: none;
+  }
+}
