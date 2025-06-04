@@ -1,17 +1,17 @@
 
 'use client';
+import React, { useEffect, useState } from 'react'; // Added React import
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gift, LogIn as LogInIcon, Star, ChefHat, Settings } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase'; 
-import { doc, getDoc } from 'firebase/firestore'; 
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
-import type { UserDocument } from '@/lib/types'; 
+import type { UserDocument } from '@/lib/types';
 
 export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,7 +34,7 @@ export function SiteHeader() {
             const userData = userDocSnap.data() as UserDocument;
             setUserRole(userData.role);
           } else {
-            setUserRole(null); 
+            setUserRole(null);
             console.warn("User document not found in Firestore for UID:", currentUser.uid);
           }
         } catch (error) {
@@ -42,7 +42,7 @@ export function SiteHeader() {
           setUserRole(null);
         }
       } else {
-        setUserRole(null); 
+        setUserRole(null);
       }
       setIsLoadingAuth(false);
     });
@@ -54,9 +54,9 @@ export function SiteHeader() {
       await signOut(auth);
       setUser(null);
       setUserRole(null);
-      setIsSheetOpen(false); 
+      setIsSheetOpen(false);
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push('/'); 
+      router.push('/');
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "Could not log you out. Please try again.", variant: "destructive" });
@@ -74,11 +74,11 @@ export function SiteHeader() {
     { href: "/customer/notifications", label: "Notifications", icon: <Bell className="mr-2 h-5 w-5" /> },
     { href: "/customer/rewards", label: "Rewards", icon: <Gift className="mr-2 h-5 w-5" /> },
   ];
-  
+
   const ownerAuthNavLinks = [
     { href: "/owner/dashboard", label: "Owner Dashboard", icon: <ChefHat className="mr-2 h-5 w-5" /> },
   ];
-  
+
   const handleLinkClick = () => setIsSheetOpen(false);
 
 
@@ -137,7 +137,7 @@ export function SiteHeader() {
   };
 
 
-  if (isLoadingAuth && !user) { 
+  if (isLoadingAuth && !user) {
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
@@ -172,8 +172,8 @@ export function SiteHeader() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0"> 
-              <SheetHeader className="p-4 border-b"> 
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+              <SheetHeader className="p-4 border-b">
                 <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick}>
                     <Utensils className="h-6 w-6 text-primary" />
                     <SheetTitle>Truck Tracker</SheetTitle>
@@ -181,7 +181,7 @@ export function SiteHeader() {
                 <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
                 <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
               </SheetHeader>
-               <div className="p-4 flex flex-col gap-3"> 
+               <div className="p-4 flex flex-col gap-3">
                 {renderNavLinks(true)}
                </div>
             </SheetContent>
