@@ -1,6 +1,5 @@
 
 'use client'; 
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,7 +85,7 @@ export default function OwnerLoginPage() {
         <CardHeader className="text-center">
           <ChefHat className="mx-auto h-12 w-12 text-accent mb-4" />
           <CardTitle className="text-3xl font-bold tracking-tight text-accent">Food Truck Owner Login</CardTitle>
-          <CardDescription>Log in to manage your truck on FindATruck.</CardDescription>
+          <CardDescription>Log in to manage your truck on Truck Tracker.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleLogin)}>
           <CardContent className="space-y-6">
@@ -121,7 +120,7 @@ export default function OwnerLoginPage() {
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
                 Not an owner?{' '}
-                <Link href="/customer/login" className="font-medium text-primary hover:underline">
+                <Link href="/login" className="font-medium text-primary hover:underline">
                 Customer Login
                 </Link>
             </p>
@@ -130,5 +129,3 @@ export default function OwnerLoginPage() {
     </div>
   );
 }
-
-    

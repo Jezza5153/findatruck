@@ -13,44 +13,26 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'FindATruck - Find Your Next Favorite Food Truck!',
+  title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
   description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
   manifest: '/manifest.json',
-  keywords: ['food trucks', 'mobile food', 'local food', 'street food', 'find food', 'food near me'],
+  keywords: ['food trucks', 'mobile food', 'local food', 'street food', 'find food', 'food near me', 'truck tracker'],
   authors: [{ name: 'Firebase Studio Project' }],
-  // Open Graph and Twitter Card metadata can be added here for better social sharing
   openGraph: {
-    title: 'FindATruck - Find Your Next Favorite Food Truck!',
+    title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
     description: 'Discover and connect with local food trucks.',
     type: 'website',
-    // url: 'YOUR_PRODUCTION_URL_HERE', // Replace with your actual deployed URL
-    // images: [
-    //   {
-    //     url: 'YOUR_OG_IMAGE_URL_HERE', // Replace with a URL to a preview image
-    //     width: 1200,
-    //     height: 630,
-    //     alt: 'FindATruck Logo and Food Truck Montage',
-    //   },
-    // ],
   },
-  // twitter: {
-  //   card: 'summary_large_image',
-  //   title: 'FindATruck - Find Your Next Favorite Food Truck!',
-  //   description: 'Discover and connect with local food trucks.',
-  //   // images: ['YOUR_TWITTER_IMAGE_URL_HERE'], // Replace with a URL to a preview image
-  // },
 };
 
 export const viewport: Viewport = {
-  themeColor: [ // You can define multiple theme colors for light/dark mode
-    { media: '(prefers-color-scheme: light)', color: 'hsl(210 40% 98%)' }, // Corresponds to --background HSL
-    { media: '(prefers-color-scheme: dark)', color: 'hsl(210 40% 10%)' },  // Corresponds to dark --background HSL
+  themeColor: [ 
+    { media: '(prefers-color-scheme: light)', color: 'hsl(210 40% 98%)' }, 
+    { media: '(prefers-color-scheme: dark)', color: 'hsl(210 40% 10%)' },  
   ],
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1, // Optional: Prevent zooming if desired for PWA feel
-  // minimumScale: 1, // Optional
-  // userScalable: false, // Optional: if maximumScale is 1, userScalable is often false
+  maximumScale: 1, 
 }
 
 
@@ -68,7 +50,7 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        <div className="relative flex min-h-dvh flex-col"> {/* Use dvh for dynamic viewport height */}
+        <div className="relative flex min-h-dvh flex-col"> 
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />

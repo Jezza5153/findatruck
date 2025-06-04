@@ -1,6 +1,7 @@
-# Firebase Studio - FindATruck
 
-This is a Next.js food truck finder application built in Firebase Studio.
+# Firebase Studio - Truck Tracker
+
+This is a Next.js food truck finder application built in Firebase Studio. Its name is Truck Tracker.
 
 To get started:
 1.  Ensure you have Node.js and npm (or yarn) installed.
@@ -15,3 +16,4 @@ To get started:
 10. Run the development server: `npm run dev` (or `yarn dev`).
 
 The application should now be running on `http://localhost:9002` (or your configured port).
+The app, Truck Tracker, helps users find food trucks.

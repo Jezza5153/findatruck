@@ -2,40 +2,12 @@
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Testimonial } from "@/lib/types";
-import { MapPin, UtensilsCrossed, Smile, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search, MenuSquare, CalendarClock, LineChart } from "lucide-react";
-import Image from "next/image";
+import { MapPin, UtensilsCrossed, Star, Truck, Download, Users, ChefHat, LogIn, UserPlus, Search, MenuSquare, CalendarClock, LineChart } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react"; // Required for React.cloneElement
-
-const testimonialsData: Testimonial[] = [
-  {
-    id: "1",
-    name: "Sarah L.",
-    truckId: "truck-123", // Example, ensure this aligns if used
-    quote: "FindATruck helped me find the most amazing tacos right around the corner! So easy to use.",
-    avatarUrl: "https://placehold.co/100x100.png?text=SL",
-    dataAiHint: "person avatar"
-  },
-  {
-    id: "2",
-    name: "Mike P.",
-    truckId: "truck-456", // Example
-    quote: "I love getting notifications when my favorite burger truck is nearby. Game changer!",
-    avatarUrl: "https://placehold.co/100x100.png?text=MP",
-    dataAiHint: "person avatar"
-  },
-  {
-    id: "3",
-    name: "Chen W.",
-    truckId: "truck-789", // Example
-    quote: "The menus are always up-to-date, and ordering ahead is super convenient.",
-    avatarUrl: "https://placehold.co/100x100.png?text=CW",
-    dataAiHint: "person avatar"
-  },
-];
+import React from "react";
+import type { Testimonial } from "@/lib/types"; // Removed as testimonialsData is removed
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -45,6 +17,9 @@ interface BeforeInstallPromptEvent extends Event {
   }>;
   prompt(): Promise<void>;
 }
+
+// Testimonials are removed from this page as per previous request to resolve ReferenceError
+// If they need to be re-added, the data source (testimonialsData or dynamic fetch) must be implemented.
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -72,16 +47,16 @@ export default function HomePage() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      toast({ title: "Installation Successful!", description: "FindATruck added to your home screen."});
+      toast({ title: "Installation Successful!", description: "Truck Tracker added to your home screen."});
     } else {
-      toast({ title: "Installation Dismissed", description: "You can add FindATruck later from your browser menu."});
+      toast({ title: "Installation Dismissed", description: "You can add Truck Tracker later from your browser menu."});
     }
     setDeferredPrompt(null);
     setShowInstallButton(false);
   };
 
   return (
-    <div className="flex flex-col min-h-dvh"> {/* Use dvh for dynamic viewport height */}
+    <div className="flex flex-col min-h-dvh">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary via-blue-600 to-accent text-primary-foreground py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
@@ -90,51 +65,51 @@ export default function HomePage() {
             Find Food Trucks Near You!
           </h1>
           <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-            Discover local food trucks in real-time or showcase your culinary creations on FindATruck.
+            Discover local food trucks in real-time or showcase your culinary creations on Truck Tracker.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
             <Button size="lg" className="w-full sm:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow" asChild>
-                <Link href="/map">
-                    <Search className="mr-2 h-5 w-5" /> Explore Map
-                </Link>
+              <Link href="/map">
+                <Search className="mr-2 h-5 w-5" /> Explore Map
+              </Link>
             </Button>
-             <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow border-background text-background hover:bg-background/10" asChild>
-                <Link href="/featured">
-                    <Star className="mr-2 h-5 w-5" /> View Featured
-                </Link>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg py-3 px-8 shadow-lg hover:shadow-xl transition-shadow border-background text-background hover:bg-background/10" asChild>
+              <Link href="/featured">
+                <Star className="mr-2 h-5 w-5" /> View Featured
+              </Link>
             </Button>
           </div>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
-                <Link href="/customer/signup">
-                    <UserPlus className="h-10 w-10 mb-2" />
-                    I'm a Hungry Customer
-                    <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
-                </Link>
+              <Link href="/customer/signup">
+                <UserPlus className="h-10 w-10 mb-2" />
+                I'm a Hungry Customer
+                <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
+              </Link>
             </Button>
             <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
-                <Link href="/owner/portal"> 
-                    <ChefHat className="h-10 w-10 mb-2" />
-                    I'm a Food Truck Owner
-                    <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
-                </Link>
+              <Link href="/owner/portal">
+                <ChefHat className="h-10 w-10 mb-2" />
+                I'm a Food Truck Owner
+                <span className="text-sm font-normal mt-1 block">(Go to Owner Portal)</span>
+              </Link>
             </Button>
           </div>
           <div className="mt-8">
             <Link href="/login" className="text-primary-foreground/90 hover:text-primary-foreground hover:underline text-md">
-                Already have an account? <span className="font-semibold">Log In Here</span> <LogIn className="inline h-5 w-5 ml-1"/>
+              Already have an account? <span className="font-semibold">Log In Here</span> <LogIn className="inline h-5 w-5 ml-1"/>
             </Link>
           </div>
           {showInstallButton && (
             <div className="mt-10 flex justify-center">
-                <Button
+              <Button
                 size="default"
                 variant="outline"
                 onClick={handleInstallClick}
                 className="border-background text-background hover:bg-background/10"
-                >
+              >
                 <Download className="mr-2 h-5 w-5" /> Add to Home Screen
-                </Button>
+              </Button>
             </div>
           )}
         </div>
@@ -143,7 +118,7 @@ export default function HomePage() {
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Why You'll Love <span className="text-primary">FindATruck</span>
+            Why You'll Love <span className="text-primary">Truck Tracker</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -197,43 +172,17 @@ export default function HomePage() {
             <InfoCard icon={<CalendarClock />} title="Flexible Scheduling" description="Set your operating hours, special event schedules, and update your location easily."/>
             <InfoCard icon={<LineChart />} title="Performance Insights" description="Track your popular items, customer ratings, and (soon!) sales analytics."/>
           </div>
-           <div className="mt-12 text-center">
-                <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    <Link href="/owner/portal">Get Started as an Owner</Link>
-                </Button>
-            </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            What Our Users Say <Smile className="inline h-8 w-8 text-primary" />
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonialsData.map((testimonial) => (
-              <Card key={testimonial.id} className="shadow-lg hover:shadow-xl transition-shadow bg-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center mb-4">
-                    {testimonial.avatarUrl && (
-                      <Image
-                        src={testimonial.avatarUrl}
-                        alt={testimonial.name}
-                        width={50}
-                        height={50}
-                        className="rounded-full mr-4"
-                        data-ai-hint={testimonial.dataAiHint || "person avatar"}
-                      />
-                    )}
-                    <p className="font-semibold text-lg">{testimonial.name}</p>
-                  </div>
-                  <p className="text-muted-foreground italic text-sm">"{testimonial.quote}"</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mt-12 text-center">
+            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link href="/owner/portal">Get Started as an Owner</Link>
+            </Button>
           </div>
         </div>
       </section>
+      
+      {/* Testimonials Section Removed as per previous steps to fix ReferenceError */}
+      {/* If testimonials are needed, data source and rendering logic must be re-implemented */}
+
     </div>
   );
 }

@@ -7,11 +7,11 @@ import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gif
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase'; // db import for role check
-import { doc, getDoc } from 'firebase/firestore'; // For fetching user role
+import { auth, db } from '@/lib/firebase'; 
+import { doc, getDoc } from 'firebase/firestore'; 
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
-import type { UserDocument } from '@/lib/types'; // For UserDocument type
+import type { UserDocument } from '@/lib/types'; 
 
 export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +27,6 @@ export function SiteHeader() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Fetch user role from Firestore
         const userDocRef = doc(db, "users", currentUser.uid);
         try {
           const userDocSnap = await getDoc(userDocRef);
@@ -35,7 +34,7 @@ export function SiteHeader() {
             const userData = userDocSnap.data() as UserDocument;
             setUserRole(userData.role);
           } else {
-            setUserRole(null); // No user document found, treat as basic user or handle error
+            setUserRole(null); 
             console.warn("User document not found in Firestore for UID:", currentUser.uid);
           }
         } catch (error) {
@@ -43,7 +42,7 @@ export function SiteHeader() {
           setUserRole(null);
         }
       } else {
-        setUserRole(null); // No user logged in
+        setUserRole(null); 
       }
       setIsLoadingAuth(false);
     });
@@ -55,9 +54,9 @@ export function SiteHeader() {
       await signOut(auth);
       setUser(null);
       setUserRole(null);
-      setIsSheetOpen(false); // Close sheet on logout
+      setIsSheetOpen(false); 
       toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      router.push('/'); // Redirect to homepage
+      router.push('/'); 
     } catch (error) {
       console.error("Logout error:", error);
       toast({ title: "Logout Failed", description: "Could not log you out. Please try again.", variant: "destructive" });
@@ -78,10 +77,8 @@ export function SiteHeader() {
   
   const ownerAuthNavLinks = [
     { href: "/owner/dashboard", label: "Owner Dashboard", icon: <ChefHat className="mr-2 h-5 w-5" /> },
-    // Add other direct owner links if needed, e.g., /owner/menu
   ];
   
-  // Close sheet on navigation
   const handleLinkClick = () => setIsSheetOpen(false);
 
 
@@ -140,16 +137,15 @@ export function SiteHeader() {
   };
 
 
-  if (isLoadingAuth && !user) { // Show simplified header during initial auth check
+  if (isLoadingAuth && !user) { 
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Utensils className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block text-lg">FindATruck</span>
+            <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
           </Link>
            <div className="flex flex-1 items-center justify-end space-x-4">
-             {/* Placeholder or minimal loader can go here */}
            </div>
         </div>
       </header>
@@ -159,9 +155,9 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2" onClick={isMobile ? handleLinkClick : undefined}>
+        <Link href="/" className="mr-6 flex items-center space-x-2" onClick={isSheetOpen ? handleLinkClick : undefined}>
           <Utensils className="h-6 w-6 text-primary" />
-          <span className="font-bold sm:inline-block text-lg">FindATruck</span>
+          <span className="font-bold sm:inline-block text-lg">Truck Tracker</span>
         </Link>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
@@ -176,16 +172,16 @@ export function SiteHeader() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0"> {/* Adjusted padding */}
-              <SheetHeader className="p-4 border-b"> {/* Added padding and border */}
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0"> 
+              <SheetHeader className="p-4 border-b"> 
                 <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick}>
                     <Utensils className="h-6 w-6 text-primary" />
-                    <SheetTitle>FindATruck</SheetTitle>
+                    <SheetTitle>Truck Tracker</SheetTitle>
                 </Link>
                 <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
                 <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
               </SheetHeader>
-               <div className="p-4 flex flex-col gap-3"> {/* Added padding */}
+               <div className="p-4 flex flex-col gap-3"> 
                 {renderNavLinks(true)}
                </div>
             </SheetContent>

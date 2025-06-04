@@ -16,11 +16,11 @@ export default function OwnerPortalPage() {
         <CardHeader className="text-center">
           <ChefHat className="mx-auto h-16 w-16 text-accent mb-4" />
           <CardTitle className="text-3xl font-bold tracking-tight text-accent">Food Truck Owner Portal</CardTitle>
-          <CardDescription>Welcome! Manage your truck or get started with FindATruck.</CardDescription>
+          <CardDescription>Welcome! Manage your truck or get started with Truck Tracker.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
-            onClick={() => router.push('/login?role=owner')} // Use unified login, hint role if needed for specific logic
+            onClick={() => router.push('/owner/login')} 
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6"
             size="lg"
           >

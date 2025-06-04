@@ -1,6 +1,5 @@
 
 'use client';
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,7 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 import * as z from "zod";
-import { Suspense } from 'react'; // Import Suspense
+import { Suspense } from 'react'; 
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -25,7 +24,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-function LoginForm() { // Create a new component for the form
+function LoginForm() { 
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -38,7 +37,6 @@ function LoginForm() { // Create a new component for the form
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-      // Fetch user document from Firestore to determine role
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -52,8 +50,6 @@ function LoginForm() { // Create a new component for the form
         });
         router.push(redirectUrl);
       } else {
-        // This case should ideally not happen if signup creates a user doc.
-        // But as a fallback:
         await signOut(auth);
         toast({
           title: "Login Failed",
@@ -68,7 +64,7 @@ function LoginForm() { // Create a new component for the form
         switch (error.code) {
             case 'auth/user-not-found':
             case 'auth/wrong-password':
-            case 'auth/invalid-credential': // Covers both wrong password and user not found in newer SDK versions
+            case 'auth/invalid-credential': 
             errorMessage = "Invalid email or password. Please check your credentials.";
             break;
             case 'auth/too-many-requests':
@@ -94,7 +90,7 @@ function LoginForm() { // Create a new component for the form
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <Utensils className="mx-auto h-12 w-12 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold tracking-tight">Welcome to FindATruck!</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">Welcome to Truck Tracker!</CardTitle>
           <CardDescription>Log in to continue to your account.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleLogin)}>
@@ -157,3 +153,4 @@ function LoginForm() { // Create a new component for the form
     </div>
   );
 }
+export default LoginForm;

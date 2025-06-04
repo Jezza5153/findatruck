@@ -1,5 +1,6 @@
 
 'use client';
+
 import { Star, Loader2 } from 'lucide-react';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
 import type { FoodTruck } from '@/lib/types';

@@ -1,6 +1,5 @@
 
 'use client';
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,10 +46,8 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-      // Update Firebase Auth profile (optional, but good for display name)
       await updateProfile(user, { displayName: data.name });
 
-      // Create user document in Firestore
       const userDocRef = doc(db, "users", user.uid);
       const userDocumentData: Partial<UserDocument> = { 
         uid: user.uid,
@@ -69,13 +66,13 @@ export default function SignupPage() {
       
       toast({
         title: "Signup Successful!",
-        description: "Your account has been created. Please login.",
+        description: "Your account has been created. Welcome to Truck Tracker!",
       });
-      router.push('/login'); 
+      router.push('/customer/dashboard'); 
     } catch (error: any) {
-      console.error("Detailed Signup Error:", JSON.stringify(error, null, 2)); // More detailed logging
+      console.error("Detailed Signup Error:", JSON.stringify(error, null, 2)); 
       let errorMessage = "An unexpected error occurred. Please try again.";
-      if (error.code) { // Check if error object has a code property
+      if (error.code) { 
         switch (error.code) {
           case 'auth/email-already-in-use':
             errorMessage = "This email is already registered. Please login or use a different email.";
@@ -86,7 +83,6 @@ export default function SignupPage() {
           case 'auth/invalid-email':
             errorMessage = "The email address is not valid.";
             break;
-          // Add more Firebase specific error codes here if needed
           default:
             errorMessage = `Signup failed: ${error.message || 'Please try again.'}`;
         }
@@ -108,7 +104,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <Utensils className="mx-auto h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-bold tracking-tight">Create Your Customer Account</CardTitle>
-          <CardDescription>Join FindATruck to discover amazing food.</CardDescription>
+          <CardDescription>Join Truck Tracker to discover amazing food.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignup)}>
           <CardContent className="space-y-4">
@@ -135,7 +131,7 @@ export default function SignupPage() {
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" {...register("terms")} />
               <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
-                I agree to the FindATruck{' '}
+                I agree to the Truck Tracker{' '}
                 <Link href="/terms" className="font-medium text-primary hover:underline" target="_blank">
                   Terms of Service
                 </Link>
