@@ -1,5 +1,5 @@
-
 'use client';
+import React, { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,6 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 import * as z from "zod";
-import { Suspense } from 'react'; 
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -24,7 +23,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-function LoginForm() { 
+function LoginPageInner() { 
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -36,14 +35,12 @@ function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
-
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as UserDocument;
         const redirectUrl = searchParams.get('redirect') || (userData.role === 'owner' ? '/owner/dashboard' : '/customer/dashboard');
-        
         toast({
           title: "Login Successful!",
           description: `Welcome back, ${userData.name || userData.ownerName || 'User'}! Redirecting...`,
@@ -138,7 +135,7 @@ function LoginForm() {
             </p>
             <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button variant="outline" asChild className="w-full">
-                    <Link href="/customer/signup" className="flex items-center justify-center">
+                    <Link href="/signup" className="flex items-center justify-center">
                         <UserPlus className="mr-2 h-4 w-4" /> Customer Signup
                     </Link>
                 </Button>
@@ -153,4 +150,16 @@ function LoginForm() {
     </div>
   );
 }
-export default LoginForm;
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    }>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
