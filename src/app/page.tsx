@@ -6,8 +6,10 @@ import { MapPin, UtensilsCrossed, Star, Truck, Download, Users, ChefHat, LogIn, 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react";
-import type { Testimonial } from "@/lib/types"; // Removed as testimonialsData is removed
+import React from "react"; // Ensured React is imported for React.cloneElement
+
+// Removed Testimonial type import as testimonialsData is also removed
+// import type { Testimonial } from "@/lib/types";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -18,8 +20,8 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-// Testimonials are removed from this page as per previous request to resolve ReferenceError
-// If they need to be re-added, the data source (testimonialsData or dynamic fetch) must be implemented.
+// Testimonials section has been removed to resolve the ReferenceError for testimonialsData
+// If testimonials are needed in the future, their data source and rendering logic must be re-implemented.
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -81,7 +83,7 @@ export default function HomePage() {
           </div>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Button size="lg" variant="default" className="bg-background/20 text-primary-foreground hover:bg-background/30 w-full text-lg py-8 px-6 flex flex-col h-auto items-center justify-center shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm" asChild>
-              <Link href="/customer/signup">
+              <Link href="/signup"> {/* Changed href to /signup */}
                 <UserPlus className="h-10 w-10 mb-2" />
                 I'm a Hungry Customer
                 <span className="text-sm font-normal mt-1 block">(Create an Account)</span>
@@ -180,8 +182,7 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Testimonials Section Removed as per previous steps to fix ReferenceError */}
-      {/* If testimonials are needed, data source and rendering logic must be re-implemented */}
+      {/* Testimonials Section is removed. */}
 
     </div>
   );
