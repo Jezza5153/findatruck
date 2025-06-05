@@ -67,6 +67,7 @@ export default function OwnerMenuPage() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // --- STATE ---
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -86,69 +87,80 @@ export default function OwnerMenuPage() {
   const [itemImageFile, setItemImageFile] = useState<File | null>(null);
   const [itemImagePreview, setItemImagePreview] = useState<string | undefined>(undefined);
 
-  // Auth and Owner truck resolution
+  // --- AUTH & OWNER TRUCK RESOLUTION ---
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
+      setIsLoading(true);
+      setCurrentUser(null);
+      setTruckId(null);
+      if (!user) {
+        router.replace('/login?redirect=/owner/menu');
+        return;
+      }
+      setCurrentUser(user);
+      try {
         const userDocRef = doc(db, "users", user.uid);
         const userDocSnap = await getFirestoreDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as UserDocument;
-          if (userData.role === 'owner') {
-            setTruckId(userData.truckId || user.uid);
-          } else {
-            toast({ title: "Access Denied", description: "You are not an authorized owner.", variant: "destructive" });
-            router.push('/login');
-          }
-        } else {
+        if (!userDocSnap.exists()) {
           toast({ title: "Error", description: "User profile not found.", variant: "destructive" });
-          router.push('/login');
+          router.replace('/login');
+          return;
         }
-      } else {
-        router.push('/login?redirect=/owner/menu');
+        const userData = userDocSnap.data() as UserDocument;
+        if (userData.role !== 'owner') {
+          toast({ title: "Access Denied", description: "You are not an authorized owner.", variant: "destructive" });
+          router.replace('/login');
+          return;
+        }
+        // OWNER MATCHES TRUCKID BY UID OR EXPLICIT truckId
+        setTruckId(userData.truckId || user.uid);
+      } catch (e: any) {
+        toast({ title: "Error", description: e.message || "Unknown error.", variant: "destructive" });
+        router.replace('/login');
       }
+      setIsLoading(false);
     });
     return () => unsub();
-    // eslint-disable-next-line
   }, [router, toast]);
 
-  // Fetch menu categories and items for this truck
+  // --- FETCH MENU DATA ---
+  async function fetchMenuData(silent = false) {
+    if (!truckId) return;
+    if (!silent) setIsLoading(true);
+    setError(null);
+    try {
+      const categoriesPath = collection(db, "trucks", truckId, "menuCategories");
+      const itemsPath = collection(db, "trucks", truckId, "menuItems");
+      const [catsSnap, itemsSnap] = await Promise.all([
+        getDocs(query(categoriesPath)),
+        getDocs(query(itemsPath))
+      ]);
+      const fetchedCategories = catsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuCategory));
+      setCategories(fetchedCategories);
+      setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
+      // Reset selection to default category if not set
+      if (fetchedCategories.length > 0 && !itemCategoryName) {
+        setItemCategoryName(fetchedCategories[0].name);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to load menu data.");
+      toast({ title: "Data Load Error", description: err.message || "Failed to load menu data.", variant: "destructive" });
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
+  }
+
+  // FETCH ON TRUCK ID CHANGE
   useEffect(() => {
     if (!truckId) {
-      if (currentUser) setIsLoading(false);
+      setIsLoading(false);
       return;
     }
-    const fetchMenuData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const categoriesPath = collection(db, "trucks", truckId, "menuCategories");
-        const itemsPath = collection(db, "trucks", truckId, "menuItems");
-        const [catsSnap, itemsSnap] = await Promise.all([
-          getDocs(query(categoriesPath)),
-          getDocs(query(itemsPath))
-        ]);
-        const fetchedCategories = catsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuCategory));
-        setCategories(fetchedCategories);
-        setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
-        if (fetchedCategories.length > 0 && !itemCategoryName) {
-          setItemCategoryName(fetchedCategories[0].name);
-        }
-      } catch (err: any) {
-        console.error("Menu data fetch error:", err);
-        setError(err.message || "Failed to load menu data.");
-        toast({ title: "Data Load Error", description: err.message || "Failed to load menu data.", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchMenuData();
     // eslint-disable-next-line
   }, [truckId]);
 
-  // --- Dialog/Event handlers and helpers below (same as your code, trimmed for space) ---
-
+  // --- IMAGE HANDLER ---
   const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -160,6 +172,7 @@ export default function OwnerMenuPage() {
     }
   };
 
+  // --- CATEGORY HANDLERS ---
   const handleSaveCategory = async () => {
     if (!currentCategoryName.trim() || !truckId) {
       toast({ title: "Error", description: "Category name cannot be empty.", variant: "destructive" });
@@ -178,17 +191,15 @@ export default function OwnerMenuPage() {
           batch.update(itemRef, { category: currentCategoryName });
         });
         await batch.commit();
-        setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, name: currentCategoryName } : c));
-        setMenuItems(menuItems.map(item => item.category === oldCategoryName ? { ...item, category: currentCategoryName } : item));
         toast({ title: "Category Updated", description: `Category "${currentCategoryName}" updated. Associated items also updated.` });
       } else {
-        const docRef = await addDoc(categoryCollectionRef, {
+        await addDoc(categoryCollectionRef, {
           name: currentCategoryName,
           createdAt: serverTimestamp()
         });
-        setCategories([...categories, { id: docRef.id, name: currentCategoryName }]);
         toast({ title: "Category Added", description: `Category "${currentCategoryName}" added.` });
       }
+      await fetchMenuData(true);
     } catch (e: any) {
       toast({ title: "Error saving category", description: e.message || String(e), variant: "destructive" });
     }
@@ -211,15 +222,15 @@ export default function OwnerMenuPage() {
       }
       batch.delete(doc(db, "trucks", truckId, "menuCategories", categoryId));
       await batch.commit();
-      setCategories(categories.filter(c => c.id !== categoryId));
-      setMenuItems(menuItems.filter(item => item.category !== categoryName));
       toast({ title: "Category Deleted", description: `Category "${categoryName}" and all its items deleted.`, variant: "destructive" });
+      await fetchMenuData(true);
     } catch (e: any) {
       toast({ title: "Error deleting category", description: e.message || String(e), variant: "destructive" });
     }
     setIsSubmitting(false);
   };
 
+  // --- MENU ITEM HANDLERS ---
   const handleSaveItem = async () => {
     if (!itemName || !itemPrice || !itemCategoryName || !truckId) {
       toast({ title: "Missing Fields", description: "Name, price, and category are required.", variant: "destructive" });
@@ -254,16 +265,13 @@ export default function OwnerMenuPage() {
       const itemCollectionRef = collection(db, "trucks", truckId, "menuItems");
       if (editingItem) {
         await updateDoc(doc(itemCollectionRef, editingItem.id), itemData);
-        setMenuItems(menuItems.map(item =>
-          item.id === editingItem.id ? { ...editingItem, ...itemData } : item
-        ));
         toast({ title: "Item Updated", description: `"${itemName}" updated.` });
       } else {
         itemData.createdAt = serverTimestamp();
-        const docRef = await addDoc(itemCollectionRef, itemData);
-        setMenuItems([...menuItems, { ...itemData, id: docRef.id, createdAt: new Date() }]);
+        await addDoc(itemCollectionRef, itemData);
         toast({ title: "Item Added", description: `"${itemName}" added to ${itemCategoryName}.` });
       }
+      await fetchMenuData(true);
     } catch (e: any) {
       toast({ title: "Error saving item", description: e.message || String(e), variant: "destructive" });
     }
@@ -278,14 +286,15 @@ export default function OwnerMenuPage() {
     try {
       if (itemToDelete.imagePath) { try { await deleteObject(ref(storage, itemToDelete.imagePath)); } catch { } }
       await deleteDoc(doc(db, "trucks", truckId, "menuItems", itemToDelete.id));
-      setMenuItems(menuItems.filter(item => item.id !== itemToDelete.id));
       toast({ title: "Item Deleted", variant: "destructive" });
+      await fetchMenuData(true);
     } catch (e: any) {
       toast({ title: "Error deleting item", description: e.message || String(e), variant: "destructive" });
     }
     setIsSubmitting(false);
   };
 
+  // --- DIALOG AND FORM HELPERS ---
   const openEditCategoryDialog = (category: MenuCategory) => {
     setEditingCategory(category);
     setCurrentCategoryName(category.name);
@@ -317,8 +326,7 @@ export default function OwnerMenuPage() {
     setIsItemDialogOpen(true);
   };
 
-  // --- Render ---
-
+  // --- RENDER ---
   return (
     <div className="flex min-h-screen bg-background">
       {/* --- Sidebar (Desktop) --- */}
