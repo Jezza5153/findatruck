@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Upload, Image as ImageIcon, FileText, Utensils, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, Image as ImageIcon, Utensils, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
 
@@ -28,12 +28,9 @@ export default function OwnerSignupPage() {
   });
   const [logoFile, setLogoFile] = useState<File|null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
-  const [resumeFile, setResumeFile] = useState<File|null>(null);
-  const [resumeName, setResumeName] = useState<string>('');
   const [errors, setErrors] = useState<Record<string,string>>({});
   const [uploading, setUploading] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
-  const resumeInput = useRef<HTMLInputElement>(null);
 
   // --- FIELD CHANGE HANDLER ---
   function handleFieldChange(e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) {
@@ -57,17 +54,6 @@ export default function OwnerSignupPage() {
     setLogoPreview(URL.createObjectURL(file));
     setErrors(e => ({ ...e, logo: '' }));
   }
-  // --- RESUME HANDLER ---
-  function handleResumeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      setErrors(e => ({ ...e, resume: 'Only PDF files allowed' })); return;
-    }
-    setResumeFile(file);
-    setResumeName(file.name);
-    setErrors(e => ({ ...e, resume: '' }));
-  }
 
   // --- VALIDATION ---
   function validateForm() {
@@ -79,8 +65,7 @@ export default function OwnerSignupPage() {
     if (!form.truckName.trim()) err.truckName = 'Truck name required';
     if (!form.cuisine) err.cuisine = 'Cuisine required';
     if (!form.about.trim() || form.about.length < 20) err.about = 'Tell us about your truck (20+ chars)';
-    if (!logoFile) err.logo = 'Truck logo required';
-    if (!resumeFile) err.resume = 'PDF resume required';
+    // logoFile is now optional
     setErrors(err);
     return Object.keys(err).length === 0;
   }
@@ -91,31 +76,22 @@ export default function OwnerSignupPage() {
     if (!validateForm()) return;
     setUploading(true);
     setStep('loading');
-    let logoUrl = '', resumeUrl = '';
+    let logoUrl = '';
     let newUser = null;
     try {
       // 1. Create Auth User
       const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       newUser = userCred.user;
 
-      // 2. Upload Logo + Resume to Storage
-      const logoPath = `trucks/${newUser.uid}/logo.${logoFile?.name.split('.').pop()}`;
-      const resumePath = `trucks/${newUser.uid}/resume.pdf`;
-
-      await updateProfile(newUser, { displayName: form.truckName });
-
-      // Logo Upload
+      // 2. Upload Logo to Storage (optional)
       if (logoFile) {
+        const logoPath = `trucks/${newUser.uid}/logo.${logoFile.name.split('.').pop()}`;
         const logoRef = ref(storage, logoPath);
         await uploadBytes(logoRef, logoFile);
         logoUrl = await getDownloadURL(logoRef);
       }
-      // Resume Upload
-      if (resumeFile) {
-        const resumeRef = ref(storage, resumePath);
-        await uploadBytes(resumeRef, resumeFile);
-        resumeUrl = await getDownloadURL(resumeRef);
-      }
+
+      await updateProfile(newUser, { displayName: form.truckName });
 
       // 3. Write Firestore Profile (users & trucks)
       const ownerData = {
@@ -128,8 +104,7 @@ export default function OwnerSignupPage() {
         truckName: form.truckName,
         cuisine: form.cuisine,
         about: form.about,
-        logoUrl,
-        resumeUrl,
+        logoUrl: logoUrl || '', // empty string if not provided
         createdAt: serverTimestamp(),
         status: 'pending', // or 'active' after approval
       };
@@ -206,7 +181,7 @@ export default function OwnerSignupPage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex-1">
-                <Label>Truck Logo</Label>
+                <Label>Truck Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
                 <div className="flex items-center gap-3 mt-1">
                   <Button type="button" variant="outline" onClick={() => logoInput.current?.click()}>
                     <ImageIcon className="mr-2 h-4 w-4" />
@@ -217,19 +192,6 @@ export default function OwnerSignupPage() {
                   {logoPreview && <div className="relative w-12 h-12"><NextImage src={logoPreview} alt="Logo" fill className="rounded shadow border" /></div>}
                 </div>
                 {errors.logo && <p className="text-xs text-destructive mt-1">{errors.logo}</p>}
-              </div>
-              <div className="flex-1">
-                <Label>Your Resume (PDF)</Label>
-                <div className="flex items-center gap-3 mt-1">
-                  <Button type="button" variant="outline" onClick={() => resumeInput.current?.click()}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    {resumeFile ? "Change PDF" : "Upload PDF"}
-                  </Button>
-                  <input ref={resumeInput} type="file" accept="application/pdf" className="hidden"
-                    onChange={handleResumeChange} />
-                  {resumeName && <span className="text-xs ml-2">{resumeName}</span>}
-                </div>
-                {errors.resume && <p className="text-xs text-destructive mt-1">{errors.resume}</p>}
               </div>
             </div>
             <Button className="w-full mt-2 py-5 text-lg" size="lg" type="submit" disabled={uploading}>
