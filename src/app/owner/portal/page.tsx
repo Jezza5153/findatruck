@@ -46,7 +46,7 @@ export default function OwnerPortalPage() {
                     </Link>
                 </Button>
                 <Button variant="outline" asChild className="w-full">
-                    <Link href="/customer/signup" className="flex items-center justify-center">
+                    <Link href="/signup" className="flex items-center justify-center">
                         <UserPlus className="mr-2 h-4 w-4" /> Customer Signup
                     </Link>
                 </Button>
