@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import MapStatsHeader from '@/components/MapStatsHeader';
@@ -9,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { List, Map as MapIcon, Utensils, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { db } from '@/lib/firebase'; // Firebase should be initialized here
-import { collection, getDocs, query, where, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, type QueryDocumentSnapshot, type DocumentData } from 'firebase/firestore';
 import FoodTruckMap from '@/components/FoodTruckMap';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
 
@@ -30,11 +29,11 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch trucks
+  // Fetch trucks from Firestore
   useEffect(() => {
     let ignore = false;
     const fetchTrucks = async () => {
-      if (!db) { // Check if db is initialized
+      if (!db) {
         setError("Database service is not available. Please try again later.");
         setIsLoading(false);
         toast({ title: "Database Error", description: "Could not connect to the database.", variant: "destructive"});
@@ -59,16 +58,16 @@ export default function MapPage() {
             lng: typeof data.lng === 'number' ? data.lng : undefined,
             address: data.address || undefined,
             operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified',
-            isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen), // Ensure boolean
+            isOpen: typeof data.isOpen === 'boolean' ? data.isOpen : undefined,
             rating: typeof data.rating === 'number' ? data.rating : undefined,
             menu: Array.isArray(data.menu) ? data.menu : [],
             testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
-            isFeatured: data.isFeatured === undefined ? undefined : Boolean(data.isFeatured),
+            isFeatured: typeof data.isFeatured === 'boolean' ? data.isFeatured : undefined,
           });
         });
         if (!ignore) {
           setTrucks(fetchedTrucks);
-          setFilteredTrucks(fetchedTrucks); // Initially, filtered trucks are all trucks
+          setFilteredTrucks(fetchedTrucks);
         }
       } catch (err: any) {
         console.error("Error fetching trucks:", err);
@@ -88,7 +87,7 @@ export default function MapPage() {
     return () => { ignore = true; };
   }, [toast]);
 
-  // Filter trucks when filters or base trucks list change
+  // Filter trucks when filters or truck list changes
   useEffect(() => {
     let currentTrucks = [...trucks];
     if (filters.cuisine && filters.cuisine !== '') {
@@ -107,8 +106,6 @@ export default function MapPage() {
         truck.cuisine.toLowerCase().includes(term)
       );
     }
-    // Note: Distance filtering is more complex and usually done server-side or with map API specific logic.
-    // For client-side, it would require user's location. We'll skip complex client-side distance filtering for now.
     setFilteredTrucks(currentTrucks);
   }, [filters, trucks]);
 
@@ -117,8 +114,6 @@ export default function MapPage() {
   }, []);
   
   const handleLocateMe = useCallback(() => {
-    // This function is passed to FilterControls and handled by FoodTruckMap
-    // For now, it can just show a toast or be handled by the map component directly
     toast({
       title: "Locating You...",
       description: "Map will attempt to center on your current location.",
@@ -129,7 +124,7 @@ export default function MapPage() {
     <div className="container mx-auto px-4 py-8">
       <MapStatsHeader />
       <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-1/4 lg:w-1/5 md:sticky md:top-20 h-fit"> {/* Added sticky positioning for desktop */}
+        <aside className="w-full md:w-1/4 lg:w-1/5 md:sticky md:top-20 h-fit">
           <FilterControls 
             onFilterChange={handleFilterChange} 
             onLocateMe={handleLocateMe}
