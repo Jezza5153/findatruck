@@ -123,7 +123,7 @@ export function SiteHeader() {
               <Link href="/login"><LogInIcon className={iconClass}/>Login</Link>
             </Button>
             <Button size={isMobile ? "lg" : "sm"} asChild className={`${buttonClass} ${isMobile ? 'bg-primary hover:bg-primary/90' : 'bg-primary hover:bg-primary/90'}`} onClick={handleLinkClick}>
-              <Link href="/customer/signup"><UserCircle className={iconClass}/>Customer Sign Up</Link>
+              <Link href="/signup"><UserCircle className={iconClass}/>Customer Sign Up</Link>
             </Button>
              {isMobile && (
                 <Button variant="outline" asChild className={`${buttonClass} text-accent border-accent hover:bg-accent/10 hover:text-accent`} onClick={handleLinkClick}>

@@ -23,7 +23,7 @@ export function SiteFooter() {
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">For Customers</h6>
               <ul className="space-y-2">
                 <li><Link href="/map" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><MapPin className="w-4 h-4 mr-1.5"/>Find Trucks</Link></li>
-                <li><Link href="/customer/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><User className="w-4 h-4 mr-1.5"/>Customer Signup</Link></li>
+                <li><Link href="/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><User className="w-4 h-4 mr-1.5"/>Customer Signup</Link></li>
                 <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><User className="w-4 h-4 mr-1.5"/>Login</Link></li>
                 <li><Link href="/featured" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><Star className="w-4 h-4 mr-1.5"/>Featured Trucks</Link></li>
               </ul>
