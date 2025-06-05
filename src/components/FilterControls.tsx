@@ -71,6 +71,14 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
     // onFilterChange will be called by the useEffect due to state changes
   };
 
+  const handleCuisineChange = (value: string) => {
+    if (value === 'all') {
+      setCuisine('');
+    } else {
+      setCuisine(value);
+    }
+  };
+
   return (
     <div className="p-4 space-y-6 bg-card rounded-lg shadow-md border">
       <div className="flex justify-between items-center">
@@ -97,12 +105,12 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
 
       <div>
         <Label htmlFor="cuisine-select" className="text-sm font-medium">Cuisine</Label>
-        <Select value={cuisine} onValueChange={setCuisine}>
+        <Select value={cuisine === '' ? 'all' : cuisine} onValueChange={handleCuisineChange}>
           <SelectTrigger id="cuisine-select" className="w-full mt-1">
             <SelectValue placeholder="Any Cuisine" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Cuisine</SelectItem> 
+            <SelectItem value="all">Any Cuisine</SelectItem> 
             {availableCuisinesData.map(c => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
