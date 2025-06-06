@@ -33,12 +33,10 @@ export default function OwnerSignupPage() {
   const [uploading, setUploading] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
 
-  // --- HANDLERS ---
   function handleFieldChange(
     e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>|{target:{name:string,value:any,type?:string,checked?:boolean}}
   ) {
     const { name, value, type, checked } = (e as any).target;
-    // Always handle checkbox as boolean!
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? !!checked : value }));
     setErrors(err => ({ ...err, [name]: '' }));
   }
@@ -73,6 +71,7 @@ export default function OwnerSignupPage() {
     return Object.keys(err).length === 0;
   }
 
+  // --- MAIN SUBMIT HANDLER ---
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validateForm()) return;
@@ -113,14 +112,21 @@ export default function OwnerSignupPage() {
       const userDocRef = doc(db, 'users', newUser.uid);
       await setDoc(userDocRef, ownerData);
 
-      // 4. Wait for user doc to be readable with role: owner (to satisfy security rules!)
+      // 4. Wait for user doc to be visible (up to 5 seconds)
       let confirmUserDoc = null;
-      for (let i = 0; i < 10; i++) {
+      let attempts = 0;
+      let maxAttempts = 20; // 20 x 250ms = 5s
+      let roleSeen = false;
+      while (attempts < maxAttempts) {
         confirmUserDoc = await getDoc(userDocRef);
-        if (confirmUserDoc.exists() && confirmUserDoc.data().role === 'owner') break;
-        await new Promise(res => setTimeout(res, 150));
+        if (confirmUserDoc.exists() && confirmUserDoc.data().role === 'owner') {
+          roleSeen = true;
+          break;
+        }
+        await new Promise(res => setTimeout(res, 250));
+        attempts++;
       }
-      if (!confirmUserDoc.exists() || confirmUserDoc.data().role !== 'owner') {
+      if (!roleSeen) {
         setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
         toast({
           title: "Just a moment...",
@@ -132,16 +138,44 @@ export default function OwnerSignupPage() {
         return;
       }
 
-      // 5. Only now, create trucks doc (rules require user role to be present!)
+      // 5. Create trucks doc. Retry up to 5 times if permission denied!
       const truckDocRef = doc(db, 'trucks', newUser.uid);
-      await setDoc(truckDocRef, {
-        ...ownerData,
-        isOpen: false,
-        isFeatured: false,
-        menu: [],
-        testimonials: [],
-        ownerUid: newUser.uid,
-      });
+      let truckSuccess = false;
+      let truckError = null;
+      for (let i = 0; i < 5; i++) {
+        try {
+          await setDoc(truckDocRef, {
+            ...ownerData,
+            isOpen: false,
+            isFeatured: false,
+            menu: [],
+            testimonials: [],
+            ownerUid: newUser.uid,
+          });
+          truckSuccess = true;
+          break;
+        } catch (err: any) {
+          // Only retry if permission-denied, else break immediately
+          if (err.code === 'permission-denied') {
+            await new Promise(res => setTimeout(res, 500));
+            truckError = err;
+          } else {
+            truckError = err;
+            break;
+          }
+        }
+      }
+      if (!truckSuccess) {
+        setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
+        toast({
+          title: "Just a moment...",
+          description: truckError?.message || "Could not finish signup. Please wait and try logging in again.",
+          variant: "default",
+        });
+        setStep('form');
+        setUploading(false);
+        return;
+      }
 
       setStep('done');
       toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! You can now set up your menu.' });
