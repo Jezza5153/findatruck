@@ -14,10 +14,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import type { UserDocument } from "@/lib/types";
 import { useState } from "react";
 
-// --- Zod schema with boolean default for 'terms'
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
@@ -50,7 +48,7 @@ export default function SignupPage() {
       await updateProfile(user, { displayName: data.name });
 
       const userDocRef = doc(db, "users", user.uid);
-      const userDocumentData: Partial<UserDocument> = { 
+      const userDocumentData = { 
         uid: user.uid,
         email: user.email,
         role: 'customer',
