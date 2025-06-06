@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Upload, Image as ImageIcon, Utensils, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import NextImage from 'next/image';
@@ -24,7 +25,7 @@ export default function OwnerSignupPage() {
   const [step, setStep] = useState<'form'|'loading'|'done'>('form');
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirmPassword: '', phone: '',
-    truckName: '', cuisine: '', about: '',
+    truckName: '', cuisine: '', about: '', terms: false
   });
   const [logoFile, setLogoFile] = useState<File|null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -32,18 +33,18 @@ export default function OwnerSignupPage() {
   const [uploading, setUploading] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
 
-  // --- FIELD CHANGE HANDLER ---
-  function handleFieldChange(e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+  // Handle field change (including checkbox)
+  function handleFieldChange(e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>|{target:{name:string,value:any,type?:string}}) {
+    const { name, value, type, checked } = (e as any).target;
+    setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
     setErrors(err => ({ ...err, [name]: '' }));
   }
+
   function handleCuisineChange(cuisine: string) {
     setForm(f => ({ ...f, cuisine }));
     setErrors(err => ({ ...err, cuisine: '' }));
   }
 
-  // --- LOGO HANDLER ---
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -55,7 +56,6 @@ export default function OwnerSignupPage() {
     setErrors(e => ({ ...e, logo: '' }));
   }
 
-  // --- VALIDATION ---
   function validateForm() {
     const err: Record<string, string> = {};
     if (!form.name.trim()) err.name = 'Name required';
@@ -67,11 +67,11 @@ export default function OwnerSignupPage() {
     if (!form.truckName.trim()) err.truckName = 'Truck name required';
     if (!form.cuisine) err.cuisine = 'Cuisine required';
     if (!form.about.trim() || form.about.length < 20) err.about = 'Tell us about your truck (20+ chars)';
+    if (!form.terms) err.terms = 'You must agree to the Terms & Privacy Policy';
     setErrors(err);
     return Object.keys(err).length === 0;
   }
 
-  // --- SIGNUP SUBMIT ---
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validateForm()) return;
@@ -107,12 +107,12 @@ export default function OwnerSignupPage() {
         about: form.about,
         logoUrl: logoUrl || '',
         createdAt: serverTimestamp(),
-        status: 'pending',
+        status: 'active', // <--- Always instantly active
       };
       const userDocRef = doc(db, 'users', newUser.uid);
       await setDoc(userDocRef, ownerData);
 
-      // 4. Wait for the user doc to be readable with role: owner (to satisfy security rules!)
+      // 4. Wait for user doc to be readable with role: owner (to satisfy security rules!)
       let confirmUserDoc = null;
       for (let i = 0; i < 10; i++) {
         confirmUserDoc = await getDoc(userDocRef);
@@ -139,7 +139,7 @@ export default function OwnerSignupPage() {
         isFeatured: false,
         menu: [],
         testimonials: [],
-        ownerUid: newUser.uid, // <--- CRUCIAL: matches security rules!
+        ownerUid: newUser.uid,
       });
 
       setStep('done');
@@ -148,7 +148,14 @@ export default function OwnerSignupPage() {
     } catch (err: any) {
       setUploading(false);
       setStep('form');
-      toast({ title: 'Signup failed', description: err.message, variant: 'destructive' });
+      let msg = "Signup failed";
+      if (err?.code === "permission-denied") {
+        msg = "Permission denied. Please check your Firestore security rules for /users and /trucks collections. Make sure newly registered owners can write both their own user profile and create a matching truck with their uid.";
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      toast({ title: 'Signup failed', description: msg, variant: 'destructive' });
+      setErrors(errs => ({ ...errs, general: msg }));
     }
   }
 
@@ -226,6 +233,30 @@ export default function OwnerSignupPage() {
                 {errors.logo && <p className="text-xs text-destructive mt-1">{errors.logo}</p>}
               </div>
             </div>
+            {/* Terms & Conditions */}
+            <div className="flex items-start gap-2 mt-2">
+              <Checkbox
+                id="terms"
+                name="terms"
+                checked={form.terms}
+                onCheckedChange={checked =>
+                  handleFieldChange({
+                    target: {
+                      name: "terms",
+                      value: checked,
+                      type: "checkbox"
+                    }
+                  })
+                }
+              />
+              <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
+                I agree to the&nbsp;
+                <a href="/terms" target="_blank" className="font-medium text-primary hover:underline">Terms of Service</a>
+                &nbsp;and&nbsp;
+                <a href="/privacy" target="_blank" className="font-medium text-primary hover:underline">Privacy Policy</a>.
+              </Label>
+            </div>
+            {errors.terms && <p className="text-xs text-destructive mt-1">{errors.terms}</p>}
             {errors.general && <p className="text-xs text-destructive mt-3">{errors.general}</p>}
             <Button className="w-full mt-2 py-5 text-lg" size="lg" type="submit" disabled={uploading}>
               {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Upload className="mr-2 h-5 w-5" />}
