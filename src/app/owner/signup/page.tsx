@@ -33,18 +33,19 @@ export default function OwnerSignupPage() {
   const [uploading, setUploading] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
 
-  // Handle field change (including checkbox)
-  function handleFieldChange(e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>|{target:{name:string,value:any,type?:string}}) {
+  // --- HANDLERS ---
+  function handleFieldChange(
+    e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>|{target:{name:string,value:any,type?:string,checked?:boolean}}
+  ) {
     const { name, value, type, checked } = (e as any).target;
-    setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+    // Always handle checkbox as boolean!
+    setForm(f => ({ ...f, [name]: type === 'checkbox' ? !!checked : value }));
     setErrors(err => ({ ...err, [name]: '' }));
   }
-
   function handleCuisineChange(cuisine: string) {
     setForm(f => ({ ...f, cuisine }));
     setErrors(err => ({ ...err, cuisine: '' }));
   }
-
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -107,7 +108,7 @@ export default function OwnerSignupPage() {
         about: form.about,
         logoUrl: logoUrl || '',
         createdAt: serverTimestamp(),
-        status: 'active', // <--- Always instantly active
+        status: 'active', // Always instantly active
       };
       const userDocRef = doc(db, 'users', newUser.uid);
       await setDoc(userDocRef, ownerData);
@@ -238,12 +239,13 @@ export default function OwnerSignupPage() {
               <Checkbox
                 id="terms"
                 name="terms"
-                checked={form.terms}
+                checked={!!form.terms}
                 onCheckedChange={checked =>
                   handleFieldChange({
                     target: {
                       name: "terms",
                       value: checked,
+                      checked: checked,
                       type: "checkbox"
                     }
                   })
