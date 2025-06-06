@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
@@ -78,7 +78,7 @@ export default function OwnerSignupPage() {
     setUploading(true);
     setStep('loading');
     let logoUrl = '';
-    let newUser = null;
+    let newUser: User | null = null;
     try {
       // 1. Create Auth User
       const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
@@ -144,12 +144,18 @@ export default function OwnerSignupPage() {
       // 5. NOW create truck doc (synchronously, not in background!)
       const truckDocRef = doc(db, 'trucks', newUser.uid);
       await setDoc(truckDocRef, {
-        ...ownerData,
+        id: newUser.uid,                 // <-- use `id` for FoodTruck type
+        name: form.truckName,            // <-- use `name` for FoodTruck type
+        cuisine: form.cuisine,
+        description: form.about,
+        imageUrl: logoUrl || '',
+        ownerUid: newUser.uid,
         isOpen: false,
         isFeatured: false,
         menu: [],
         testimonials: [],
-        ownerUid: newUser.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       // 6. Success, let user through!
@@ -251,16 +257,16 @@ export default function OwnerSignupPage() {
                 id="terms"
                 name="terms"
                 checked={!!form.terms}
-                onCheckedChange={checked =>
+                onCheckedChange={(checked: boolean | "indeterminate") => {
                   handleFieldChange({
                     target: {
                       name: "terms",
-                      value: checked,
-                      checked: checked,
+                      value: checked === true,
+                      checked: checked === true,
                       type: "checkbox"
                     }
-                  })
-                }
+                  });
+                }}
               />
               <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
                 I agree to the&nbsp;

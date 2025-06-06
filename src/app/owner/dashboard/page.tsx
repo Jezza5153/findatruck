@@ -156,18 +156,18 @@ export default function OwnerDashboardPage() {
   }
 
   // Robust fallback if truckData exists but is missing essentials
-  const dashboardDisabled = !truckData?.truckName && !truckData?.name;
+  const dashboardDisabled = !truckData?.name; // Only check .name
 
   return (
     <div className="flex min-h-screen bg-background">
-      <OwnerSidebar active="dashboard" />
+      <OwnerSidebar />
 
       <main className="flex-1 px-4 py-8 md:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-primary">Owner Dashboard</h1>
             <p className="text-muted-foreground">
-              Manage {truckData?.name || truckData?.truckName || "your food truck"}'s presence and operations.
+              Manage {(truckData?.name || "your food truck")}'s presence and operations.
             </p>
           </div>
           {truckData && truckId && (
