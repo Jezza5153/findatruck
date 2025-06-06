@@ -111,7 +111,7 @@ export default function OwnerSignupPage() {
       const userDocRef = doc(db, 'users', newUser.uid);
       await setDoc(userDocRef, ownerData);
 
-      // 4. Confirm user doc is propagated and has correct role
+      // 4. Wait for user doc to propagate and have correct role
       let confirmUserDoc = null;
       let attempts = 0;
       let maxAttempts = 30; // ~9 seconds max
@@ -141,44 +141,21 @@ export default function OwnerSignupPage() {
         return;
       }
 
-      // 5. Let user through to dashboard, create truck doc in background!
-      setStep('done');
-      toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! Setting up your truck...' });
-      setTimeout(() => router.replace('/owner/dashboard'), 2000);
+      // 5. NOW create truck doc (synchronously, not in background!)
+      const truckDocRef = doc(db, 'trucks', newUser.uid);
+      await setDoc(truckDocRef, {
+        ...ownerData,
+        isOpen: false,
+        isFeatured: false,
+        menu: [],
+        testimonials: [],
+        ownerUid: newUser.uid,
+      });
 
-      // 6. BACKGROUND: Retry creating trucks doc robustly, but do not block UI
-      (async () => {
-        const truckDocRef = doc(db, 'trucks', newUser.uid);
-        let truckSuccess = false;
-        let truckError = null;
-        for (let i = 0; i < 10; i++) {
-          try {
-            await setDoc(truckDocRef, {
-              ...ownerData,
-              isOpen: false,
-              isFeatured: false,
-              menu: [],
-              testimonials: [],
-              ownerUid: newUser.uid,
-            });
-            truckSuccess = true;
-            break;
-          } catch (err: any) {
-            if (err.code === 'permission-denied') {
-              truckError = err;
-              console.warn(`[signup] Truck doc creation permission-denied, retrying attempt ${i+1}/10. Waiting...`);
-              await new Promise(res => setTimeout(res, 1000 + i * 350));
-            } else {
-              truckError = err;
-              break;
-            }
-          }
-        }
-        // Optionally: If truck creation *still* fails, you could log or notify, or show message in dashboard on next load
-        if (!truckSuccess) {
-          console.error('Truck doc creation failed:', truckError);
-        }
-      })();
+      // 6. Success, let user through!
+      setStep('done');
+      toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! Your truck profile is ready.' });
+      setTimeout(() => router.replace('/owner/dashboard'), 2000);
 
     } catch (err: any) {
       setUploading(false);
