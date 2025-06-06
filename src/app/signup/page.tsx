@@ -40,10 +40,12 @@ export default function OwnerSignupPage() {
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? !!checked : value }));
     setErrors(err => ({ ...err, [name]: '' }));
   }
+
   function handleCuisineChange(cuisine: string) {
     setForm(f => ({ ...f, cuisine }));
     setErrors(err => ({ ...err, cuisine: '' }));
   }
+
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -256,7 +258,7 @@ export default function OwnerSignupPage() {
             <div>
               <Label htmlFor="cuisine">Cuisine Type</Label>
               <Select value={form.cuisine} onValueChange={handleCuisineChange}>
-                <SelectTrigger><SelectValue placeholder="Select cuisine" /></SelectTrigger>
+                <SelectTrigger id="cuisine" name="cuisine"><SelectValue placeholder="Select cuisine" /></SelectTrigger>
                 <SelectContent>
                   {CUISINE_TYPES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -272,13 +274,14 @@ export default function OwnerSignupPage() {
 
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex-1">
-                <Label>Truck Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Label htmlFor="logo">Truck Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
                 <div className="flex items-center gap-3 mt-1">
                   <Button type="button" variant="outline" onClick={() => logoInput.current?.click()} aria-label="Upload truck logo">
                     <ImageIcon className="mr-2 h-4 w-4" />
                     {logoFile ? "Change Logo" : "Upload Logo"}
                   </Button>
                   <input
+                    id="logo"
                     ref={logoInput}
                     type="file"
                     accept="image/*"
