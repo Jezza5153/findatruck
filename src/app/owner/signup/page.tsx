@@ -48,7 +48,8 @@ export default function OwnerSignupPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setErrors(e => ({ ...e, logo: 'Only image files allowed' })); return;
+      setErrors(e => ({ ...e, logo: 'Only image files allowed' }));
+      return;
     }
     setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
@@ -84,81 +85,102 @@ export default function OwnerSignupPage() {
       const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       newUser = userCred.user;
 
+      // 1.a Force-refresh the ID token so Firestore rules see the authentication immediately
+      //     This avoids the “permission-denied” that can occur if Firestore sees request.auth as null.
+      await auth.currentUser?.getIdToken(true);
+
       // 2. Upload Logo to Storage (optional)
-      if (logoFile) {
-        const logoPath = `trucks/${newUser.uid}/logo.${logoFile.name.split('.').pop()}`;
+      if (logoFile && newUser) {
+        const logoExt = logoFile.name.split('.').pop();
+        const logoPath = `trucks/${newUser.uid}/logo.${logoExt}`;
         const logoRef = ref(storage, logoPath);
         await uploadBytes(logoRef, logoFile);
         logoUrl = await getDownloadURL(logoRef);
       }
-      await updateProfile(newUser, { displayName: form.truckName });
 
-      // 3. Write Firestore User Profile FIRST (role: 'owner')
-      const ownerData = {
-        uid: newUser.uid,
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        role: 'owner',
-        truckId: newUser.uid,
-        truckName: form.truckName,
-        cuisine: form.cuisine,
-        about: form.about,
-        logoUrl: logoUrl || '',
-        createdAt: serverTimestamp(),
-        status: 'active'
-      };
-      const userDocRef = doc(db, 'users', newUser.uid);
-      await setDoc(userDocRef, ownerData);
+      // 3. Update Auth profile displayName
+      if (newUser) {
+        await updateProfile(newUser, { displayName: form.truckName });
+      }
 
-      // 4. Wait for user doc to propagate and have correct role
-      let confirmUserDoc = null;
-      let attempts = 0;
-      let maxAttempts = 30; // ~9 seconds max
-      let roleSeen = false;
-      while (attempts < maxAttempts) {
-        confirmUserDoc = await getDoc(userDocRef);
-        if (confirmUserDoc.exists()) {
-          const userData = confirmUserDoc.data();
-          if (userData && userData.role === 'owner') {
-            roleSeen = true;
-            break;
+      // 4. Write Firestore User Profile FIRST (role: 'owner')
+      if (newUser) {
+        const ownerData = {
+          uid: newUser.uid,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          role: 'owner',
+          truckId: newUser.uid,
+          truckName: form.truckName,
+          cuisine: form.cuisine,
+          about: form.about,
+          logoUrl: logoUrl || '',
+          createdAt: serverTimestamp(),
+          status: 'active'
+        };
+        const userDocRef = doc(db, 'users', newUser.uid);
+        await setDoc(userDocRef, ownerData);
+      }
+
+      // 5. Wait for user doc to propagate and have correct role
+      if (newUser) {
+        const userDocRef = doc(db, 'users', newUser.uid);
+        let confirmUserDoc = null;
+        let attempts = 0;
+        const maxAttempts = 30; // ~9 seconds max
+        let roleSeen = false;
+        while (attempts < maxAttempts) {
+          confirmUserDoc = await getDoc(userDocRef);
+          if (confirmUserDoc.exists()) {
+            const userData = confirmUserDoc.data();
+            if (userData && userData.role === 'owner') {
+              roleSeen = true;
+              break;
+            }
           }
+          if (attempts % 5 === 0) {
+            console.log(`[signup] Waiting for Firestore user doc propagation, attempt ${attempts + 1}/${maxAttempts}`);
+          }
+          await new Promise(res => setTimeout(res, 300));
+          attempts++;
         }
-        if (attempts % 5 === 0) console.log(`[signup] Waiting for Firestore user doc propagation, attempt ${attempts+1}/${maxAttempts}`);
-        await new Promise(res => setTimeout(res, 300));
-        attempts++;
+        if (!roleSeen) {
+          setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
+          toast({
+            title: "Just a moment...",
+            description: "Your account is being finalized. Try logging in again in a few seconds.",
+            variant: "default",
+          });
+          setStep('form');
+          setUploading(false);
+          return;
+        }
       }
-      if (!roleSeen) {
-        setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
-        toast({
-          title: "Just a moment...",
-          description: "Your account is being finalized. Try logging in again in a few seconds.",
-          variant: "default",
+
+      // 6. NOW create truck doc (synchronously, not in background!)
+      if (newUser) {
+        // Another token refresh just before writing the truck doc to be extra safe
+        await auth.currentUser?.getIdToken(true);
+
+        const truckDocRef = doc(db, 'trucks', newUser.uid);
+        await setDoc(truckDocRef, {
+          id: newUser.uid,
+          name: form.truckName,
+          cuisine: form.cuisine,
+          description: form.about,
+          imageUrl: logoUrl || '',
+          ownerUid: newUser.uid,
+          isOpen: false,
+          isFeatured: false,
+          menu: [],
+          testimonials: [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         });
-        setStep('form');
-        setUploading(false);
-        return;
       }
 
-      // 5. NOW create truck doc (synchronously, not in background!)
-      const truckDocRef = doc(db, 'trucks', newUser.uid);
-      await setDoc(truckDocRef, {
-        id: newUser.uid,
-        name: form.truckName,
-        cuisine: form.cuisine,
-        description: form.about,
-        imageUrl: logoUrl || '',
-        ownerUid: newUser.uid,    // << REQUIRED for rules!
-        isOpen: false,
-        isFeatured: false,
-        menu: [],
-        testimonials: [],
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      // 6. Success, let user through!
+      // 7. Success, let user through!
       setStep('done');
       toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! Your truck profile is ready.' });
       setTimeout(() => router.replace('/owner/dashboard'), 2000);
@@ -184,7 +206,12 @@ export default function OwnerSignupPage() {
           <Utensils className="h-8 w-8 text-green-600" />
           <h2 className="text-3xl font-bold text-primary">Owner Sign Up</h2>
         </div>
-        <p className="text-muted-foreground mb-6">Join the platform. Grow your business.<br />Show us why your food truck is special.</p>
+        <p className="text-muted-foreground mb-6">
+          Join the platform. Grow your business.
+          <br />
+          Show us why your food truck is special.
+        </p>
+
         {step === 'form' && (
           <form className="space-y-5" autoComplete="off" onSubmit={handleSubmit}>
             <div className="flex gap-3">
@@ -199,11 +226,13 @@ export default function OwnerSignupPage() {
                 {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
               </div>
             </div>
+
             <div>
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" autoComplete="email" value={form.email} onChange={handleFieldChange} />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
+
             <div className="flex gap-3">
               <div className="flex-1">
                 <Label htmlFor="password">Password</Label>
@@ -216,11 +245,13 @@ export default function OwnerSignupPage() {
                 {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
               </div>
             </div>
+
             <div>
               <Label htmlFor="truckName">Food Truck Name</Label>
               <Input id="truckName" name="truckName" value={form.truckName} onChange={handleFieldChange} />
               {errors.truckName && <p className="text-xs text-destructive mt-1">{errors.truckName}</p>}
             </div>
+
             <div>
               <Label htmlFor="cuisine">Cuisine Type</Label>
               <Select value={form.cuisine} onValueChange={handleCuisineChange}>
@@ -231,11 +262,13 @@ export default function OwnerSignupPage() {
               </Select>
               {errors.cuisine && <p className="text-xs text-destructive mt-1">{errors.cuisine}</p>}
             </div>
+
             <div>
               <Label htmlFor="about">About Your Truck</Label>
               <Textarea id="about" name="about" value={form.about} rows={3} onChange={handleFieldChange} placeholder="Tell us what makes your food truck amazing..." />
               {errors.about && <p className="text-xs text-destructive mt-1">{errors.about}</p>}
             </div>
+
             <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex-1">
                 <Label>Truck Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
@@ -244,13 +277,24 @@ export default function OwnerSignupPage() {
                     <ImageIcon className="mr-2 h-4 w-4" />
                     {logoFile ? "Change Logo" : "Upload Logo"}
                   </Button>
-                  <input ref={logoInput} type="file" accept="image/*" className="hidden"
-                    onChange={handleLogoChange} aria-label="Truck logo file input" />
-                  {logoPreview && <div className="relative w-12 h-12"><NextImage src={logoPreview} alt="Logo" fill className="rounded shadow border" /></div>}
+                  <input
+                    ref={logoInput}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoChange}
+                    aria-label="Truck logo file input"
+                  />
+                  {logoPreview && (
+                    <div className="relative w-12 h-12">
+                      <NextImage src={logoPreview} alt="Logo" fill className="rounded shadow border" />
+                    </div>
+                  )}
                 </div>
                 {errors.logo && <p className="text-xs text-destructive mt-1">{errors.logo}</p>}
               </div>
             </div>
+
             {/* Terms & Conditions */}
             <div className="flex items-start gap-2 mt-2">
               <Checkbox
@@ -277,12 +321,17 @@ export default function OwnerSignupPage() {
             </div>
             {errors.terms && <p className="text-xs text-destructive mt-1">{errors.terms}</p>}
             {errors.general && <p className="text-xs text-destructive mt-3">{errors.general}</p>}
+
             <Button className="w-full mt-2 py-5 text-lg" size="lg" type="submit" disabled={uploading}>
-              {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Upload className="mr-2 h-5 w-5" />}
+              {uploading
+                ? <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                : <Upload className="mr-2 h-5 w-5" />
+              }
               Create Owner Account
             </Button>
           </form>
         )}
+
         {step === 'loading' && (
           <div className="flex flex-col items-center justify-center min-h-[340px] animate-in fade-in">
             <Loader2 className="h-16 w-16 text-primary animate-spin mb-6" />
@@ -290,13 +339,19 @@ export default function OwnerSignupPage() {
             <p className="text-muted-foreground">This may take a few seconds if your uploads are large.</p>
           </div>
         )}
+
         {step === 'done' && (
           <div className="flex flex-col items-center justify-center min-h-[340px] animate-in fade-in">
             <CheckCircle className="h-20 w-20 text-green-500 mb-6" />
             <h3 className="text-2xl font-bold mb-2">Success!</h3>
-            <p className="text-lg text-muted-foreground mb-4">Your owner account is ready.<br />Redirecting to dashboard...</p>
+            <p className="text-lg text-muted-foreground mb-4">
+              Your owner account is ready.
+              <br />
+              Redirecting to dashboard...
+            </p>
           </div>
         )}
+
         <div className="mt-8 text-sm text-center text-muted-foreground">
           Already have an owner account? <a href="/login" className="text-blue-700 underline">Log in</a>
         </div>
