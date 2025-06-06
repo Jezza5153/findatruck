@@ -83,6 +83,7 @@ export default function OwnerSignupPage() {
       // 1. Create Auth User
       const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       newUser = userCred.user;
+
       // 2. Upload Logo to Storage (optional)
       if (logoFile) {
         const logoPath = `trucks/${newUser.uid}/logo.${logoFile.name.split('.').pop()}`;
@@ -110,17 +111,22 @@ export default function OwnerSignupPage() {
       const userDocRef = doc(db, 'users', newUser.uid);
       await setDoc(userDocRef, ownerData);
 
-      // 4. Wait for user doc to be visible with role: 'owner' (robust!)
+      // 4. Confirm user doc is propagated and has correct role
       let confirmUserDoc = null;
       let attempts = 0;
-      let maxAttempts = 66; // 66 x 300ms ≈ 20 seconds
+      let maxAttempts = 30; // ~9 seconds max
       let roleSeen = false;
       while (attempts < maxAttempts) {
         confirmUserDoc = await getDoc(userDocRef);
-        if (confirmUserDoc.exists() && confirmUserDoc.data().role === 'owner') {
-          roleSeen = true;
-          break;
+        if (confirmUserDoc.exists()) {
+          const userData = confirmUserDoc.data();
+          if (userData && userData.role === 'owner') {
+            roleSeen = true;
+            break;
+          }
         }
+        // Logging for debugging
+        if (attempts % 5 === 0) console.log(`[signup] Waiting for Firestore user doc propagation, attempt ${attempts+1}/${maxAttempts}`);
         await new Promise(res => setTimeout(res, 300));
         attempts++;
       }
@@ -136,7 +142,7 @@ export default function OwnerSignupPage() {
         return;
       }
 
-      // 5. Create trucks doc. Retry up to 10 times if permission denied!
+      // 5. Retry creating trucks doc with robust error handling
       const truckDocRef = doc(db, 'trucks', newUser.uid);
       let truckSuccess = false;
       let truckError = null;
@@ -154,18 +160,18 @@ export default function OwnerSignupPage() {
           break;
         } catch (err: any) {
           if (err.code === 'permission-denied') {
-            // Wait longer each retry just in case
-            await new Promise(res => setTimeout(res, 1000 + i * 300));
             truckError = err;
+            console.warn(`[signup] Truck doc creation permission-denied, retrying attempt ${i+1}/10. Waiting...`);
+            await new Promise(res => setTimeout(res, 1000 + i * 350));
           } else {
             truckError = err;
             break;
           }
         }
       }
-      // Final validation: truck doc must exist
+      // Final validation: truck doc must exist and ownerUid is correct
       const truckDocSnap = await getDoc(truckDocRef);
-      if (!truckSuccess || !truckDocSnap.exists()) {
+      if (!truckSuccess || !truckDocSnap.exists() || truckDocSnap.data().ownerUid !== newUser.uid) {
         setErrors({ ...errors, general: "Account created, but your truck is still being set up. Please wait and try again in a few seconds." });
         toast({
           title: "Just a moment...",
