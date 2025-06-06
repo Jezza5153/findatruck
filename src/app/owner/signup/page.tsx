@@ -144,12 +144,12 @@ export default function OwnerSignupPage() {
       // 5. NOW create truck doc (synchronously, not in background!)
       const truckDocRef = doc(db, 'trucks', newUser.uid);
       await setDoc(truckDocRef, {
-        id: newUser.uid,                 // <-- use `id` for FoodTruck type
-        name: form.truckName,            // <-- use `name` for FoodTruck type
+        id: newUser.uid,
+        name: form.truckName,
         cuisine: form.cuisine,
         description: form.about,
         imageUrl: logoUrl || '',
-        ownerUid: newUser.uid,
+        ownerUid: newUser.uid,    // << REQUIRED for rules!
         isOpen: false,
         isFeatured: false,
         menu: [],
