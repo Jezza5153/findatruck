@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function OwnerSignupPage() {
   const router = useRouter();
   const [step, setStep] = useState<'form'|'loading'|'done'>('form');
   const [form, setForm] = useState({
-    name: '', email: '', password: '', phone: '',
+    name: '', email: '', password: '', confirmPassword: '', phone: '',
     truckName: '', cuisine: '', about: '',
   });
   const [logoFile, setLogoFile] = useState<File|null>(null);
@@ -61,11 +61,12 @@ export default function OwnerSignupPage() {
     if (!form.name.trim()) err.name = 'Name required';
     if (!form.email.includes('@')) err.email = 'Email required';
     if (form.password.length < 6) err.password = 'Password 6+ chars';
+    if (!form.confirmPassword) err.confirmPassword = 'Confirm your password';
+    if (form.password !== form.confirmPassword) err.confirmPassword = 'Passwords do not match';
     if (!form.phone.match(/^[0-9+() -]{8,}$/)) err.phone = 'Valid phone required';
     if (!form.truckName.trim()) err.truckName = 'Truck name required';
     if (!form.cuisine) err.cuisine = 'Cuisine required';
     if (!form.about.trim() || form.about.length < 20) err.about = 'Tell us about your truck (20+ chars)';
-    // logoFile is now optional
     setErrors(err);
     return Object.keys(err).length === 0;
   }
@@ -108,14 +109,36 @@ export default function OwnerSignupPage() {
         createdAt: serverTimestamp(),
         status: 'pending', // or 'active' after approval
       };
-      await setDoc(doc(db, 'users', newUser.uid), ownerData);
-      await setDoc(doc(db, 'trucks', newUser.uid), {
+      const userDocRef = doc(db, 'users', newUser.uid);
+      const truckDocRef = doc(db, 'trucks', newUser.uid);
+
+      await setDoc(userDocRef, ownerData);
+      await setDoc(truckDocRef, {
         ...ownerData,
         isOpen: false,
         isFeatured: false,
         menu: [],
         testimonials: [],
       });
+
+      // ---- Ensure user doc exists before redirect (prevents race condition) ----
+      let confirmUserDoc = null;
+      for (let i = 0; i < 5; i++) {
+        confirmUserDoc = await getDoc(userDocRef);
+        if (confirmUserDoc.exists()) break;
+        await new Promise(res => setTimeout(res, 100));
+      }
+      if (!confirmUserDoc.exists()) {
+        setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
+        toast({
+          title: "Just a moment...",
+          description: "Your account is being finalized. Try logging in again in a few seconds.",
+          variant: "default",
+        });
+        setStep('form');
+        setUploading(false);
+        return;
+      }
 
       setStep('done');
       toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! You can now set up your menu.' });
@@ -154,10 +177,17 @@ export default function OwnerSignupPage() {
               <Input id="email" name="email" type="email" autoComplete="email" value={form.email} onChange={handleFieldChange} />
               {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
             </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={handleFieldChange} />
-              {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={handleFieldChange} />
+                {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={handleFieldChange} />
+                {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
+              </div>
             </div>
             <div>
               <Label htmlFor="truckName">Food Truck Name</Label>
@@ -183,17 +213,18 @@ export default function OwnerSignupPage() {
               <div className="flex-1">
                 <Label>Truck Logo <span className="text-xs text-muted-foreground">(optional)</span></Label>
                 <div className="flex items-center gap-3 mt-1">
-                  <Button type="button" variant="outline" onClick={() => logoInput.current?.click()}>
+                  <Button type="button" variant="outline" onClick={() => logoInput.current?.click()} aria-label="Upload truck logo">
                     <ImageIcon className="mr-2 h-4 w-4" />
                     {logoFile ? "Change Logo" : "Upload Logo"}
                   </Button>
                   <input ref={logoInput} type="file" accept="image/*" className="hidden"
-                    onChange={handleLogoChange} />
+                    onChange={handleLogoChange} aria-label="Truck logo file input"/>
                   {logoPreview && <div className="relative w-12 h-12"><NextImage src={logoPreview} alt="Logo" fill className="rounded shadow border" /></div>}
                 </div>
                 {errors.logo && <p className="text-xs text-destructive mt-1">{errors.logo}</p>}
               </div>
             </div>
+            {errors.general && <p className="text-xs text-destructive mt-3">{errors.general}</p>}
             <Button className="w-full mt-2 py-5 text-lg" size="lg" type="submit" disabled={uploading}>
               {uploading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Upload className="mr-2 h-5 w-5" />}
               Create Owner Account

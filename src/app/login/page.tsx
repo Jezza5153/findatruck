@@ -27,7 +27,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -79,6 +79,8 @@ function LoginPageInner() {
         description: errorMessage,
         variant: "destructive",
       });
+      setError("email", { message: errorMessage });
+      setError("password", { message: "" });
     }
   };
 
@@ -90,7 +92,7 @@ function LoginPageInner() {
           <CardTitle className="text-3xl font-bold tracking-tight">Welcome to Truck Tracker!</CardTitle>
           <CardDescription>Log in to continue to your account.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit(handleLogin)}>
+        <form onSubmit={handleSubmit(handleLogin)} autoComplete="on">
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="email-login">Email address</Label>
@@ -100,14 +102,16 @@ function LoginPageInner() {
                 {...register("email")} 
                 placeholder="you@example.com" 
                 autoComplete="email"
+                aria-invalid={!!errors.email}
+                aria-describedby="email-login-error"
               />
-              {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
+              {errors.email && <p id="email-login-error" className="text-xs text-destructive mt-1">{errors.email.message}</p>}
             </div>
             <div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="password-login">Password</Label>
                 <Link href="#" passHref legacyBehavior>
-                  <a className="text-sm font-medium text-primary hover:underline">
+                  <a className="text-sm font-medium text-primary hover:underline" tabIndex={0}>
                     Forgot your password?
                   </a>
                 </Link>
@@ -118,13 +122,15 @@ function LoginPageInner() {
                 {...register("password")} 
                 placeholder="••••••••" 
                 autoComplete="current-password"
+                aria-invalid={!!errors.password}
+                aria-describedby="password-login-error"
               />
-              {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
+              {errors.password && <p id="password-login-error" className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
             <div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting}>
-                 {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                 {isSubmitting ? "Logging in..." : "Log In"}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting} aria-busy={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
+                {isSubmitting ? "Logging in..." : "Log In"}
               </Button>
             </div>
           </CardContent>

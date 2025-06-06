@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -17,6 +17,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 import { useState } from "react";
 
+// --- Zod schema with boolean default for 'terms'
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
@@ -35,7 +36,7 @@ export default function SignupPage() {
   const { toast } = useToast();
   const [firebaseError, setFirebaseError] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SignupFormValues>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: '', email: '', password: '', confirmPassword: '', terms: false }
   });
@@ -66,9 +67,9 @@ export default function SignupPage() {
 
       toast({
         title: "Signup Successful!",
-        description: "Your account has been created. Welcome to Truck Tracker!",
+        description: "Your account has been created. Welcome to FindATruck!",
       });
-      reset(); // Reset form after success
+      reset();
       await router.push('/customer/dashboard');
     } catch (error: any) {
       let errorMessage = "An unexpected error occurred. Please try again.";
@@ -104,7 +105,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <Utensils className="mx-auto h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-bold tracking-tight">Create Your Customer Account</CardTitle>
-          <CardDescription>Join Truck Tracker to discover amazing food.</CardDescription>
+          <CardDescription>Join FindATruck to discover amazing food.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(handleSignup)} noValidate>
           <CardContent className="space-y-4">
@@ -128,10 +129,22 @@ export default function SignupPage() {
               <Input id="confirm-password-customer-signup" autoComplete="new-password" type="password" {...register("confirmPassword")} placeholder="Confirm your password" />
               {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>}
             </div>
+            {/* --- FIXED CONTROLLER for Checkbox --- */}
             <div className="flex items-center space-x-2">
-              <Checkbox id="terms" {...register("terms")} />
+              <Controller
+                name="terms"
+                control={control}
+                render={({ field: { value, onChange, ...field } }) => (
+                  <Checkbox
+                    id="terms"
+                    checked={!!value}
+                    onCheckedChange={val => onChange(!!val)}
+                    {...field}
+                  />
+                )}
+              />
               <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
-                I agree to the Truck Tracker{' '}
+                I agree to the FindATruck{' '}
                 <Link href="/terms" className="font-medium text-primary hover:underline" target="_blank">
                   Terms of Service
                 </Link>
