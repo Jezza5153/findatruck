@@ -94,7 +94,7 @@ export default function OwnerSignupPage() {
 
       await updateProfile(newUser, { displayName: form.truckName });
 
-      // 3. Write Firestore Profile (users & trucks)
+      // 3. Write Firestore User Profile FIRST (role: 'owner')
       const ownerData = {
         uid: newUser.uid,
         name: form.name,
@@ -105,30 +105,21 @@ export default function OwnerSignupPage() {
         truckName: form.truckName,
         cuisine: form.cuisine,
         about: form.about,
-        logoUrl: logoUrl || '', // empty string if not provided
+        logoUrl: logoUrl || '',
         createdAt: serverTimestamp(),
-        status: 'pending', // or 'active' after approval
+        status: 'pending',
       };
       const userDocRef = doc(db, 'users', newUser.uid);
-      const truckDocRef = doc(db, 'trucks', newUser.uid);
-
       await setDoc(userDocRef, ownerData);
-      await setDoc(truckDocRef, {
-        ...ownerData,
-        isOpen: false,
-        isFeatured: false,
-        menu: [],
-        testimonials: [],
-      });
 
-      // ---- Ensure user doc exists before redirect (prevents race condition) ----
+      // 4. Wait for the user doc to be readable with role: owner (to satisfy security rules!)
       let confirmUserDoc = null;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 10; i++) {
         confirmUserDoc = await getDoc(userDocRef);
-        if (confirmUserDoc.exists()) break;
-        await new Promise(res => setTimeout(res, 100));
+        if (confirmUserDoc.exists() && confirmUserDoc.data().role === 'owner') break;
+        await new Promise(res => setTimeout(res, 150));
       }
-      if (!confirmUserDoc.exists()) {
+      if (!confirmUserDoc.exists() || confirmUserDoc.data().role !== 'owner') {
         setErrors({ ...errors, general: "Account created, but still setting up. Please wait and log in again soon." });
         toast({
           title: "Just a moment...",
@@ -139,6 +130,17 @@ export default function OwnerSignupPage() {
         setUploading(false);
         return;
       }
+
+      // 5. Only now, create trucks doc (rules require user role to be present!)
+      const truckDocRef = doc(db, 'trucks', newUser.uid);
+      await setDoc(truckDocRef, {
+        ...ownerData,
+        isOpen: false,
+        isFeatured: false,
+        menu: [],
+        testimonials: [],
+        ownerUid: newUser.uid, // <--- CRUCIAL: matches security rules!
+      });
 
       setStep('done');
       toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! You can now set up your menu.' });
