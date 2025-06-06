@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,57 +16,78 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { UserDocument, FoodTruck } from '@/lib/types';
 
-import { OwnerSidebar } from '@/components/OwnerSidebar'; // <-- You'll need this component!
-import '@/app/globals.css'; // Import your global styles once (usually in layout.tsx)
+import { OwnerSidebar } from '@/components/OwnerSidebar';
+import '@/app/globals.css';
 
 export default function OwnerDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
   const [truckId, setTruckId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchingTruck, setFetchingTruck] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
-  // Load user and truck data
+  // Fetch and re-fetch truck doc, retry if missing after signup.
+  const fetchTruckData = useCallback(async (uid: string, allowRetry = true) => {
+    setFetchingTruck(true);
+    const truckDocRef = doc(db, "trucks", uid);
+    for (let i = 0; i < (allowRetry ? 10 : 1); i++) {
+      const snap = await getDoc(truckDocRef);
+      if (snap.exists()) {
+        setTruckData(snap.data() as Partial<FoodTruck>);
+        setFetchingTruck(false);
+        setError(null);
+        return true;
+      }
+      await new Promise(res => setTimeout(res, 700 + i * 150));
+    }
+    setFetchingTruck(false);
+    setTruckData(null);
+    setError("Your truck profile is still being set up in the background. Most dashboard actions will be unavailable until this completes.");
+    return false;
+  }, []);
+
+  // Load user + truck data (with robust truck retry)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoading(true);
-      if (user) {
-        setCurrentUser(user);
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+      setError(null);
+      setTruckData(null);
 
-        if (!userDocSnap.exists()) {
-          toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
-          router.push('/login');
-          setIsLoading(false); return;
-        }
-        const userData = userDocSnap.data() as UserDocument;
-        if (userData.role !== 'owner') {
-          toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
-          router.push('/');
-          setIsLoading(false); return;
-        }
-        const resolvedTruckId = userData.truckId || user.uid;
-        setTruckId(resolvedTruckId);
-
-        // Fetch truck data
-        const truckDocRef = doc(db, "trucks", resolvedTruckId);
-        const truckDocSnap = await getDoc(truckDocRef);
-        if (truckDocSnap.exists()) {
-          setTruckData(truckDocSnap.data() as Partial<FoodTruck>);
-        } else {
-          setError("Truck profile not found. Please complete your profile.");
-          setTruckData({ name: "Your Truck (Setup Incomplete)", isOpen: false });
-        }
-      } else {
+      if (!user) {
         router.push('/login?redirect=/owner/dashboard');
+        setIsLoading(false);
+        return;
       }
+
+      setCurrentUser(user);
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
+        router.push('/login');
+        setIsLoading(false); return;
+      }
+
+      const userData = userDocSnap.data() as UserDocument;
+      if (userData.role !== 'owner') {
+        toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
+        router.push('/');
+        setIsLoading(false); return;
+      }
+      const resolvedTruckId = userData.truckId || user.uid;
+      setTruckId(resolvedTruckId);
+
+      // Fetch truck doc, retry in case signup created it in background
+      await fetchTruckData(resolvedTruckId, true);
+
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, [router, toast]);
+  }, [router, toast, fetchTruckData]);
 
   // Toggle open/closed status
   const handleToggleOpenClosed = async (isOpen: boolean) => {
@@ -87,7 +108,7 @@ export default function OwnerDashboardPage() {
     }
   };
 
-  // LOADING
+  // If just loading (first load or user switch)
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -97,7 +118,7 @@ export default function OwnerDashboardPage() {
     );
   }
 
-  // NOT LOGGED IN (extra guard)
+  // Not logged in guard
   if (!currentUser) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -113,35 +134,41 @@ export default function OwnerDashboardPage() {
     );
   }
 
-  // SHOW ERRORS (not for incomplete setup, which is handled below)
-  if (error && !truckData?.name?.includes("Setup Incomplete")) {
+  // Show if truck setup is still pending (from signup background process)
+  if (fetchingTruck || (!truckData && error)) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <div className="text-lg font-medium">Setting up your truck profile...</div>
+        <div className="text-muted-foreground mt-2 mb-6">This can take 10–20 seconds after signup. <br />You can refresh this page.</div>
         <Alert variant="destructive" className="max-w-lg mx-auto">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Dashboard Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertTitle>Truck Not Ready</AlertTitle>
+          <AlertDescription>
+            {error}
+            <Button variant="link" className="ml-2 p-0 h-auto" onClick={() => { setTruckData(null); setError(null); setIsLoading(true); fetchTruckData(truckId!, true).then(()=>setIsLoading(false)); }}>
+              Retry Now
+            </Button>
+          </AlertDescription>
         </Alert>
-        {error.includes("profile not found") && (
-          <Button asChild className="mt-4">
-            <Link href="/owner/profile">Complete Your Profile</Link>
-          </Button>
-        )}
       </div>
     );
   }
 
+  // Robust fallback if truckData exists but is missing essentials
+  const dashboardDisabled = !truckData?.truckName && !truckData?.name;
+
   return (
     <div className="flex min-h-screen bg-background">
-      {/* --- Sidebar --- */}
       <OwnerSidebar active="dashboard" />
 
-      {/* --- Main Content --- */}
       <main className="flex-1 px-4 py-8 md:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-primary">Owner Dashboard</h1>
-            <p className="text-muted-foreground">Manage {truckData?.name || "your food truck"}'s presence and operations.</p>
+            <p className="text-muted-foreground">
+              Manage {truckData?.name || truckData?.truckName || "your food truck"}'s presence and operations.
+            </p>
           </div>
           {truckData && truckId && (
             <div className="mt-4 sm:mt-0 flex items-center space-x-3 p-3 border rounded-lg shadow-sm bg-card">
@@ -151,22 +178,25 @@ export default function OwnerDashboardPage() {
               <Switch
                 id="truck-status-toggle"
                 checked={!!truckData.isOpen}
-                onCheckedChange={handleToggleOpenClosed}
+                onCheckedChange={dashboardDisabled ? undefined : handleToggleOpenClosed}
                 aria-label={`Toggle truck status to ${truckData.isOpen ? "closed" : "open"}`}
+                disabled={dashboardDisabled}
               />
             </div>
           )}
         </div>
 
-        {error && truckData?.name?.includes("Setup Incomplete") && (
+        {/* Incomplete profile alert */}
+        {dashboardDisabled && (
           <Alert variant="destructive" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Profile Incomplete</AlertTitle>
             <AlertDescription>
-              {error} Some dashboard features may be limited.
+              Your truck profile is missing. Please&nbsp;
               <Button asChild variant="link" className="p-0 h-auto ml-1 text-destructive hover:underline">
-                <Link href="/owner/profile">Go to Profile Setup</Link>
+                <Link href="/owner/profile">complete your profile</Link>
               </Button>
+              &nbsp;before using dashboard features.
             </AlertDescription>
           </Alert>
         )}
@@ -178,6 +208,7 @@ export default function OwnerDashboardPage() {
             link="/owner/profile"
             icon={<Edit className="text-primary" />}
             buttonText="Edit Profile"
+            disabled={dashboardDisabled}
           />
           <DashboardCard
             title="Manage Menu"
@@ -185,6 +216,7 @@ export default function OwnerDashboardPage() {
             link="/owner/menu"
             icon={<MenuSquare className="text-primary" />}
             buttonText="Edit Menu"
+            disabled={dashboardDisabled}
           />
           <DashboardCard
             title="Set Schedule"
@@ -192,6 +224,7 @@ export default function OwnerDashboardPage() {
             link="/owner/schedule"
             icon={<CalendarClock className="text-primary" />}
             buttonText="Set Hours"
+            disabled={dashboardDisabled}
           />
           <DashboardCard
             title="View Live Orders"
@@ -199,6 +232,7 @@ export default function OwnerDashboardPage() {
             link="/owner/orders"
             icon={<Eye className="text-primary" />}
             buttonText="See Orders"
+            disabled={dashboardDisabled}
           />
           <DashboardCard
             title="Performance Analytics"
@@ -206,6 +240,7 @@ export default function OwnerDashboardPage() {
             link="/owner/analytics"
             icon={<LineChart className="text-primary" />}
             buttonText="View Analytics"
+            disabled={dashboardDisabled}
           />
           <DashboardCard
             title="Billing & Subscription"
@@ -213,6 +248,7 @@ export default function OwnerDashboardPage() {
             link="/owner/billing"
             icon={<CreditCard className="text-primary" />}
             buttonText="Manage Billing"
+            disabled={dashboardDisabled}
           />
         </div>
       </main>
@@ -220,7 +256,7 @@ export default function OwnerDashboardPage() {
   );
 }
 
-// --- Card for dashboard quick nav ---
+// --- DashboardCard ---
 interface DashboardCardProps {
   title: string;
   description: string;
@@ -231,7 +267,7 @@ interface DashboardCardProps {
 }
 function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
   return (
-    <Card className="hover:shadow-lg transition-shadow flex flex-col">
+    <Card className={`hover:shadow-lg transition-shadow flex flex-col ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
           <span className="mr-2 h-6 w-6">{icon}</span> {title}

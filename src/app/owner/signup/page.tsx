@@ -125,7 +125,6 @@ export default function OwnerSignupPage() {
             break;
           }
         }
-        // Logging for debugging
         if (attempts % 5 === 0) console.log(`[signup] Waiting for Firestore user doc propagation, attempt ${attempts+1}/${maxAttempts}`);
         await new Promise(res => setTimeout(res, 300));
         attempts++;
@@ -142,50 +141,44 @@ export default function OwnerSignupPage() {
         return;
       }
 
-      // 5. Retry creating trucks doc with robust error handling
-      const truckDocRef = doc(db, 'trucks', newUser.uid);
-      let truckSuccess = false;
-      let truckError = null;
-      for (let i = 0; i < 10; i++) {
-        try {
-          await setDoc(truckDocRef, {
-            ...ownerData,
-            isOpen: false,
-            isFeatured: false,
-            menu: [],
-            testimonials: [],
-            ownerUid: newUser.uid,
-          });
-          truckSuccess = true;
-          break;
-        } catch (err: any) {
-          if (err.code === 'permission-denied') {
-            truckError = err;
-            console.warn(`[signup] Truck doc creation permission-denied, retrying attempt ${i+1}/10. Waiting...`);
-            await new Promise(res => setTimeout(res, 1000 + i * 350));
-          } else {
-            truckError = err;
+      // 5. Let user through to dashboard, create truck doc in background!
+      setStep('done');
+      toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! Setting up your truck...' });
+      setTimeout(() => router.replace('/owner/dashboard'), 2000);
+
+      // 6. BACKGROUND: Retry creating trucks doc robustly, but do not block UI
+      (async () => {
+        const truckDocRef = doc(db, 'trucks', newUser.uid);
+        let truckSuccess = false;
+        let truckError = null;
+        for (let i = 0; i < 10; i++) {
+          try {
+            await setDoc(truckDocRef, {
+              ...ownerData,
+              isOpen: false,
+              isFeatured: false,
+              menu: [],
+              testimonials: [],
+              ownerUid: newUser.uid,
+            });
+            truckSuccess = true;
             break;
+          } catch (err: any) {
+            if (err.code === 'permission-denied') {
+              truckError = err;
+              console.warn(`[signup] Truck doc creation permission-denied, retrying attempt ${i+1}/10. Waiting...`);
+              await new Promise(res => setTimeout(res, 1000 + i * 350));
+            } else {
+              truckError = err;
+              break;
+            }
           }
         }
-      }
-      // Final validation: truck doc must exist and ownerUid is correct
-      const truckDocSnap = await getDoc(truckDocRef);
-      if (!truckSuccess || !truckDocSnap.exists() || truckDocSnap.data().ownerUid !== newUser.uid) {
-        setErrors({ ...errors, general: "Account created, but your truck is still being set up. Please wait and try again in a few seconds." });
-        toast({
-          title: "Just a moment...",
-          description: truckError?.message || "Could not finish signup. Please wait and try logging in again.",
-          variant: "default",
-        });
-        setStep('form');
-        setUploading(false);
-        return;
-      }
-
-      setStep('done');
-      toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! You can now set up your menu.' });
-      setTimeout(() => router.replace('/owner/dashboard'), 2000);
+        // Optionally: If truck creation *still* fails, you could log or notify, or show message in dashboard on next load
+        if (!truckSuccess) {
+          console.error('Truck doc creation failed:', truckError);
+        }
+      })();
 
     } catch (err: any) {
       setUploading(false);
