@@ -51,43 +51,56 @@ export default function OwnerDashboardPage() {
 
   // Load user + truck data (with robust truck retry)
   useEffect(() => {
+    console.log("Dashboard EFFECT fired");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoading(true);
       setError(null);
       setTruckData(null);
-
+  
       if (!user) {
+        console.log("NO USER. Redirecting...");
         router.push('/login?redirect=/owner/dashboard');
         setIsLoading(false);
         return;
       }
-
+  
       setCurrentUser(user);
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
-
+  
       if (!userDocSnap.exists()) {
-        toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
+        console.log("NO USER DOC. Redirecting...");
         router.push('/login');
-        setIsLoading(false); return;
+        setIsLoading(false);
+        return;
       }
-
-      const userData = userDocSnap.data() as UserDocument;
+  
+      const userData = userDocSnap.data();
+      console.log("USER DATA:", userData);
       if (userData.role !== 'owner') {
-        toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
+        console.log("NOT OWNER. Redirecting...");
         router.push('/');
-        setIsLoading(false); return;
+        setIsLoading(false);
+        return;
       }
       const resolvedTruckId = userData.truckId || user.uid;
       setTruckId(resolvedTruckId);
-
-      // Fetch truck doc, retry in case signup created it in background
-      await fetchTruckData(resolvedTruckId, true);
-
+      console.log("TRUCK ID:", resolvedTruckId);
+  
+      // Minimal fetch logic (replace fetchTruckData call)
+      const truckDocRef = doc(db, "trucks", resolvedTruckId);
+      const snap = await getDoc(truckDocRef);
+      console.log("TRUCK DOC EXISTS:", snap.exists());
+      if (snap.exists()) {
+        setTruckData(snap.data());
+      } else {
+        setError("Truck profile not found.");
+      }
       setIsLoading(false);
+      console.log("SET isLoading false");
     });
     return () => unsubscribe();
-  }, [router, toast, fetchTruckData]);
+  }, [router]);  
 
   // Toggle open/closed status
   const handleToggleOpenClosed = async (isOpen: boolean) => {
