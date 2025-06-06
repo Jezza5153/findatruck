@@ -83,7 +83,6 @@ export default function OwnerSignupPage() {
       // 1. Create Auth User
       const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
       newUser = userCred.user;
-
       // 2. Upload Logo to Storage (optional)
       if (logoFile) {
         const logoPath = `trucks/${newUser.uid}/logo.${logoFile.name.split('.').pop()}`;
@@ -91,7 +90,6 @@ export default function OwnerSignupPage() {
         await uploadBytes(logoRef, logoFile);
         logoUrl = await getDownloadURL(logoRef);
       }
-
       await updateProfile(newUser, { displayName: form.truckName });
 
       // 3. Write Firestore User Profile FIRST (role: 'owner')
@@ -156,7 +154,8 @@ export default function OwnerSignupPage() {
           break;
         } catch (err: any) {
           if (err.code === 'permission-denied') {
-            await new Promise(res => setTimeout(res, 1000));
+            // Wait longer each retry just in case
+            await new Promise(res => setTimeout(res, 1000 + i * 300));
             truckError = err;
           } else {
             truckError = err;
@@ -164,7 +163,9 @@ export default function OwnerSignupPage() {
           }
         }
       }
-      if (!truckSuccess) {
+      // Final validation: truck doc must exist
+      const truckDocSnap = await getDoc(truckDocRef);
+      if (!truckSuccess || !truckDocSnap.exists()) {
         setErrors({ ...errors, general: "Account created, but your truck is still being set up. Please wait and try again in a few seconds." });
         toast({
           title: "Just a moment...",
@@ -179,6 +180,7 @@ export default function OwnerSignupPage() {
       setStep('done');
       toast({ title: 'Account Created!', description: 'Welcome to FoodieTruck! You can now set up your menu.' });
       setTimeout(() => router.replace('/owner/dashboard'), 2000);
+
     } catch (err: any) {
       setUploading(false);
       setStep('form');
