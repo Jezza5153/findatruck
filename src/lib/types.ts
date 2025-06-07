@@ -1,183 +1,186 @@
-
 import type { Timestamp, FieldValue } from 'firebase/firestore';
 
+// ========== UTILITY TYPES ==========
+
+export type TruckLocation = {
+  lat?: number;
+  lng?: number;
+  address?: string;
+  updatedAt?: Timestamp | FieldValue;
+  note?: string;
+} | undefined;
+
+export type TodaysHours = {
+  open?: string;
+  close?: string;
+  note?: string;
+} | undefined;
+
+export type RegularHoursEntry = {
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
+};
+
+// ========== FOOD TRUCK BASE TYPE ==========
+
 export type FoodTruck = {
-  id: string; // Firestore document ID
+  id: string;
   name: string;
   cuisine: string;
   description?: string;
   imageUrl?: string;
-  imagePath?: string; // Path in Firebase Storage for the image
+  imagePath?: string;
   ownerUid: string;
 
   address?: string;
   lat?: number;
   lng?: number;
+  operatingHoursSummary?: string;
+  isOpen?: boolean;
+  isVisible?: boolean;
 
-  operatingHoursSummary?: string; // e.g., "Mon-Fri: 10am-8pm, Sat: 12pm-6pm"
-  isOpen?: boolean; // Calculated or manually set status
+  currentLocation?: TruckLocation;
+  todaysMenu?: string[];
+  todaysHours?: TodaysHours;
 
-  // Detailed schedule (optional, if stored directly on truck doc)
-  // For a more robust system, schedule might be in a subcollection or separate settings doc
   regularHours?: {
-    [day: string]: { openTime: string; closeTime: string; isClosed: boolean }; // day: "Monday", "Tuesday", etc.
+    [day: string]: RegularHoursEntry;
   };
-  specialHours?: {
-    date: string; // YYYY-MM-DD
+  specialHours?: Array<{
+    date: string;
     status: 'open-custom' | 'closed';
-    openTime?: string; // HH:mm
-    closeTime?: string; // HH:mm
-  }[];
-  isTruckOpenOverride?: boolean | null; // null for auto, true for force open, false for force closed
+    openTime?: string;
+    closeTime?: string;
+    note?: string;
+  }>;
+  isTruckOpenOverride?: boolean | null;
 
-  // Menu might be fetched from a subcollection for scalability
-  // menu?: MenuItem[]; 
-  
-  rating?: number; // Average rating
+  rating?: number;
   numberOfRatings?: number;
-
-  features?: string[]; // e.g., "Accepts Credit Cards", "Vegan Options", "Outdoor Seating"
-  socialMediaLinks?: { [platform: string]: string }; // e.g., { instagram: "url", facebook: "url" }
-
+  features?: string[];
+  socialMediaLinks?: { [platform: string]: string };
   contactEmail?: string;
   phone?: string;
-
   isFeatured?: boolean;
-  subscriptionTier?: string; // e.g., "free", "premium"
-
+  subscriptionTier?: string;
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
-
-  // Client-side calculated, not stored in DB
-  distance?: string; 
-  testimonials?: Testimonial[]; // Could be a subcollection for many testimonials
+  distance?: string;
+  testimonials?: Testimonial[];
 };
 
+// ========== MENU & OTHER TYPES ==========
+
 export type MenuItem = {
-  id: string; // Firestore document ID
+  id: string;
   name: string;
   description?: string;
   price: number;
-  category: string; // Category name (denormalized for easier filtering/display)
+  category: string;
   imageUrl?: string;
-  imagePath?: string; // Path in Firebase Storage for the item image
+  imagePath?: string;
   isSpecial?: boolean;
   availability?: 'available' | 'sold_out' | 'unavailable';
   customizations?: CustomizationOption[];
-  
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
 };
 
-export type MenuCategory = { // For managing categories themselves
-  id: string; // Firestore document ID for the category document
+export type MenuCategory = {
+  id: string;
   name: string;
-  truckId: string; // To associate with a specific truck
+  truckId: string;
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
 };
 
 export type CustomizationOption = {
-  id: string; // Unique ID for this customization section
-  name: string; // e.g., "Choose your protein", "Add toppings"
-  options: { 
-    name: string; // e.g., "Chicken", "Beef", "Extra Cheese"
-    additionalPrice?: number; // e.g., 0, 1.50
-  }[];
-  type: 'radio' | 'checkbox' | 'select'; // How the options are presented
+  id: string;
+  name: string;
+  options: { name: string; additionalPrice?: number }[];
+  type: 'radio' | 'checkbox' | 'select';
   isRequired?: boolean;
 };
 
 export type Testimonial = {
-  id: string; // Firestore document ID
-  truckId: string; // Which truck this testimonial is for
-  userId?: string; // ID of the user who wrote it (if logged in)
-  name: string; // User's display name (can be anonymous if not logged in)
+  id: string;
+  truckId: string;
+  userId?: string;
+  name: string;
   quote: string;
-  rating?: number; // 1-5 stars
-  avatarUrl?: string; // User's avatar (if available)
+  rating?: number;
+  avatarUrl?: string;
   createdAt?: Timestamp | FieldValue;
-  dataAiHint?: string; // For placeholder images
+  dataAiHint?: string;
 };
 
 export type UserRole = 'customer' | 'owner';
 
-// Represents the document structure in the 'users' collection in Firestore
 export type UserDocument = {
-  uid: string; // Corresponds to Firebase Auth UID
+  uid: string;
   email: string | null;
   role: UserRole;
-  name?: string; // For customers: their display name. For owners: can be their name or primary contact name.
-  
-  // Owner-specific fields
-  ownerName?: string; // Full name or business contact name for the owner
-  truckName?: string; // Name of the food truck they own
-  cuisineType?: string; // Primary cuisine type of their truck
-  truckId?: string; // ID of the truck document in the 'trucks' collection associated with this owner
-
-  // Customer-specific fields
-  favoriteTrucks?: string[]; // Array of truck IDs
+  name?: string;
+  ownerName?: string;
+  truckName?: string;
+  cuisineType?: string;
+  truckId?: string;
+  favoriteTrucks?: string[];
   notificationPreferences: NotificationPreferences;
-
   createdAt: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
 };
 
-// Often used for client-side state, combining aspects of UserDocument
 export type UserProfile = {
-  name: string; // Display name
+  name: string;
   email: string;
-  role?: UserRole; // Helpful to have on profile state
-  
-  // Customer specific
-  savedPaymentMethods?: string[]; // Placeholder for future payment integration
+  role?: UserRole;
+  savedPaymentMethods?: string[];
   favoriteTrucks?: string[];
   notificationPreferences: NotificationPreferences;
-
-  // Owner specific (if applicable)
   truckName?: string;
   cuisineType?: string;
   truckId?: string;
 };
 
 export type NotificationPreferences = {
-  truckNearbyRadius: number; // in miles or km
-  orderUpdates: boolean; // e.g., order confirmed, ready for pickup
-  promotionalMessages: boolean; // From FindATruck or favorited trucks
+  truckNearbyRadius: number;
+  orderUpdates: boolean;
+  promotionalMessages: boolean;
 };
 
 export type FilterOptions = {
-  cuisine?: string[]; // Array of cuisine IDs/names
-  distance?: number; // Max distance
+  cuisine?: string[];
+  distance?: number;
   openNow?: boolean;
   searchTerm?: string;
-  rating?: number; // Minimum rating
+  rating?: number;
 };
 
 export type Cuisine = {
-  id: string; // e.g., 'mexican', 'italian' (used as value in selects)
-  name: string; // e.g., 'Mexican', 'Italian' (used for display)
-  icon?: React.ElementType; // Optional: for displaying icons next to cuisine names
+  id: string;
+  name: string;
+  icon?: React.ElementType;
 };
 
-// Order related types (simple example)
 export interface OrderItemDetail {
   itemId: string;
   name: string;
   quantity: number;
-  price: number; // Price per item at time of order
-  // Add customizations if needed: customizationChoices?: { optionName: string; choice: string; additionalPrice?: number }[]
+  price: number;
 }
+
 export interface Order {
-    id: string; // Firestore document ID
-    truckId: string;
-    customerId: string;
-    customerName?: string; // Denormalized for display
-    items: OrderItemDetail[];
-    totalAmount: number;
-    status: "New" | "Preparing" | "Ready for Pickup" | "Completed" | "Cancelled";
-    createdAt: Timestamp; 
-    updatedAt?: Timestamp;
-    notes?: string; // Customer notes for the order
-    pickupTime?: Timestamp; // Estimated or scheduled pickup time
+  id: string;
+  truckId: string;
+  customerId: string;
+  customerName?: string;
+  items: OrderItemDetail[];
+  totalAmount: number;
+  status: "New" | "Preparing" | "Ready for Pickup" | "Completed" | "Cancelled";
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+  notes?: string;
+  pickupTime?: Timestamp;
 }

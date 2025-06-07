@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from 'next/navigation';
 import NextImage from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck } from "lucide-react";
+import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { auth, db, storage } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import {
-  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc as getFirestoreDoc, writeBatch, query
+  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc as getFirestoreDoc, writeBatch, query, getDoc, setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import type { UserDocument } from '@/lib/types';
@@ -86,6 +87,8 @@ export default function OwnerMenuPage() {
   const [itemCategoryName, setItemCategoryName] = useState('');
   const [itemImageFile, setItemImageFile] = useState<File | null>(null);
   const [itemImagePreview, setItemImagePreview] = useState<string | undefined>(undefined);
+  const [todaysMenuIds, setTodaysMenuIds] = useState<string[]>([]);
+  const [savingTodayMenu, setSavingTodayMenu] = useState(false);
 
   // --- AUTH & OWNER TRUCK RESOLUTION ---
   useEffect(() => {
@@ -112,7 +115,6 @@ export default function OwnerMenuPage() {
           router.replace('/login');
           return;
         }
-        // OWNER MATCHES TRUCKID BY UID OR EXPLICIT truckId
         setTruckId(userData.truckId || user.uid);
       } catch (e: any) {
         toast({ title: "Error", description: e.message || "Unknown error.", variant: "destructive" });
@@ -131,14 +133,37 @@ export default function OwnerMenuPage() {
     try {
       const categoriesPath = collection(db, "trucks", truckId, "menuCategories");
       const itemsPath = collection(db, "trucks", truckId, "menuItems");
-      const [catsSnap, itemsSnap] = await Promise.all([
+      const truckDocRef = doc(db, "trucks", truckId);
+
+      const [catsSnap, itemsSnap, truckSnap] = await Promise.all([
         getDocs(query(categoriesPath)),
-        getDocs(query(itemsPath))
+        getDocs(query(itemsPath)),
+        getDoc(truckDocRef),
       ]);
-      const fetchedCategories = catsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuCategory));
+      // SAFER: strip .id from Firestore doc.data()
+      const fetchedCategories = catsSnap.docs.map(doc => {
+        const data = doc.data();
+        if ('id' in data) delete data.id;
+        return { id: doc.id, ...data } as MenuCategory;
+      });
       setCategories(fetchedCategories);
-      setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
-      // Reset selection to default category if not set
+
+      const fetchedItems = itemsSnap.docs.map(doc => {
+        const data = doc.data();
+        if ('id' in data) delete data.id;
+        return {
+          id: doc.id,
+          ...data,
+          price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+        } as MenuItem;
+      });
+      setMenuItems(fetchedItems);
+
+      if (truckSnap.exists() && Array.isArray(truckSnap.data().todaysMenu)) {
+        setTodaysMenuIds(truckSnap.data().todaysMenu);
+      } else {
+        setTodaysMenuIds([]);
+      }
       if (fetchedCategories.length > 0 && !itemCategoryName) {
         setItemCategoryName(fetchedCategories[0].name);
       }
@@ -150,7 +175,6 @@ export default function OwnerMenuPage() {
     }
   }
 
-  // FETCH ON TRUCK ID CHANGE
   useEffect(() => {
     if (!truckId) {
       setIsLoading(false);
@@ -184,7 +208,6 @@ export default function OwnerMenuPage() {
       if (editingCategory) {
         const oldCategoryName = editingCategory.name;
         await updateDoc(doc(categoryCollectionRef, editingCategory.id), { name: currentCategoryName, updatedAt: serverTimestamp() });
-        // Update items that were in the old category
         const batch = writeBatch(db);
         menuItems.filter(item => item.category === oldCategoryName).forEach(item => {
           const itemRef = doc(db, "trucks", truckId, "menuItems", item.id);
@@ -294,6 +317,26 @@ export default function OwnerMenuPage() {
     setIsSubmitting(false);
   };
 
+  // --- TODAY'S MENU HANDLER ---
+  const handleToggleTodayMenu = async (itemId: string) => {
+    if (!truckId) return;
+    setSavingTodayMenu(true);
+    let updatedMenu: string[];
+    if (todaysMenuIds.includes(itemId)) {
+      updatedMenu = todaysMenuIds.filter(id => id !== itemId);
+    } else {
+      updatedMenu = [...todaysMenuIds, itemId];
+    }
+    try {
+      await setDoc(doc(db, "trucks", truckId), { todaysMenu: updatedMenu }, { merge: true });
+      setTodaysMenuIds(updatedMenu);
+      toast({ title: "Today's Menu Updated", icon: <CheckCircle className="text-green-600" /> });
+    } catch (e: any) {
+      toast({ title: "Error updating today's menu", description: e.message || String(e), variant: "destructive" });
+    }
+    setSavingTodayMenu(false);
+  };
+
   // --- DIALOG AND FORM HELPERS ---
   const openEditCategoryDialog = (category: MenuCategory) => {
     setEditingCategory(category);
@@ -329,7 +372,6 @@ export default function OwnerMenuPage() {
   // --- RENDER ---
   return (
     <div className="flex min-h-screen bg-background">
-      {/* --- Sidebar (Desktop) --- */}
       <OwnerSidebar active="/owner/menu" />
       <main className="flex-1 px-2 md:px-8 py-8">
         {isLoading ? (
@@ -360,6 +402,48 @@ export default function OwnerMenuPage() {
                 <Link href="/owner/dashboard">Back to Dashboard</Link>
               </Button>
             </div>
+            {/* --- Today's Menu (at the top) --- */}
+            <Card className="mb-8 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-lg">Today's Menu Selection</CardTitle>
+                </div>
+                <CardDescription>Select which menu items are visible as “Today’s Menu” for customers.</CardDescription>
+                {savingTodayMenu && <Loader2 className="animate-spin h-5 w-5 text-primary ml-2" />}
+              </CardHeader>
+              <CardContent>
+                {categories.length === 0 || menuItems.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">Add categories and menu items below to select your daily menu.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {categories.map(category => {
+                      const items = menuItems.filter(item => item.category === category.name);
+                      if (!items.length) return null;
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <div className="font-semibold text-primary mb-2">{category.name}</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {items.map(item => (
+                              <div key={item.id} className="flex items-center gap-2 p-2 border rounded bg-muted/60">
+                                <Checkbox
+                                  id={`todaymenu-${item.id}`}
+                                  checked={todaysMenuIds.includes(item.id)}
+                                  disabled={savingTodayMenu}
+                                  onCheckedChange={() => handleToggleTodayMenu(item.id)}
+                                />
+                                <Label htmlFor={`todaymenu-${item.id}`} className="flex-grow cursor-pointer">{item.name}</Label>
+                                <span className="text-xs text-accent font-semibold">${item.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             {/* --- Categories Dialog --- */}
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
               <DialogContent>
@@ -450,7 +534,12 @@ export default function OwnerMenuPage() {
                                 {item.imageUrl && <div className="w-full sm:w-1/3 h-40 sm:h-auto relative"><NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" /></div>}
                                 <div className={`flex-1 p-4 flex flex-col justify-between ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
                                   <div>
-                                    <CardTitle className="text-lg mb-1">{item.name}</CardTitle>
+                                    <CardTitle className="text-lg mb-1 flex items-center gap-2">
+                                      {todaysMenuIds.includes(item.id) && (
+                                        <CheckCircle className="inline h-4 w-4 text-green-600" title="In Today's Menu" />
+                                      )}
+                                      {item.name}
+                                    </CardTitle>
                                     <CardDescription className="text-xs text-accent font-semibold mb-1">${item.price.toFixed(2)}</CardDescription>
                                     <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{item.description}</p>
                                   </div>
