@@ -2,54 +2,61 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
-import { Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2 } from 'lucide-react';
-
+import { Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { UserDocument, FoodTruck } from '@/lib/types';
-
 import { OwnerSidebar } from '@/components/OwnerSidebar';
 import '@/app/globals.css';
 
-// ---- Safe helpers ----
+// ---------- HELPER UI -----------
+function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
+  if (!open) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"><XCircle className="w-4 h-4 mr-1" /> Closed</span>;
+  if (!visible) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"><Info className="w-4 h-4 mr-1" /> Hidden</span>;
+  return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</span>;
+}
+
 function displayLocation(loc?: FoodTruck['currentLocation']) {
   if (!loc) return "No location set";
   if ('address' in loc && loc.address) return loc.address;
-  if ('lat' in loc && 'lng' in loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+  if ('lat' in loc && 'lng' in loc && typeof loc.lat === 'number' && typeof loc.lng === 'number')
     return `(${loc.lat}, ${loc.lng})`;
-  }
   return "No location set";
 }
-
 function displayTodaysHours(hours: any) {
-  // Support both string and object
   if (!hours) return "Not set";
   if (typeof hours === 'string') return hours;
-  if (typeof hours === 'object' && ('open' in hours || 'close' in hours)) {
-    return (hours.open && hours.close)
-      ? `${hours.open}–${hours.close}`
-      : "Not set";
-  }
+  if (typeof hours === 'object' && ('open' in hours || 'close' in hours))
+    return (hours.open && hours.close) ? `${hours.open}–${hours.close}` : "Not set";
   return "Not set";
 }
+function setupProgress(truck?: Partial<FoodTruck>) {
+  if (!truck) return 0;
+  let n = 0;
+  if (truck.name) n++;
+  if (truck.cuisine) n++;
+  if (truck.currentLocation && (truck.currentLocation.address || (truck.currentLocation.lat && truck.currentLocation.lng))) n++;
+  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
+  if (truck.todaysHours && ((truck.todaysHours as any).open && (truck.todaysHours as any).close)) n++;
+  return Math.round((n / 5) * 100);
+}
 
-// ---- Customer Preview Card ----
+// ---------- CUSTOMER PREVIEW CARD -----------
 function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
   return (
-    <Card className="w-full border-primary border-2 bg-gradient-to-br from-white to-green-50 mb-2">
+    <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
       <CardHeader>
         <CardTitle className="flex gap-2 items-center">
           <MapPin className="text-primary w-5 h-5" />
-          {truck.name || "Your Truck Name"}
+          <span>{truck.name || "Your Truck Name"}</span>
+          <StatusPill open={truck.isOpen} visible={truck.isVisible} />
         </CardTitle>
         <CardDescription>
           <span className="block">{truck.cuisine || "Cuisine Type"}</span>
@@ -59,9 +66,7 @@ function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
       <CardContent className="flex flex-col gap-2">
         <div className="flex gap-4 items-center">
           <Label>Status:</Label>
-          <span className={`font-bold ${truck.isOpen && truck.isVisible ? "text-green-700" : "text-red-600"}`}>
-            {truck.isOpen && truck.isVisible ? "OPEN & VISIBLE" : "Closed/Hidden"}
-          </span>
+          <StatusPill open={truck.isOpen} visible={truck.isVisible} />
         </div>
         <div className="flex gap-4 items-center">
           <Label>Location:</Label>
@@ -87,7 +92,7 @@ function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
   );
 }
 
-// ---- Main Dashboard ----
+// ---------- MAIN DASHBOARD ----------
 export default function OwnerDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
@@ -99,48 +104,33 @@ export default function OwnerDashboardPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setIsLoading(true);
-      setTruckData(null);
-      setError(null);
-
+      setIsLoading(true); setTruckData(null); setError(null);
       if (!user) {
-        router.push('/login?redirect=/owner/dashboard');
-        setIsLoading(false);
-        return;
+        router.push('/login?redirect=/owner/dashboard'); setIsLoading(false); return;
       }
-
       setCurrentUser(user);
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
-
       if (!userDocSnap.exists()) {
         toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
-        router.push('/login');
-        setIsLoading(false); return;
+        router.push('/login'); setIsLoading(false); return;
       }
-
       const userData = userDocSnap.data() as UserDocument;
       if (userData.role !== 'owner') {
         toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
-        router.push('/');
-        setIsLoading(false); return;
+        router.push('/'); setIsLoading(false); return;
       }
       const resolvedTruckId = userData.truckId || user.uid;
       setTruckId(resolvedTruckId);
-
       const truckDocRef = doc(db, "trucks", resolvedTruckId);
       const snap = await getDoc(truckDocRef);
-      if (snap.exists()) {
-        setTruckData(snap.data() as Partial<FoodTruck>);
-      } else {
-        setError("Truck profile not found.");
-      }
+      if (snap.exists()) setTruckData(snap.data() as Partial<FoodTruck>);
+      else setError("Truck profile not found.");
       setIsLoading(false);
     });
     return () => unsubscribe();
   }, [router, toast]);
 
-  // --- All updates through this helper (safe partial updates) ---
   const updateTruck = async (updates: Partial<FoodTruck>) => {
     if (!truckId) return;
     await updateDoc(doc(db, "trucks", truckId), updates);
@@ -149,18 +139,18 @@ export default function OwnerDashboardPage() {
 
   const dashboardDisabled = !truckData?.name;
 
-  // --- Loading & Auth States ---
+  // ---- Loading & Auth States ----
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <span className="ml-3 text-xl">Loading owner dashboard...</span>
+        <span className="ml-3 text-xl font-semibold tracking-tight">Loading owner dashboard...</span>
       </div>
     );
   }
   if (!currentUser) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <LogIn className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
@@ -174,7 +164,7 @@ export default function OwnerDashboardPage() {
   }
   if (!truckData) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
         <div className="text-lg font-medium">Setting up your truck profile...</div>
         <div className="text-muted-foreground mt-2 mb-6">Please refresh the page if this takes longer than 20 seconds.</div>
@@ -192,22 +182,23 @@ export default function OwnerDashboardPage() {
     );
   }
 
-  // ---- UI START ----
-  return (
-    <div className="flex min-h-screen bg-background">
-      <OwnerSidebar />
+  // --------- UI START ----------
+  const progress = setupProgress(truckData);
 
+  return (
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <OwnerSidebar />
       <main className="flex-1 px-4 py-8 md:px-8">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-3">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">Owner Dashboard</h1>
-            <p className="text-muted-foreground">
-              Manage {(truckData?.name || "your food truck")}'s presence and operations.
+            <h1 className="text-3xl md:text-4xl font-bold text-primary drop-shadow-sm">Owner Dashboard</h1>
+            <p className="text-muted-foreground font-medium">
+              Manage <span className="font-semibold">{truckData?.name || "your food truck"}</span>'s presence and operations.
             </p>
           </div>
-          {truckData && truckId && (
-            <div className="mt-4 sm:mt-0 flex items-center space-x-3 p-3 border rounded-lg shadow-sm bg-card">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center space-x-3 p-3 border rounded-xl shadow-sm bg-card">
               <Label htmlFor="truck-status-toggle" className={`text-sm font-medium ${truckData.isOpen ? 'text-green-600' : 'text-red-600'}`}>
                 Truck Status: {truckData.isOpen ? "Open" : "Closed"}
               </Label>
@@ -216,27 +207,31 @@ export default function OwnerDashboardPage() {
                 checked={!!truckData.isOpen}
                 onCheckedChange={dashboardDisabled ? undefined : async (checked) => {
                   await updateTruck({ isOpen: checked });
-                  toast({
-                    title: "Status Updated",
-                    description: `Your truck is now marked as ${checked ? "Open" : "Closed"}.`,
-                  });
+                  toast({ title: "Status Updated", description: `Your truck is now marked as ${checked ? "Open" : "Closed"}.` });
                 }}
                 aria-label={`Toggle truck status to ${truckData.isOpen ? "closed" : "open"}`}
                 disabled={dashboardDisabled}
               />
             </div>
-          )}
+            <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
+              <span className="block">Setup Progress:</span>
+              <div className="h-2 w-36 rounded-full bg-muted overflow-hidden">
+                <div className={`h-2 rounded-full bg-primary transition-all`} style={{ width: `${progress}%` }} />
+              </div>
+              <span className="ml-1">{progress}%</span>
+            </div>
+          </div>
         </div>
 
-        {/* --- LIVE PRESENCE TOOLS --- */}
-        <Card className="mb-8">
+        {/* PRESENCE TOOLS */}
+        <Card className="mb-8 shadow-md border-2 border-primary/10 bg-white/70 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>
               <Globe2 className="inline w-6 h-6 mr-2 text-primary" />
-              I'm Here! (Live Presence)
+              I'm Here! <span className="font-normal text-muted-foreground">Live Presence</span>
             </CardTitle>
             <CardDescription>
-              Share your location, today's menu and hours. Let customers find and follow you!
+              Share your location, today's menu, and hours. Let customers find and follow you!
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -275,8 +270,8 @@ export default function OwnerDashboardPage() {
                 Enter Address Manually
               </Button>
               {truckData?.currentLocation && (
-                <span className="ml-4 text-sm">
-                  Current: {displayLocation(truckData.currentLocation)}
+                <span className="ml-4 text-sm font-medium">
+                  Current: <span className="text-muted-foreground">{displayLocation(truckData.currentLocation)}</span>
                 </span>
               )}
             </div>
@@ -285,16 +280,10 @@ export default function OwnerDashboardPage() {
               <Label className="mr-2">Today's Hours:</Label>
               <input
                 type="time"
-                value={
-                  typeof truckData?.todaysHours === 'object'
-                    ? truckData.todaysHours?.open || ""
-                    : ""
-                }
+                value={typeof truckData?.todaysHours === 'object' ? truckData.todaysHours?.open || "" : ""}
                 onChange={async e => {
                   const open = e.target.value;
-                  let hours: any = typeof truckData?.todaysHours === 'object'
-                    ? { ...truckData?.todaysHours }
-                    : {};
+                  let hours: any = typeof truckData?.todaysHours === 'object' ? { ...truckData?.todaysHours } : {};
                   hours.open = open;
                   await updateTruck({ todaysHours: hours });
                 }}
@@ -303,16 +292,10 @@ export default function OwnerDashboardPage() {
               <span>to</span>
               <input
                 type="time"
-                value={
-                  typeof truckData?.todaysHours === 'object'
-                    ? truckData.todaysHours?.close || ""
-                    : ""
-                }
+                value={typeof truckData?.todaysHours === 'object' ? truckData.todaysHours?.close || "" : ""}
                 onChange={async e => {
                   const close = e.target.value;
-                  let hours: any = typeof truckData?.todaysHours === 'object'
-                    ? { ...truckData?.todaysHours }
-                    : {};
+                  let hours: any = typeof truckData?.todaysHours === 'object' ? { ...truckData?.todaysHours } : {};
                   hours.close = close;
                   await updateTruck({ todaysHours: hours });
                 }}
@@ -343,15 +326,14 @@ export default function OwnerDashboardPage() {
                 id="visible-toggle"
               />
               <Label htmlFor="visible-toggle">
-                Show Me to Customers (Live on Map)
+                Show Me to Customers <span className="text-xs text-muted-foreground">(Live on Map)</span>
               </Label>
             </div>
           </CardContent>
         </Card>
-        {/* END PRESENCE TOOLS */}
 
-        {/* ---- CUSTOMER PREVIEW ---- */}
-        <Card className="mb-8 border-dashed border-blue-300">
+        {/* CUSTOMER PREVIEW */}
+        <Card className="mb-10 border-dashed border-blue-300/80 bg-blue-50/60 shadow-none">
           <CardHeader>
             <CardTitle>
               <EyeIcon className="inline w-5 h-5 mr-2 text-primary" />
@@ -364,7 +346,7 @@ export default function OwnerDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* ---- INCOMPLETE PROFILE ALERT ---- */}
+        {/* PROFILE INCOMPLETE */}
         {dashboardDisabled && (
           <Alert variant="destructive" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
@@ -379,7 +361,7 @@ export default function OwnerDashboardPage() {
           </Alert>
         )}
 
-        {/* ---- DASHBOARD CARDS ---- */}
+        {/* DASHBOARD NAV CARDS */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <DashboardCard
             title="Truck Profile"
@@ -446,9 +428,9 @@ interface DashboardCardProps {
 }
 function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
   return (
-    <Card className={`hover:shadow-lg transition-shadow flex flex-col ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+    <Card className={`hover:shadow-lg transition-all flex flex-col border-primary/10 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
       <CardHeader>
-        <CardTitle className="flex items-center text-xl">
+        <CardTitle className="flex items-center text-xl font-semibold gap-2">
           <span className="mr-2 h-6 w-6">{icon}</span> {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>

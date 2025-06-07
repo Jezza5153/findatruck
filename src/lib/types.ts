@@ -1,6 +1,8 @@
 import type { Timestamp, FieldValue } from 'firebase/firestore';
 
-// ========== UTILITY TYPES ==========
+// =======================
+// UTILITY TYPES
+// =======================
 
 export type TruckLocation = {
   lat?: number;
@@ -8,13 +10,13 @@ export type TruckLocation = {
   address?: string;
   updatedAt?: Timestamp | FieldValue;
   note?: string;
-} | undefined;
+};
 
 export type TodaysHours = {
   open?: string;
   close?: string;
   note?: string;
-} | undefined;
+};
 
 export type RegularHoursEntry = {
   openTime: string;
@@ -22,7 +24,9 @@ export type RegularHoursEntry = {
   isClosed: boolean;
 };
 
-// ========== FOOD TRUCK BASE TYPE ==========
+// =======================
+// FOOD TRUCK BASE TYPE
+// =======================
 
 export type FoodTruck = {
   id: string;
@@ -66,11 +70,13 @@ export type FoodTruck = {
   subscriptionTier?: string;
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
-  distance?: string;
+  distance?: string; // Calculated on frontend
   testimonials?: Testimonial[];
 };
 
-// ========== MENU & OTHER TYPES ==========
+// =======================
+// MENU & CATEGORY TYPES
+// =======================
 
 export type MenuItem = {
   id: string;
@@ -103,6 +109,10 @@ export type CustomizationOption = {
   isRequired?: boolean;
 };
 
+// =======================
+// TESTIMONIALS
+// =======================
+
 export type Testimonial = {
   id: string;
   truckId: string;
@@ -115,7 +125,17 @@ export type Testimonial = {
   dataAiHint?: string;
 };
 
+// =======================
+// USER TYPES
+// =======================
+
 export type UserRole = 'customer' | 'owner';
+
+export type NotificationPreferences = {
+  truckNearbyRadius: number;
+  orderUpdates: boolean;
+  promotionalMessages: boolean;
+};
 
 export type UserDocument = {
   uid: string;
@@ -144,11 +164,9 @@ export type UserProfile = {
   truckId?: string;
 };
 
-export type NotificationPreferences = {
-  truckNearbyRadius: number;
-  orderUpdates: boolean;
-  promotionalMessages: boolean;
-};
+// =======================
+// FILTERS & CUISINES
+// =======================
 
 export type FilterOptions = {
   cuisine?: string[];
@@ -163,6 +181,10 @@ export type Cuisine = {
   name: string;
   icon?: React.ElementType;
 };
+
+// =======================
+// ORDER TYPES
+// =======================
 
 export interface OrderItemDetail {
   itemId: string;
