@@ -247,6 +247,8 @@ export default function OwnerDashboardPage() {
                     const { latitude, longitude } = pos.coords;
                     await updateTruck({
                       currentLocation: { lat: latitude, lng: longitude },
+                      lat: latitude,     // ROOT LEVEL (for map)
+                      lng: longitude,    // ROOT LEVEL (for map)
                       locationSetAt: new Date(),
                     });
                     toast({ title: "Location Updated", description: "Customers will see your live GPS location now." });
@@ -262,6 +264,9 @@ export default function OwnerDashboardPage() {
                   if (addr) {
                     await updateTruck({
                       currentLocation: { address: addr },
+                      address: addr,    // ROOT LEVEL
+                      lat: null,        // ROOT LEVEL - clear
+                      lng: null,        // ROOT LEVEL - clear
                       locationSetAt: new Date(),
                     });
                     toast({ title: "Location Updated", description: "Customers will see your entered address now." });

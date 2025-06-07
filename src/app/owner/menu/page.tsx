@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import NextImage from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck, CheckCircle } from "lucide-react";
+import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck, CheckCircle, Move, XCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,10 +19,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { auth, db, storage } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import {
-  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc as getFirestoreDoc, writeBatch, query, getDoc, setDoc
+  doc, collection, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc as getFirestoreDoc, writeBatch, query, getDoc, setDoc, orderBy
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import type { UserDocument } from '@/lib/types';
+
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult
+} from "@hello-pangea/dnd";
 
 type MenuItem = {
   id: string;
@@ -30,17 +37,37 @@ type MenuItem = {
   description: string;
   price: number;
   category: string;
+  tags?: string[];
+  outOfStock?: boolean;
   imageUrl?: string;
   imagePath?: string;
   createdAt?: any;
   updatedAt?: any;
+  order?: number;
 };
 
 type MenuCategory = {
   id: string;
   name: string;
   createdAt?: any;
+  order?: number;
 };
+
+// --- Preset tags ---
+const PRESET_TAGS = [
+  "Vegan", "Vegetarian", "Gluten-free", "Spicy", "Dairy-free", "Nut-free"
+];
+
+// --- UTILITY: Remove undefined fields (for Firestore!) ---
+function removeUndefinedFields<T extends Record<string, any>>(obj: T) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined)
+  ) as Partial<T>;
+}
+
+// --- UTILITY: Draft storage ---
+const DRAFT_KEY = "foodietruck_menuitem_draft";
+const DRAFT_CATEGORY_KEY = "foodietruck_category_draft";
 
 function OwnerSidebar({ active }: { active: string }) {
   const nav = [
@@ -66,7 +93,6 @@ function OwnerSidebar({ active }: { active: string }) {
 export default function OwnerMenuPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const pathname = usePathname();
 
   // --- STATE ---
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -81,13 +107,22 @@ export default function OwnerMenuPage() {
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [currentCategoryName, setCurrentCategoryName] = useState('');
+  const [categoryOrder, setCategoryOrder] = useState(0);
+
+  // --- Item Dialog ---
   const [itemName, setItemName] = useState('');
   const [itemDescription, setItemDescription] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategoryName, setItemCategoryName] = useState('');
+  const [itemTags, setItemTags] = useState<string[]>([]);
+  const [itemCustomTag, setItemCustomTag] = useState('');
+  const [itemOutOfStock, setItemOutOfStock] = useState(false);
   const [itemImageFile, setItemImageFile] = useState<File | null>(null);
   const [itemImagePreview, setItemImagePreview] = useState<string | undefined>(undefined);
+  const [itemOrder, setItemOrder] = useState(0);
+
   const [todaysMenuIds, setTodaysMenuIds] = useState<string[]>([]);
+  const [menuActionLog, setMenuActionLog] = useState<{id: string, count: number, name: string}[]>([]);
   const [savingTodayMenu, setSavingTodayMenu] = useState(false);
 
   // --- AUTH & OWNER TRUCK RESOLUTION ---
@@ -136,25 +171,25 @@ export default function OwnerMenuPage() {
       const truckDocRef = doc(db, "trucks", truckId);
 
       const [catsSnap, itemsSnap, truckSnap] = await Promise.all([
-        getDocs(query(categoriesPath)),
-        getDocs(query(itemsPath)),
+        getDocs(query(categoriesPath, orderBy("order", "asc"))),
+        getDocs(query(itemsPath, orderBy("order", "asc"))),
         getDoc(truckDocRef),
       ]);
-      // SAFER: strip .id from Firestore doc.data()
       const fetchedCategories = catsSnap.docs.map(doc => {
         const data = doc.data();
-        if ('id' in data) delete data.id;
         return { id: doc.id, ...data } as MenuCategory;
       });
       setCategories(fetchedCategories);
 
       const fetchedItems = itemsSnap.docs.map(doc => {
         const data = doc.data();
-        if ('id' in data) delete data.id;
         return {
           id: doc.id,
           ...data,
           price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          outOfStock: !!data.outOfStock,
+          order: typeof data.order === "number" ? data.order : 0,
         } as MenuItem;
       });
       setMenuItems(fetchedItems);
@@ -164,6 +199,13 @@ export default function OwnerMenuPage() {
       } else {
         setTodaysMenuIds([]);
       }
+      // --- Analytics: Frequency log ---
+      if (truckSnap.exists() && truckSnap.data().menuActionLog) {
+        setMenuActionLog(truckSnap.data().menuActionLog);
+      } else {
+        setMenuActionLog([]);
+      }
+
       if (fetchedCategories.length > 0 && !itemCategoryName) {
         setItemCategoryName(fetchedCategories[0].name);
       }
@@ -181,7 +223,7 @@ export default function OwnerMenuPage() {
       return;
     }
     fetchMenuData();
-    // eslint-disable-next-line
+  // eslint-disable-next-line
   }, [truckId]);
 
   // --- IMAGE HANDLER ---
@@ -204,22 +246,20 @@ export default function OwnerMenuPage() {
     }
     setIsSubmitting(true);
     try {
+      const order = categories.length;
       const categoryCollectionRef = collection(db, "trucks", truckId, "menuCategories");
       if (editingCategory) {
-        const oldCategoryName = editingCategory.name;
-        await updateDoc(doc(categoryCollectionRef, editingCategory.id), { name: currentCategoryName, updatedAt: serverTimestamp() });
-        const batch = writeBatch(db);
-        menuItems.filter(item => item.category === oldCategoryName).forEach(item => {
-          const itemRef = doc(db, "trucks", truckId, "menuItems", item.id);
-          batch.update(itemRef, { category: currentCategoryName });
-        });
-        await batch.commit();
-        toast({ title: "Category Updated", description: `Category "${currentCategoryName}" updated. Associated items also updated.` });
-      } else {
-        await addDoc(categoryCollectionRef, {
+        await updateDoc(doc(categoryCollectionRef, editingCategory.id), removeUndefinedFields({
           name: currentCategoryName,
-          createdAt: serverTimestamp()
-        });
+          updatedAt: serverTimestamp(),
+        }));
+        toast({ title: "Category Updated", description: `Category "${currentCategoryName}" updated.` });
+      } else {
+        await addDoc(categoryCollectionRef, removeUndefinedFields({
+          name: currentCategoryName,
+          createdAt: serverTimestamp(),
+          order,
+        }));
         toast({ title: "Category Added", description: `Category "${currentCategoryName}" added.` });
       }
       await fetchMenuData(true);
@@ -230,6 +270,7 @@ export default function OwnerMenuPage() {
     setEditingCategory(null);
     setIsCategoryDialogOpen(false);
     setIsSubmitting(false);
+    localStorage.removeItem(DRAFT_CATEGORY_KEY);
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
@@ -251,6 +292,43 @@ export default function OwnerMenuPage() {
       toast({ title: "Error deleting category", description: e.message || String(e), variant: "destructive" });
     }
     setIsSubmitting(false);
+  };
+
+  // --- DND ORDERING ---
+  const onDragEndCategory = async (result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
+    const reordered = Array.from(categories);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    setCategories(reordered);
+    // Persist new order
+    if (!truckId) return;
+    const batch = writeBatch(db);
+    reordered.forEach((cat, idx) => {
+      batch.update(doc(db, "trucks", truckId, "menuCategories", cat.id), { order: idx });
+    });
+    await batch.commit();
+  };
+  const onDragEndItem = async (catId: string, result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
+    const itemsOfCat = menuItems.filter(i => i.category === categories.find(c => c.id === catId)?.name);
+    const reordered = Array.from(itemsOfCat);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    // Update orders locally:
+    const updatedMenuItems = menuItems.map(item =>
+      reordered.find(i => i.id === item.id)
+        ? { ...item, order: reordered.findIndex(i => i.id === item.id) }
+        : item
+    );
+    setMenuItems(updatedMenuItems);
+    // Persist new order:
+    if (!truckId) return;
+    const batch = writeBatch(db);
+    reordered.forEach((item, idx) => {
+      batch.update(doc(db, "trucks", truckId, "menuItems", item.id), { order: idx });
+    });
+    await batch.commit();
   };
 
   // --- MENU ITEM HANDLERS ---
@@ -275,23 +353,29 @@ export default function OwnerMenuPage() {
         setIsSubmitting(false); return;
       }
     }
-    const itemData: Omit<MenuItem, 'id' | 'createdAt' | 'updatedAt'> & { updatedAt: any, createdAt?: any } = {
+    let itemData: Omit<MenuItem, 'id' | 'createdAt' | 'updatedAt'> & { updatedAt: any, createdAt?: any } = {
       name: itemName,
       description: itemDescription,
       price: parseFloat(itemPrice),
       category: itemCategoryName,
+      tags: itemTags,
+      outOfStock: !!itemOutOfStock,
       imageUrl: imageUrlToSave,
       imagePath: imagePathToSave,
+      order: itemOrder,
       updatedAt: serverTimestamp(),
     };
+    const cleanedItemData = removeUndefinedFields(itemData);
+
     try {
       const itemCollectionRef = collection(db, "trucks", truckId, "menuItems");
       if (editingItem) {
-        await updateDoc(doc(itemCollectionRef, editingItem.id), itemData);
+        await updateDoc(doc(itemCollectionRef, editingItem.id), cleanedItemData);
         toast({ title: "Item Updated", description: `"${itemName}" updated.` });
       } else {
-        itemData.createdAt = serverTimestamp();
-        await addDoc(itemCollectionRef, itemData);
+        cleanedItemData.createdAt = serverTimestamp();
+        cleanedItemData.order = menuItems.filter(i => i.category === itemCategoryName).length;
+        await addDoc(itemCollectionRef, cleanedItemData);
         toast({ title: "Item Added", description: `"${itemName}" added to ${itemCategoryName}.` });
       }
       await fetchMenuData(true);
@@ -300,6 +384,7 @@ export default function OwnerMenuPage() {
     }
     resetItemFormAndDialog();
     setIsSubmitting(false);
+    localStorage.removeItem(DRAFT_KEY);
   };
 
   const handleDeleteItem = async (itemToDelete: MenuItem) => {
@@ -322,14 +407,29 @@ export default function OwnerMenuPage() {
     if (!truckId) return;
     setSavingTodayMenu(true);
     let updatedMenu: string[];
+    let actionType: "add" | "remove";
     if (todaysMenuIds.includes(itemId)) {
       updatedMenu = todaysMenuIds.filter(id => id !== itemId);
+      actionType = "remove";
     } else {
       updatedMenu = [...todaysMenuIds, itemId];
+      actionType = "add";
     }
     try {
-      await setDoc(doc(db, "trucks", truckId), { todaysMenu: updatedMenu }, { merge: true });
+      // Analytics log
+      const updatedLog = [...menuActionLog];
+      const idx = updatedLog.findIndex(l => l.id === itemId);
+      if (idx >= 0) updatedLog[idx].count += 1;
+      else {
+        const item = menuItems.find(i => i.id === itemId);
+        updatedLog.push({ id: itemId, count: 1, name: item?.name || "" });
+      }
+      await setDoc(doc(db, "trucks", truckId), {
+        todaysMenu: updatedMenu,
+        menuActionLog: updatedLog
+      }, { merge: true });
       setTodaysMenuIds(updatedMenu);
+      setMenuActionLog(updatedLog);
       toast({ title: "Today's Menu Updated", icon: <CheckCircle className="text-green-600" /> });
     } catch (e: any) {
       toast({ title: "Error updating today's menu", description: e.message || String(e), variant: "destructive" });
@@ -342,31 +442,68 @@ export default function OwnerMenuPage() {
     setEditingCategory(category);
     setCurrentCategoryName(category.name);
     setIsCategoryDialogOpen(true);
+    localStorage.setItem(DRAFT_CATEGORY_KEY, JSON.stringify({ name: category.name }));
   };
   const openNewCategoryDialog = () => {
     setEditingCategory(null);
-    setCurrentCategoryName('');
+    setCurrentCategoryName(localStorage.getItem(DRAFT_CATEGORY_KEY)
+      ? JSON.parse(localStorage.getItem(DRAFT_CATEGORY_KEY) || '{}').name || ''
+      : '');
     setIsCategoryDialogOpen(true);
   };
+
   const resetItemFormAndDialog = () => {
     setItemName(''); setItemDescription(''); setItemPrice('');
     setItemCategoryName(categories.length > 0 ? categories[0].name : '');
+    setItemTags([]); setItemCustomTag(''); setItemOutOfStock(false); setItemOrder(0);
     setItemImageFile(null); setItemImagePreview(undefined);
     setEditingItem(null); setIsItemDialogOpen(false);
+    localStorage.removeItem(DRAFT_KEY);
   };
   const openEditItemDialog = (item: MenuItem) => {
     setEditingItem(item);
     setItemName(item.name); setItemDescription(item.description);
     setItemPrice(item.price.toString()); setItemCategoryName(item.category);
+    setItemTags(item.tags || []); setItemCustomTag('');
+    setItemOutOfStock(!!item.outOfStock);
     setItemImageFile(null); setItemImagePreview(item.imageUrl || undefined);
+    setItemOrder(item.order || 0);
     setIsItemDialogOpen(true);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      name: item.name, description: item.description, price: item.price, category: item.category,
+      tags: item.tags, outOfStock: item.outOfStock, order: item.order
+    }));
   };
   const openNewItemDialog = () => {
+    const draft = localStorage.getItem(DRAFT_KEY) ? JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}') : {};
     setEditingItem(null);
-    setItemName(''); setItemDescription(''); setItemPrice('');
-    setItemCategoryName(categories.length > 0 ? categories[0].name : '');
+    setItemName(draft.name || ''); setItemDescription(draft.description || '');
+    setItemPrice(draft.price?.toString() || '');
+    setItemCategoryName(draft.category || (categories.length > 0 ? categories[0].name : ''));
+    setItemTags(draft.tags || []); setItemCustomTag('');
+    setItemOutOfStock(!!draft.outOfStock);
     setItemImageFile(null); setItemImagePreview(undefined);
+    setItemOrder(draft.order || 0);
     setIsItemDialogOpen(true);
+  };
+
+  // --- AUTOSAVE DRAFTS ---
+  useEffect(() => {
+    if (!isItemDialogOpen) return;
+    const draft = {
+      name: itemName, description: itemDescription, price: itemPrice, category: itemCategoryName,
+      tags: itemTags, outOfStock: itemOutOfStock, order: itemOrder
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [isItemDialogOpen, itemName, itemDescription, itemPrice, itemCategoryName, itemTags, itemOutOfStock, itemOrder]);
+
+  // --- TAG HANDLING ---
+  const handleTagChange = (tag: string, checked: boolean) => {
+    setItemTags(checked ? [...itemTags, tag] : itemTags.filter(t => t !== tag));
+  };
+  const handleAddCustomTag = () => {
+    if (itemCustomTag && !itemTags.includes(itemCustomTag)) setItemTags([...itemTags, itemCustomTag]);
+    setItemCustomTag('');
   };
 
   // --- RENDER ---
@@ -409,7 +546,7 @@ export default function OwnerMenuPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <CardTitle className="text-lg">Today's Menu Selection</CardTitle>
                 </div>
-                <CardDescription>Select which menu items are visible as “Today’s Menu” for customers.</CardDescription>
+                <CardDescription>Select which menu items are visible as “Today’s Menu” for customers. Out of stock items are disabled.</CardDescription>
                 {savingTodayMenu && <Loader2 className="animate-spin h-5 w-5 text-primary ml-2" />}
               </CardHeader>
               <CardContent>
@@ -418,7 +555,7 @@ export default function OwnerMenuPage() {
                 ) : (
                   <div className="space-y-4">
                     {categories.map(category => {
-                      const items = menuItems.filter(item => item.category === category.name);
+                      const items = menuItems.filter(item => item.category === category.name).sort((a,b) => (a.order||0)-(b.order||0));
                       if (!items.length) return null;
                       return (
                         <div key={category.id} className="mb-2">
@@ -429,11 +566,20 @@ export default function OwnerMenuPage() {
                                 <Checkbox
                                   id={`todaymenu-${item.id}`}
                                   checked={todaysMenuIds.includes(item.id)}
-                                  disabled={savingTodayMenu}
+                                  disabled={savingTodayMenu || !!item.outOfStock}
                                   onCheckedChange={() => handleToggleTodayMenu(item.id)}
                                 />
-                                <Label htmlFor={`todaymenu-${item.id}`} className="flex-grow cursor-pointer">{item.name}</Label>
+                                <Label htmlFor={`todaymenu-${item.id}`} className="flex-grow cursor-pointer">{item.name}
+                                  {item.outOfStock && <span className="ml-2 text-xs text-destructive">(Out of stock)</span>}
+                                </Label>
                                 <span className="text-xs text-accent font-semibold">${item.price.toFixed(2)}</span>
+                                {item.tags && item.tags.length > 0 && (
+                                  <span className="ml-2 flex gap-1 flex-wrap">
+                                    {item.tags.map(t => (
+                                      <span key={t} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px]">{t}</span>
+                                    ))}
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -444,6 +590,39 @@ export default function OwnerMenuPage() {
                 )}
               </CardContent>
             </Card>
+            {/* --- Analytics Widget --- */}
+            <Card className="mb-6 bg-blue-50/40 border-blue-300/30">
+              <CardHeader className="flex-row items-center gap-4">
+                <LineChart className="h-5 w-5 text-primary mr-2" />
+                <CardTitle className="text-base">Today's Menu Analytics</CardTitle>
+                <CardDescription className="text-xs ml-2">Most frequently toggled items this week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {menuActionLog.length === 0 ? (
+                  <span className="text-sm text-muted-foreground">No analytics yet. Start adding items to your daily menu!</span>
+                ) : (
+                  <ul className="list-inside text-sm">
+                    {[...menuActionLog].sort((a,b)=>b.count-a.count).slice(0,3).map((log, i) => (
+                      <li key={log.id} className="flex items-center gap-1">
+                        <span className="font-bold">{i+1}.</span>
+                        <span>{log.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">({log.count} times)</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+            {/* --- Image Optimization Notice --- */}
+            <Alert variant="info" className="mb-8">
+              <Info className="w-4 h-4" />
+              <AlertTitle>Pro tip:</AlertTitle>
+              <AlertDescription>
+                For best customer experience, keep food photos under <b>1MB</b> and use clear, well-lit images. 
+                <br />
+                Tag items (e.g. Vegan, Gluten-free) and use “Out of stock” to hide unavailable items.
+              </AlertDescription>
+            </Alert>
             {/* --- Categories Dialog --- */}
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
               <DialogContent>
@@ -469,7 +648,7 @@ export default function OwnerMenuPage() {
               <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</DialogTitle>
-                  <DialogDescription>Fill in the details for your menu item.</DialogDescription>
+                  <DialogDescription>Fill in the details for your menu item. You can add tags and set “out of stock”.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto pr-2">
                   <div><Label htmlFor="itemName"><Tag className="inline mr-1 h-4 w-4" />Item Name</Label><Input id="itemName" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="e.g., Gourmet Burger" /></div>
@@ -482,6 +661,39 @@ export default function OwnerMenuPage() {
                       <SelectContent>{categories.map(cat => (<SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>))}</SelectContent>
                     </Select>
                     {categories.length === 0 && <p className="text-xs text-destructive mt-1">Please add a category first via the 'Menu Categories' card.</p>}
+                  </div>
+                  <div>
+                    <Label>Tags</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {PRESET_TAGS.map(tag => (
+                        <label key={tag} className="flex items-center gap-1 text-xs bg-green-100 px-2 py-0.5 rounded cursor-pointer">
+                          <Checkbox checked={itemTags.includes(tag)} onCheckedChange={c => handleTagChange(tag, !!c)} />
+                          {tag}
+                        </label>
+                      ))}
+                      {/* Custom tag input */}
+                      <Input
+                        className="w-24 h-7 text-xs ml-2"
+                        value={itemCustomTag}
+                        placeholder="Custom"
+                        onChange={e => setItemCustomTag(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") { handleAddCustomTag(); e.preventDefault(); } }}
+                        onBlur={handleAddCustomTag}
+                      />
+                    </div>
+                    {itemTags.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {itemTags.map(tag => (
+                          <span key={tag} className="bg-green-200 text-green-800 px-2 py-0.5 rounded text-[11px]">
+                            {tag} <button className="ml-1 text-xs" onClick={()=>setItemTags(itemTags.filter(t=>t!==tag))}><XCircle className="inline h-3 w-3" /></button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={itemOutOfStock} onCheckedChange={v => setItemOutOfStock(!!v)} id="itemOutOfStock" />
+                    <Label htmlFor="itemOutOfStock">Out of stock (item hidden from ordering)</Label>
                   </div>
                   <div>
                     <Label htmlFor="itemImageFile"><ImageIcon className="inline mr-1 h-4 w-4" />Item Image (Optional)</Label>
@@ -499,62 +711,109 @@ export default function OwnerMenuPage() {
             </Dialog>
             {/* --- Main Cards --- */}
             <div className="grid md:grid-cols-3 gap-6">
+              {/* DragDrop for Categories */}
               <Card className="md:col-span-1 shadow-lg">
                 <CardHeader>
                   <div className="flex justify-between items-center"><CardTitle className="text-xl">Menu Categories</CardTitle><Button variant="ghost" size="icon" onClick={openNewCategoryDialog} aria-label="Add new category"><PlusCircle className="h-5 w-5 text-primary" /></Button></div>
-                  <CardDescription>Organize your menu sections.</CardDescription>
+                  <CardDescription>Organize your menu sections. Drag to reorder.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-                  {categories.length > 0 ? categories.map(cat => (
-                    <div key={cat.id} className="flex justify-between items-center p-2.5 border rounded-md bg-muted/40 hover:bg-muted/70">
-                      <span className="font-medium">{cat.name}</span>
-                      <div className="space-x-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEditCategoryDialog(cat)} aria-label={`Edit category ${cat.name}`}> <Edit3 className="h-4 w-4" /> </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(cat.id, cat.name)} aria-label={`Delete category ${cat.name}`}> <Trash2 className="h-4 w-4 text-destructive" /> </Button>
-                      </div>
-                    </div>
-                  )) : <p className="text-sm text-muted-foreground text-center py-4">No categories yet. Click '+' to add one.</p>}
+                  <DragDropContext onDragEnd={onDragEndCategory}>
+                    <Droppable droppableId="categories">
+                      {(provided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                          {categories.length > 0 ? categories.map((cat, idx) => (
+                            <Draggable key={cat.id} draggableId={cat.id} index={idx}>
+                              {(prov, snap) => (
+                                <div
+                                  ref={prov.innerRef}
+                                  {...prov.draggableProps}
+                                  className={`flex justify-between items-center p-2.5 border rounded-md bg-muted/40 hover:bg-muted/70 mb-1 ${snap.isDragging ? "shadow-lg" : ""}`}
+                                >
+                                  <span {...prov.dragHandleProps} title="Drag to reorder"><Move className="inline w-4 h-4 mr-1 text-muted-foreground cursor-move" /></span>
+                                  <span className="font-medium flex-1">{cat.name}</span>
+                                  <div className="space-x-1">
+                                    <Button variant="ghost" size="icon" onClick={() => openEditCategoryDialog(cat)} aria-label={`Edit category ${cat.name}`}> <Edit3 className="h-4 w-4" /> </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteCategory(cat.id, cat.name)} aria-label={`Delete category ${cat.name}`}> <Trash2 className="h-4 w-4 text-destructive" /> </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          )) : <p className="text-sm text-muted-foreground text-center py-4">No categories yet. Click '+' to add one.</p>}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 </CardContent>
               </Card>
+              {/* DragDrop for Items within categories */}
               <Card className="md:col-span-2 shadow-lg">
                 <CardHeader>
                   <div className="flex justify-between items-center"><CardTitle className="text-xl">Menu Items</CardTitle><Button onClick={openNewItemDialog} disabled={categories.length === 0}><PlusCircle className="mr-2 h-4 w-4" /> Add New Item</Button></div>
-                  <CardDescription>Add, edit, or remove items from your menu. Items are grouped by category below.</CardDescription>
+                  <CardDescription>Add, edit, or remove items from your menu. Items are grouped by category below. Drag to reorder within category.</CardDescription>
                   {categories.length === 0 && <p className="text-xs text-destructive pt-2">Please add a category before adding menu items.</p>}
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {categories.length > 0 ? categories.map(category => (
-                    menuItems.filter(item => item.category === category.name).length > 0 ? (
+                  {categories.length > 0 ? categories.map(category => {
+                    const items = menuItems.filter(item => item.category === category.name).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                    return items.length > 0 ? (
                       <div key={category.id}>
                         <h3 className="text-lg font-semibold mb-3 text-primary border-b pb-1">{category.name}</h3>
-                        <div className="space-y-4">
-                          {menuItems.filter(item => item.category === category.name).map(item => (
-                            <Card key={item.id} className="bg-card p-0 overflow-hidden shadow-sm">
-                              <div className="flex flex-col sm:flex-row">
-                                {item.imageUrl && <div className="w-full sm:w-1/3 h-40 sm:h-auto relative"><NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" /></div>}
-                                <div className={`flex-1 p-4 flex flex-col justify-between ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
-                                  <div>
-                                    <CardTitle className="text-lg mb-1 flex items-center gap-2">
-                                      {todaysMenuIds.includes(item.id) && (
-                                        <CheckCircle className="inline h-4 w-4 text-green-600" title="In Today's Menu" />
-                                      )}
-                                      {item.name}
-                                    </CardTitle>
-                                    <CardDescription className="text-xs text-accent font-semibold mb-1">${item.price.toFixed(2)}</CardDescription>
-                                    <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{item.description}</p>
-                                  </div>
-                                  <div className="flex justify-end space-x-2 mt-auto pt-2">
-                                    <Button variant="outline" size="sm" onClick={() => openEditItemDialog(item)}> <Edit3 className="mr-1 h-3 w-3" /> Edit </Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteItem(item)}> <Trash2 className="mr-1 h-3 w-3" /> Delete </Button>
-                                  </div>
-                                </div>
+                        <DragDropContext onDragEnd={result => onDragEndItem(category.id, result)}>
+                          <Droppable droppableId={category.id}>
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
+                                {items.map((item, idx) => (
+                                  <Draggable key={item.id} draggableId={item.id} index={idx}>
+                                    {(prov, snap) => (
+                                      <Card
+                                        ref={prov.innerRef}
+                                        {...prov.draggableProps}
+                                        className={`bg-card p-0 overflow-hidden shadow-sm ${snap.isDragging ? "ring-2 ring-primary/40" : ""}`}
+                                      >
+                                        <div className="flex flex-col sm:flex-row">
+                                          <span {...prov.dragHandleProps} title="Drag to reorder">
+                                            <Move className="w-4 h-4 text-muted-foreground cursor-move m-3" />
+                                          </span>
+                                          {item.imageUrl && <div className="w-full sm:w-1/3 h-40 sm:h-auto relative"><NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" /></div>}
+                                          <div className={`flex-1 p-4 flex flex-col justify-between ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
+                                            <div>
+                                              <CardTitle className="text-lg mb-1 flex items-center gap-2">
+                                                {todaysMenuIds.includes(item.id) && (
+                                                  <CheckCircle className="inline h-4 w-4 text-green-600" title="In Today's Menu" />
+                                                )}
+                                                {item.name}
+                                                {item.outOfStock && <span className="ml-2 text-xs text-destructive">(Out of stock)</span>}
+                                              </CardTitle>
+                                              <CardDescription className="text-xs text-accent font-semibold mb-1">${item.price.toFixed(2)}</CardDescription>
+                                              <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{item.description}</p>
+                                              {item.tags && item.tags.length > 0 && (
+                                                <div className="flex gap-1 flex-wrap mt-1">
+                                                  {item.tags.map(t => (
+                                                    <span key={t} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px]">{t}</span>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className="flex justify-end space-x-2 mt-auto pt-2">
+                                              <Button variant="outline" size="sm" onClick={() => openEditItemDialog(item)}> <Edit3 className="mr-1 h-3 w-3" /> Edit </Button>
+                                              <Button variant="destructive" size="sm" onClick={() => handleDeleteItem(item)}> <Trash2 className="mr-1 h-3 w-3" /> Delete </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </Card>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
                               </div>
-                            </Card>
-                          ))}
-                        </div>
+                            )}
+                          </Droppable>
+                        </DragDropContext>
                       </div>
-                    ) : null
-                  )) : <p className="text-sm text-muted-foreground py-10 text-center">No categories or menu items yet. Start by adding a category, then items.</p>}
+                    ) : null;
+                  }) : <p className="text-sm text-muted-foreground py-10 text-center">No categories or menu items yet. Start by adding a category, then items.</p>}
                   {categories.length > 0 && menuItems.length === 0 && <p className="text-sm text-muted-foreground py-10 text-center">No menu items added yet for the existing categories.</p>}
                 </CardContent>
               </Card>
@@ -565,3 +824,6 @@ export default function OwnerMenuPage() {
     </div>
   );
 }
+
+// Add this missing icon if not imported already
+function LineChart(props: any) { return <svg viewBox="0 0 24 24" fill="none" {...props}><path d="M3 17L9 11L13 15L21 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 21H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>; }
