@@ -13,14 +13,14 @@ export type TruckLocation = {
 };
 
 export type TodaysHours = {
-  open?: string;
-  close?: string;
+  open?: string;      // "09:00"
+  close?: string;     // "17:00"
   note?: string;
 };
 
 export type RegularHoursEntry = {
-  openTime: string;
-  closeTime: string;
+  openTime: string;   // "09:00"
+  closeTime: string;  // "17:00"
   isClosed: boolean;
 };
 
@@ -45,14 +45,12 @@ export type FoodTruck = {
   isVisible?: boolean;
 
   currentLocation?: TruckLocation;
-  todaysMenu?: string[];
+  todaysMenu?: string[];      // menuItem IDs
   todaysHours?: TodaysHours;
 
-  regularHours?: {
-    [day: string]: RegularHoursEntry;
-  };
+  regularHours?: Record<string, RegularHoursEntry>; // "monday": {...}
   specialHours?: Array<{
-    date: string;
+    date: string;     // "YYYY-MM-DD"
     status: 'open-custom' | 'closed';
     openTime?: string;
     closeTime?: string;
@@ -63,14 +61,14 @@ export type FoodTruck = {
   rating?: number;
   numberOfRatings?: number;
   features?: string[];
-  socialMediaLinks?: { [platform: string]: string };
+  socialMediaLinks?: Record<string, string>;
   contactEmail?: string;
   phone?: string;
   isFeatured?: boolean;
   subscriptionTier?: string;
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
-  distance?: string; // Calculated on frontend
+  distance?: string;   // Calculated on frontend, e.g., "1.2km"
   testimonials?: Testimonial[];
 };
 
@@ -179,7 +177,7 @@ export type FilterOptions = {
 export type Cuisine = {
   id: string;
   name: string;
-  icon?: React.ElementType;
+  icon?: React.ElementType<any>; // Upgraded for strict typing with React 18+
 };
 
 // =======================
@@ -206,3 +204,12 @@ export interface Order {
   notes?: string;
   pickupTime?: Timestamp;
 }
+
+// =======================
+// TRUCK WITH MENU (for Map)
+// =======================
+
+export type TruckWithMenu = FoodTruck & {
+  todaysMenuItems: MenuItem[];
+  isHere: boolean;
+};

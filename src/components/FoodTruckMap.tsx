@@ -1,174 +1,192 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
-import type { FoodTruck } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Crosshair, WifiOff, Loader as LoaderIcon } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-type Props = {
-  trucks: FoodTruck[];
-  onTruckClick?: (truck: FoodTruck) => void;
-};
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L, { Icon, LatLngExpression } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { useEffect } from 'react';
+import Image from 'next/image';
+import { Star, MapPin, CircleCheck, Clock, Utensils } from 'lucide-react';
+import type { TruckWithMenu } from '@/lib/types';
 
-const mapContainerStyle: React.CSSProperties = {
-  width: '100%',
-  height: '65vh',
-  borderRadius: '1rem',
-  overflow: 'hidden',
-  boxShadow: '0 8px 24px hsl(var(--primary) / 0.1)',
-  border: '1px solid hsl(var(--border))',
-  position: 'relative',
-  backgroundColor: 'hsl(var(--muted))',
-};
+const defaultPosition: LatLngExpression = [-34.9285, 138.6007];
 
-export default function FoodTruckMap({ trucks, onTruckClick }: Props) {
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [userMarker, setUserMarker] = useState<any>(null); // Type: google.maps.marker.AdvancedMarkerElement | null
-  const [isLoadingMap, setIsLoadingMap] = useState(true);
-  const [mapError, setMapError] = useState<string | null>(null);
+const truckMarkerSVG = `<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="56" height="56" rx="28" fill="#fff" fill-opacity="0.92"/><rect x="10" y="26" width="36" height="14" rx="4" fill="#64b867"/><rect x="34" y="14" width="12" height="14" rx="2" fill="#228be6"/><rect x="12" y="29" width="12" height="7" rx="2" fill="#fff"/><circle cx="18" cy="44" r="4" fill="#333"/><circle cx="38" cy="44" r="4" fill="#333"/></svg>`;
+const truckHereMarkerSVG = `<svg width="62" height="62" viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="31" cy="31" r="31" fill="#fbe62f" fill-opacity="0.85"/><rect x="13" y="30" width="36" height="14" rx="4" fill="#fff176"/><rect x="37" y="18" width="12" height="14" rx="2" fill="#ffd60a"/><rect x="15" y="33" width="12" height="7" rx="2" fill="#fff"/><circle cx="21" cy="48" r="4" fill="#333"/><circle cx="41" cy="48" r="4" fill="#333"/></svg>`;
 
-  // Load Google Maps and init map
+const svgToDataURL = (svg: string) => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+
+const truckIcon = new Icon({
+  iconUrl: svgToDataURL(truckMarkerSVG),
+  iconSize: [56, 56],
+  iconAnchor: [28, 54],
+  popupAnchor: [0, -52],
+  className: 'drop-shadow-xl',
+});
+
+const hereIcon = new Icon({
+  iconUrl: svgToDataURL(truckHereMarkerSVG),
+  iconSize: [62, 62],
+  iconAnchor: [31, 61],
+  popupAnchor: [0, -60],
+  className: 'animate-pulse shadow-2xl',
+});
+
+function RatingStars({ rating = 0, count = 0 }: { rating?: number, count?: number }) {
+  if (!rating || !count) return null;
+  const rounded = Math.round(rating);
+  return (
+    <span className="inline-flex items-center ml-2">
+      {[...Array(rounded)].map((_, i) => (
+        <Star key={i} className="w-4 h-4 text-yellow-400" fill="yellow" />
+      ))}
+      <span className="ml-1 text-xs text-gray-600">({count})</span>
+    </span>
+  );
+}
+
+function FitMapToTrucks({ trucks }: { trucks: TruckWithMenu[] }) {
+  const map = useMap();
   useEffect(() => {
-    if (!mapRef.current || map) return;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      setMapError("Google Maps API Key is missing. Please configure it in your .env.local file (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).");
-      setIsLoadingMap(false);
-      return;
+    const trucksWithLoc = trucks.filter(t => t.isHere && t.lat && t.lng);
+    if (!trucksWithLoc.length) return;
+    const bounds = L.latLngBounds(trucksWithLoc.map(t => [t.lat!, t.lng!] as [number, number]));
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [60, 60] });
     }
-    setIsLoadingMap(true);
-    setMapError(null);
+  }, [trucks, map]);
+  return null;
+}
 
-    const loader = new Loader({
-      apiKey,
-      version: "weekly",
-      libraries: ["marker"], // Needed for Advanced Markers!
-    });
-
-    loader.load()
-      .then(async () => {
-        if (!mapRef.current || map) return;
-        // Dynamically import the Maps Library
-        const { Map } = await (window as any).google.maps.importLibrary("maps") as google.maps.MapsLibrary;
-        const initial = { lat: -34.9285, lng: 138.6007 }; // Default: Adelaide
-        const gmap = new Map(mapRef.current, {
-          center: initial,
-          zoom: 12,
-          mapId: "FINDATRUCK_MAP_ID", // Replace with your Map ID or remove if not using cloud styling
-          disableDefaultUI: true,
-          zoomControl: true,
-          clickableIcons: false,
-        });
-        setMap(gmap);
-      })
-      .catch(e => {
-        setMapError("Failed to load Google Maps. Check your API key, network connection, and browser console for more details.");
-      })
-      .finally(() => {
-        setIsLoadingMap(false);
-      });
-    // eslint-disable-next-line
-  }, [mapRef]);
-
-  // Place Advanced Markers for trucks
-  useEffect(() => {
-    if (!map || !(window as any).google.maps.marker) return;
-
-    // Clean up previous markers
-    (map as any).__truckMarkers?.forEach((marker: any) => {
-      marker.map = null;
-    });
-
-    const newMarkers: any[] = [];
-    trucks.forEach(truck => {
-      if (typeof truck.lat === "number" && typeof truck.lng === "number") {
-        const truckIcon = document.createElement('img');
-        truckIcon.src = truck.isOpen ? '/truck-marker-open.svg' : '/truck-marker-closed.svg';
-        truckIcon.style.width = '38px';
-        truckIcon.style.height = '44px';
-        const marker = new (window as any).google.maps.marker.AdvancedMarkerElement({
-          position: { lat: truck.lat, lng: truck.lng },
-          map,
-          title: truck.name,
-          content: truckIcon,
-        });
-        marker.addListener('click', () => onTruckClick?.(truck));
-        newMarkers.push(marker);
-      }
-    });
-    (map as any).__truckMarkers = newMarkers;
-
-  }, [map, trucks, onTruckClick]);
-
-  // Locate Me button logic (AdvancedMarkerElement for user location)
-  const handleLocateMe = useCallback(() => {
-    if (!map || !navigator.geolocation || !(window as any).google.maps.marker) {
-      setMapError("Geolocation is not supported by your browser or map is not loaded.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.panTo(coords);
-        map.setZoom(14);
-
-        if (!userMarker) {
-          const userIcon = document.createElement('img');
-          userIcon.src = '/user-marker.svg';
-          userIcon.style.width = '30px';
-          userIcon.style.height = '30px';
-
-          const marker = new (window as any).google.maps.marker.AdvancedMarkerElement({
-            position: coords,
-            map,
-            content: userIcon,
-            title: 'You are here',
-            zIndex: 1000,
-          });
-          setUserMarker(marker);
-        } else {
-          userMarker.position = coords;
-        }
-      },
-      error => {
-        setMapError("Could not access your location. Please allow location access in your browser settings.");
-      },
-      { enableHighAccuracy: true }
-    );
-  }, [map, userMarker]);
+export default function FoodTruckMap({ trucks }: { trucks: TruckWithMenu[] }) {
+  const firstHere = trucks.find(t => t.isHere && t.lat && t.lng);
+  const mapCenter: LatLngExpression = firstHere
+    ? [firstHere.lat!, firstHere.lng!]
+    : defaultPosition;
 
   return (
-    <div className="relative w-full h-[65vh] rounded-xl overflow-hidden shadow border" style={mapContainerStyle}>
-      <Button
-        className="absolute z-10 top-4 left-4 bg-accent text-accent-foreground shadow-lg"
-        onClick={handleLocateMe}
-        type="button"
-        size="sm"
-        aria-label="Locate Me"
-        disabled={isLoadingMap || !!mapError}
+    <div className="relative w-full h-[580px] rounded-2xl overflow-hidden shadow-xl border border-primary/30">
+      <MapContainer
+        center={mapCenter}
+        zoom={13}
+        scrollWheelZoom
+        className="h-full w-full z-0"
+        style={{ minHeight: '580px' }}
       >
-        <Crosshair className="mr-2 h-4 w-4" /> Locate Me
-      </Button>
-      <div ref={mapRef} className="w-full h-full" />
-      {(isLoadingMap || mapError) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20 p-4">
-          {isLoadingMap && !mapError && (
-            <div className="text-center">
-              <LoaderIcon className="h-12 w-12 animate-spin text-primary mx-auto mb-3" />
-              <p className="text-lg text-muted-foreground">Loading map…</p>
-            </div>
-          )}
-          {mapError && (
-            <Alert variant="destructive" className="max-w-md">
-              <WifiOff className="h-5 w-5" />
-              <AlertTitle>Map Error</AlertTitle>
-              <AlertDescription>{mapError}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      )}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://carto.com/">CartoDB</a> contributors'
+        />
+        <FitMapToTrucks trucks={trucks} />
+        {trucks.filter(t => t.isHere && t.lat && t.lng).map((truck, idx) => (
+          <Marker
+            key={truck.id || idx}
+            position={[truck.lat!, truck.lng!] as [number, number]}
+            icon={truck.isOpen ? hereIcon : truckIcon}
+            zIndexOffset={truck.isOpen ? 1000 : 500}
+            eventHandlers={{
+              add: (e: L.LeafletEvent) => {
+                const marker = e.target as L.Marker;
+                if (marker._icon) {
+                  marker._icon.style.transition = 'transform 0.6s cubic-bezier(.2,1.7,.5,.86)';
+                  marker._icon.style.transform = 'scale(0.6) translateY(-70px)';
+                  setTimeout(() => {
+                    marker._icon!.style.transform = 'scale(1) translateY(0)';
+                  }, 50);
+                }
+              }
+            }}
+          >
+            <Popup>
+              <div className="min-w-[225px] max-w-[280px]">
+                <div className="flex items-center gap-2 mb-1">
+                  <Image
+                    src={truck.imageUrl || '/fallback-truck.jpg'}
+                    width={46}
+                    height={46}
+                    alt={truck.name}
+                    className="rounded-lg object-cover border"
+                  />
+                  <div>
+                    <div className="font-bold text-lg leading-tight flex items-center gap-1">
+                      {truck.name}
+                      {truck.isOpen && (
+                        <span className="ml-1 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded inline-flex items-center">
+                          <CircleCheck className="w-3 h-3 mr-1" />Open
+                        </span>
+                      )}
+                      <RatingStars rating={truck.rating} count={truck.numberOfRatings} />
+                    </div>
+                    <div className="text-xs text-muted-foreground">{truck.cuisine}</div>
+                  </div>
+                </div>
+                <div className="flex items-center text-xs mb-1 text-gray-500">
+                  <MapPin className="w-3 h-3 mr-1" />
+                  {truck.currentLocation?.address || truck.address || <span className="italic">No address set</span>}
+                </div>
+                <div className="flex items-center text-xs mb-1 text-gray-500">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {truck.todaysHours?.open && truck.todaysHours?.close
+                    ? `${truck.todaysHours.open} – ${truck.todaysHours.close}`
+                    : truck.operatingHoursSummary || <span className="italic">Hours not set</span>
+                  }
+                </div>
+                <div className="mt-2 mb-1">
+                  <span className="font-medium text-primary text-sm">Today's Menu:</span>
+                  {truck.todaysMenuItems?.length ? (
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {truck.todaysMenuItems.slice(0, 2).map((item: any) => (
+                        <li key={item.id} className="flex items-center gap-1 text-xs">
+                          {item.imageUrl && (
+                            <Image
+                              src={item.imageUrl}
+                              width={22}
+                              height={22}
+                              alt={item.name}
+                              className="rounded-full mr-1 border"
+                            />
+                          )}
+                          <span className="font-semibold">{item.name}</span>
+                          {typeof item.price === 'number' &&
+                            <span className="text-muted-foreground ml-2">${item.price.toFixed(2)}</span>
+                          }
+                        </li>
+                      ))}
+                      {truck.todaysMenuItems.length > 2 && (
+                        <li className="italic text-muted-foreground text-xs">+{truck.todaysMenuItems.length - 2} more…</li>
+                      )}
+                    </ul>
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic">Not published for today</div>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                      truck.currentLocation?.address ||
+                      (truck.lat && truck.lng ? `${truck.lat},${truck.lng}` : '')
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90 font-semibold"
+                  >
+                    Directions
+                  </a>
+                  <a
+                    href={`/trucks/${truck.id}`}
+                    className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 font-semibold"
+                  >
+                    See Menu
+                  </a>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+      <div className="absolute top-2 left-2 z-10 p-2 bg-white/90 rounded-xl shadow-lg flex gap-2 items-center">
+        <Utensils className="text-primary w-5 h-5" />
+        <span className="font-bold text-base">Find Food Trucks Near You</span>
+      </div>
     </div>
   );
 }

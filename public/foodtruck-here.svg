@@ -1,0 +1,10 @@
+<svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="45" cy="45" r="44" fill="#FFED4A" stroke="#333" stroke-width="2"/>
+  <rect x="22" y="48" width="46" height="17" rx="4" fill="#fff" stroke="#64B867" stroke-width="2"/>
+  <rect x="55" y="31" width="13" height="15" rx="2" fill="#228be6" stroke="#228be6" stroke-width="2"/>
+  <rect x="25" y="53" width="12" height="7" rx="2" fill="#fff" />
+  <circle cx="32" cy="68" r="5" fill="#333"/>
+  <circle cx="60" cy="68" r="5" fill="#333"/>
+  <text x="45" y="44" text-anchor="middle" font-size="18" fill="#333" font-family="Arial" font-weight="bold">🍔</text>
+  <text x="45" y="82" text-anchor="middle" font-size="14" fill="#228be6" font-family="Arial" font-weight="bold">I'm Here!</text>
+</svg>

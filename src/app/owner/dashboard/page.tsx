@@ -11,45 +11,54 @@ import { Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import type { UserDocument, FoodTruck } from '@/lib/types';
+import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import type { UserDocument, FoodTruck, MenuItem } from '@/lib/types';
 import { OwnerSidebar } from '@/components/OwnerSidebar';
-import '@/app/globals.css';
+import NextImage from "next/image";
 
-// ---------- HELPER UI -----------
+// Helper: format time as 12-hour (am/pm)
+function formatAMPM(time: string = '') {
+  if (!time.includes(':')) return time;
+  let [hour, min] = time.split(':');
+  let h = parseInt(hour, 10);
+  let ampm = h >= 12 ? 'pm' : 'am';
+  let h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12.toString().padStart(2, '0')}:${min} ${ampm}`;
+}
+
+// Helper: setup progress
+function setupProgress(truck?: Partial<FoodTruck>) {
+  if (!truck) return 0;
+  let n = 0;
+  if (truck.name) n++;
+  if (truck.cuisine) n++;
+  if (truck.currentLocation && truck.currentLocation.address) n++;
+  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
+  if (truck.todaysHours && truck.todaysHours.open && truck.todaysHours.close) n++;
+  return Math.round((n / 5) * 100);
+}
+
+// Helper: status display
 function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
   if (!open) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"><XCircle className="w-4 h-4 mr-1" /> Closed</span>;
   if (!visible) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"><Info className="w-4 h-4 mr-1" /> Hidden</span>;
   return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</span>;
 }
 
-function displayLocation(loc?: FoodTruck['currentLocation']) {
-  if (!loc) return "No location set";
-  if ('address' in loc && loc.address) return loc.address;
-  if ('lat' in loc && 'lng' in loc && typeof loc.lat === 'number' && typeof loc.lng === 'number')
-    return `(${loc.lat}, ${loc.lng})`;
-  return "No location set";
-}
-function displayTodaysHours(hours: any) {
-  if (!hours) return "Not set";
-  if (typeof hours === 'string') return hours;
-  if (typeof hours === 'object' && ('open' in hours || 'close' in hours))
-    return (hours.open && hours.close) ? `${hours.open}–${hours.close}` : "Not set";
-  return "Not set";
-}
-function setupProgress(truck?: Partial<FoodTruck>) {
-  if (!truck) return 0;
-  let n = 0;
-  if (truck.name) n++;
-  if (truck.cuisine) n++;
-  if (truck.currentLocation && (truck.currentLocation.address || (truck.currentLocation.lat && truck.currentLocation.lng))) n++;
-  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
-  if (truck.todaysHours && ((truck.todaysHours as any).open && (truck.todaysHours as any).close)) n++;
-  return Math.round((n / 5) * 100);
-}
+// ------------- UPGRADED CUSTOMER CARD --------------
+function CustomerTruckCard({
+  truck,
+  menuItems
+}: {
+  truck: Partial<FoodTruck>,
+  menuItems: MenuItem[]
+}) {
+  const menuList = (Array.isArray(truck.todaysMenu) && menuItems.length)
+    ? truck.todaysMenu
+        .map((id: string) => menuItems.find(m => m.id === id))
+        .filter(Boolean)
+    : [];
 
-// ---------- CUSTOMER PREVIEW CARD -----------
-function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
   return (
     <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
       <CardHeader>
@@ -70,19 +79,43 @@ function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
         </div>
         <div className="flex gap-4 items-center">
           <Label>Location:</Label>
-          <span>{displayLocation(truck.currentLocation)}</span>
+          <span>
+            {truck.currentLocation?.address
+              ? truck.currentLocation.address
+              : <span className="italic text-muted-foreground">No address set</span>
+            }
+            {!truck.currentLocation?.address && truck.currentLocation?.lat && truck.currentLocation?.lng &&
+              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
+            }
+          </span>
         </div>
         <div className="flex gap-4 items-center">
           <Label>Today's Hours:</Label>
-          <span>{displayTodaysHours(truck.todaysHours)}</span>
+          <span>
+            {(truck.todaysHours?.open && truck.todaysHours?.close)
+              ? `${formatAMPM(truck.todaysHours.open)} – ${formatAMPM(truck.todaysHours.close)}`
+              : <span className="italic text-muted-foreground">Not set</span>
+            }
+          </span>
         </div>
         <div>
           <Label>Today's Menu:</Label>
           <div className="flex flex-wrap gap-2 mt-1">
-            {Array.isArray(truck.todaysMenu) && truck.todaysMenu.length
-              ? truck.todaysMenu.map((item: string, i: number) => (
-                <span key={i} className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{item}</span>
-              ))
+            {menuList.length
+              ? menuList.map((item, i) => (
+                  <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                    {item.imageUrl &&
+                      <NextImage
+                        src={item.imageUrl}
+                        alt={item.name}
+                        width={20}
+                        height={20}
+                        className="rounded-full mr-1"
+                      />
+                    }
+                    {item.name}
+                  </span>
+                ))
               : <span className="italic text-muted-foreground">No menu set for today</span>
             }
           </div>
@@ -92,16 +125,18 @@ function CustomerTruckCard({ truck }: { truck: Partial<FoodTruck> }) {
   );
 }
 
-// ---------- MAIN DASHBOARD ----------
+// --------------- MAIN DASHBOARD -------------------
 export default function OwnerDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
   const [truckId, setTruckId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const { toast } = useToast();
   const router = useRouter();
 
+  // ----- Fetch Auth + Truck Data -----
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoading(true); setTruckData(null); setError(null);
@@ -130,6 +165,16 @@ export default function OwnerDashboardPage() {
     });
     return () => unsubscribe();
   }, [router, toast]);
+
+  // Fetch menu items for today's menu preview
+  useEffect(() => {
+    if (!truckId || !truckData?.todaysMenu?.length) { setMenuItems([]); return; }
+    (async () => {
+      const itemsCol = collection(db, "trucks", truckId, "menuItems");
+      const itemsSnap = await getDocs(itemsCol);
+      setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
+    })();
+  }, [truckId, truckData?.todaysMenu]);
 
   const updateTruck = async (updates: Partial<FoodTruck>) => {
     if (!truckId) return;
@@ -276,7 +321,14 @@ export default function OwnerDashboardPage() {
               </Button>
               {truckData?.currentLocation && (
                 <span className="ml-4 text-sm font-medium">
-                  Current: <span className="text-muted-foreground">{displayLocation(truckData.currentLocation)}</span>
+                  Current: <span className="text-muted-foreground">
+                  {truckData.currentLocation.address
+                    ? truckData.currentLocation.address
+                    : <span className="italic text-muted-foreground">No address set</span>}
+                  {!truckData.currentLocation.address && truckData.currentLocation.lat && truckData.currentLocation.lng &&
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
+                  }
+                  </span>
                 </span>
               )}
             </div>
@@ -313,13 +365,27 @@ export default function OwnerDashboardPage() {
               <Button asChild variant="link" className="p-0 h-auto ml-1">
                 <Link href="/owner/menu">Edit Today's Menu</Link>
               </Button>
-              {truckData?.todaysMenu && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {truckData.todaysMenu.map((item: string, i: number) => (
-                    <span key={i} className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{item}</span>
-                  ))}
-                </div>
-              )}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(Array.isArray(truckData?.todaysMenu) && menuItems.length)
+                  ? truckData.todaysMenu.map((id: string, i: number) => {
+                      const item = menuItems.find(m => m.id === id);
+                      return item ? (
+                        <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                          {item.imageUrl &&
+                            <NextImage
+                              src={item.imageUrl}
+                              alt={item.name}
+                              width={20}
+                              height={20}
+                              className="rounded-full mr-1"
+                            />}
+                          {item.name}
+                        </span>
+                      ) : null;
+                    })
+                  : <span className="italic text-muted-foreground">No menu set for today</span>
+                }
+              </div>
             </div>
             {/* VISIBILITY */}
             <div className="flex items-center gap-2">
@@ -347,7 +413,7 @@ export default function OwnerDashboardPage() {
             <CardDescription>This is your live customer card.</CardDescription>
           </CardHeader>
           <CardContent>
-            <CustomerTruckCard truck={truckData} />
+            <CustomerTruckCard truck={truckData} menuItems={menuItems} />
           </CardContent>
         </Card>
 
