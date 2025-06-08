@@ -15,7 +15,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import Image from 'next/image';
 
 // --- Dynamic Google Maps import (no SSR)
-const FoodTruckMap = dynamic(() => import('@/components/FoodTruckMapGoogle'), {
+const FoodTruckMap = dynamic(() => import('@/components/FoodTruckMap'), {
   ssr: false,
   loading: () => <div style={{ height: 480, textAlign: 'center', padding: 24 }}>Loading map…</div>,
 });
