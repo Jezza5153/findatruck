@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import dynamic from 'next/dynamic'; // 👈 Dynamic import for the map
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import MapStatsHeader from '@/components/MapStatsHeader';
 import AnimatedLoader from '@/components/AnimatedLoader';
 import { FilterControls } from '@/components/FilterControls';
@@ -14,8 +14,8 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import Image from 'next/image';
 
-// Dynamically import the map so SSR is disabled!
-const FoodTruckMap = dynamic(() => import('@/components/FoodTruckMap'), {
+// --- Dynamic Google Maps import (no SSR)
+const FoodTruckMap = dynamic(() => import('@/components/FoodTruckMapGoogle'), {
   ssr: false,
   loading: () => <div style={{ height: 480, textAlign: 'center', padding: 24 }}>Loading map…</div>,
 });
