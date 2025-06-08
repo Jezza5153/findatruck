@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import MapStatsHeader from '@/components/MapStatsHeader';
 import AnimatedLoader from '@/components/AnimatedLoader';
 import { FilterControls } from '@/components/FilterControls';
-import type { FoodTruck, MenuItem } from '@/lib/types';
+import type { FoodTruck, MenuItem, TodaysHours } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { List, Map as MapIcon, Utensils, AlertTriangle, CircleCheck, Clock, MapPin, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +32,22 @@ type TruckWithMenu = FoodTruck & {
   isHere: boolean;
 };
 
+// Helper to coerce Firestore value to correct TodaysHours type
+function normalizeTodaysHours(val: unknown): TodaysHours {
+  if (!val) return undefined;
+  if (typeof val === 'object' && val !== null && 'open' in val && 'close' in val) {
+    return {
+      open: (val as any).open || '',
+      close: (val as any).close || ''
+    };
+  }
+  if (typeof val === 'string') {
+    // String fallback—put in open, leave close blank
+    return { open: val, close: '' };
+  }
+  return undefined;
+}
+
 function getLatLng(truck: FoodTruck): { lat?: number; lng?: number } {
   if (typeof truck.lat === 'number' && typeof truck.lng === 'number') {
     return { lat: truck.lat, lng: truck.lng };
@@ -47,10 +63,10 @@ function getLatLng(truck: FoodTruck): { lat?: number; lng?: number } {
 }
 
 function getTodaysHours(truck: FoodTruck): string {
-  if (typeof truck.todaysHours === 'string') return truck.todaysHours;
-  if (typeof truck.todaysHours === 'object' && truck.todaysHours) {
+  if (truck.todaysHours && typeof truck.todaysHours === 'object') {
     if (truck.todaysHours.open && truck.todaysHours.close)
       return `${truck.todaysHours.open}–${truck.todaysHours.close}`;
+    if (truck.todaysHours.open) return truck.todaysHours.open;
   }
   return '';
 }
@@ -153,6 +169,7 @@ function TruckListCard({ truck }: { truck: TruckWithMenu }) {
   );
 }
 
+// Main page component
 export default function MapPage() {
   const [trucks, setTrucks] = useState<TruckWithMenu[]>([]);
   const [filters, setFilters] = useState<FiltersState>({});
@@ -171,35 +188,36 @@ export default function MapPage() {
         const trucksSnap = await getDocs(trucksCollectionRef);
 
         const baseTrucks: FoodTruck[] = trucksSnap.docs.map((doc) => {
-          const data = doc.data();
+          const raw = doc.data();
+          // NEVER spread possible id, always use doc.id only
+          if (!raw.ownerUid) {
+            console.warn(`Truck ${doc.id} is missing ownerUid!`, raw);
+          }
+          const normalizedTodaysHours = normalizeTodaysHours(raw.todaysHours);
+
           return {
             id: doc.id,
-            name: data.name || 'Unnamed Truck',
-            cuisine: data.cuisine || 'Unknown Cuisine',
-            description: data.description || '',
-            imageUrl: data.imageUrl,
-            address: data.address,
-            lat: typeof data.lat === 'number' ? data.lat : undefined,
-            lng: typeof data.lng === 'number' ? data.lng : undefined,
-            operatingHoursSummary: data.operatingHoursSummary || '',
-            isOpen: typeof data.isOpen === 'boolean' ? data.isOpen : undefined,
-            isVisible: typeof data.isVisible === 'boolean' ? data.isVisible : true,
-            rating: typeof data.rating === 'number' ? data.rating : undefined,
-            numberOfRatings: typeof data.numberOfRatings === 'number' ? data.numberOfRatings : undefined,
-            features: Array.isArray(data.features) ? data.features : [],
-            currentLocation: data.currentLocation,
-            todaysMenu: Array.isArray(data.todaysMenu) ? data.todaysMenu : [],
-            todaysHours:
-              typeof data.todaysHours === 'string'
-                ? data.todaysHours
-                : typeof data.todaysHours === 'object' && data.todaysHours
-                ? { open: data.todaysHours.open, close: data.todaysHours.close }
-                : undefined,
-            testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+            ownerUid: raw.ownerUid || '',
+            name: raw.name || 'Unnamed Truck',
+            cuisine: raw.cuisine || 'Unknown Cuisine',
+            description: raw.description || '',
+            imageUrl: raw.imageUrl,
+            address: raw.address,
+            lat: typeof raw.lat === 'number' ? raw.lat : undefined,
+            lng: typeof raw.lng === 'number' ? raw.lng : undefined,
+            operatingHoursSummary: raw.operatingHoursSummary || '',
+            isOpen: typeof raw.isOpen === 'boolean' ? raw.isOpen : undefined,
+            isVisible: typeof raw.isVisible === 'boolean' ? raw.isVisible : true,
+            rating: typeof raw.rating === 'number' ? raw.rating : undefined,
+            numberOfRatings: typeof raw.numberOfRatings === 'number' ? raw.numberOfRatings : undefined,
+            features: Array.isArray(raw.features) ? raw.features : [],
+            currentLocation: raw.currentLocation,
+            todaysMenu: Array.isArray(raw.todaysMenu) ? raw.todaysMenu : [],
+            todaysHours: normalizedTodaysHours,
+            testimonials: Array.isArray(raw.testimonials) ? raw.testimonials : [],
           };
         });
 
-        // Fetch today's menu items for each truck
         const fullTrucks: TruckWithMenu[] = await Promise.all(
           baseTrucks.map(async (truck) => {
             let todaysMenuItems: MenuItem[] = [];

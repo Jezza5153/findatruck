@@ -1,9 +1,9 @@
 import type { Timestamp, FieldValue } from 'firebase/firestore';
+import type React from 'react';
 
 // =======================
-// UTILITY TYPES
+// LOCATION
 // =======================
-
 export type TruckLocation = {
   lat?: number;
   lng?: number;
@@ -12,22 +12,24 @@ export type TruckLocation = {
   note?: string;
 };
 
+// =======================
+// HOURS
+// =======================
 export type TodaysHours = {
-  open?: string;      // "09:00"
-  close?: string;     // "17:00"
-  note?: string;
+  open?: string;    // "09:00" (or empty string for fallback)
+  close?: string;   // "17:00" (or empty string for fallback)
+  note?: string;    // Special message for the day (e.g., "Closed for event")
 };
 
 export type RegularHoursEntry = {
-  openTime: string;   // "09:00"
-  closeTime: string;  // "17:00"
+  openTime: string;     // "09:00"
+  closeTime: string;    // "17:00"
   isClosed: boolean;
 };
 
 // =======================
 // FOOD TRUCK BASE TYPE
 // =======================
-
 export type FoodTruck = {
   id: string;
   name: string;
@@ -40,7 +42,7 @@ export type FoodTruck = {
   address?: string;
   lat?: number;
   lng?: number;
-  operatingHoursSummary?: string;
+  operatingHoursSummary?: string;   // e.g. "Mon-Fri 9-5"
   isOpen?: boolean;
   isVisible?: boolean;
 
@@ -50,7 +52,7 @@ export type FoodTruck = {
 
   regularHours?: Record<string, RegularHoursEntry>; // "monday": {...}
   specialHours?: Array<{
-    date: string;     // "YYYY-MM-DD"
+    date: string;      // "YYYY-MM-DD"
     status: 'open-custom' | 'closed';
     openTime?: string;
     closeTime?: string;
@@ -58,8 +60,8 @@ export type FoodTruck = {
   }>;
   isTruckOpenOverride?: boolean | null;
 
-  rating?: number;
-  numberOfRatings?: number;
+  rating?: number;              // 1.0 - 5.0 (average)
+  numberOfRatings?: number;     // # of ratings ("reviews" count)
   features?: string[];
   socialMediaLinks?: Record<string, string>;
   contactEmail?: string;
@@ -75,7 +77,6 @@ export type FoodTruck = {
 // =======================
 // MENU & CATEGORY TYPES
 // =======================
-
 export type MenuItem = {
   id: string;
   name: string;
@@ -110,7 +111,6 @@ export type CustomizationOption = {
 // =======================
 // TESTIMONIALS
 // =======================
-
 export type Testimonial = {
   id: string;
   truckId: string;
@@ -126,7 +126,6 @@ export type Testimonial = {
 // =======================
 // USER TYPES
 // =======================
-
 export type UserRole = 'customer' | 'owner';
 
 export type NotificationPreferences = {
@@ -165,7 +164,6 @@ export type UserProfile = {
 // =======================
 // FILTERS & CUISINES
 // =======================
-
 export type FilterOptions = {
   cuisine?: string[];
   distance?: number;
@@ -177,13 +175,12 @@ export type FilterOptions = {
 export type Cuisine = {
   id: string;
   name: string;
-  icon?: React.ElementType<any>; // Upgraded for strict typing with React 18+
+  icon?: React.ElementType<any>;
 };
 
 // =======================
 // ORDER TYPES
 // =======================
-
 export interface OrderItemDetail {
   itemId: string;
   name: string;
@@ -208,7 +205,6 @@ export interface Order {
 // =======================
 // TRUCK WITH MENU (for Map)
 // =======================
-
 export type TruckWithMenu = FoodTruck & {
   todaysMenuItems: MenuItem[];
   isHere: boolean;

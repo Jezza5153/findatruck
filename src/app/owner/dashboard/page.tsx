@@ -1,13 +1,15 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info } from 'lucide-react';
+import {
+  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
@@ -15,6 +17,47 @@ import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore'
 import type { UserDocument, FoodTruck, MenuItem } from '@/lib/types';
 import { OwnerSidebar } from '@/components/OwnerSidebar';
 import NextImage from "next/image";
+import { motion } from 'framer-motion';
+import { useHotkeys } from 'react-hotkeys-hook';
+import axios from 'axios';
+
+// ---- Dark Mode Toggle ----
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const theme = localStorage.theme;
+    if (
+      window.matchMedia('(prefers-color-scheme: dark)').matches ||
+      theme === 'dark'
+    ) {
+      document.documentElement.classList.add('dark');
+      setDark(true);
+    }
+  }, []);
+  function toggle() {
+    setDark(d => {
+      if (!d) {
+        document.documentElement.classList.add('dark');
+        localStorage.theme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.theme = 'light';
+      }
+      return !d;
+    });
+  }
+  return (
+    <motion.button
+      aria-label="Toggle dark mode"
+      className="rounded-full border p-2 shadow hover:scale-110 transition bg-white dark:bg-gray-900"
+      onClick={toggle}
+      initial={{ scale: 0.8 }}
+      animate={{ scale: 1 }}
+    >
+      {dark ? <Sun className="text-yellow-400 w-5 h-5" /> : <Moon className="text-gray-700 w-5 h-5" />}
+    </motion.button>
+  );
+}
 
 // Helper: format time as 12-hour (am/pm)
 function formatAMPM(time: string = '') {
@@ -38,11 +81,128 @@ function setupProgress(truck?: Partial<FoodTruck>) {
   return Math.round((n / 5) * 100);
 }
 
-// Helper: status display
+// Helper: status display (now animated)
 function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
-  if (!open) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"><XCircle className="w-4 h-4 mr-1" /> Closed</span>;
-  if (!visible) return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"><Info className="w-4 h-4 mr-1" /> Hidden</span>;
-  return <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</span>;
+  if (!open) return (
+    <motion.span
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"
+    ><XCircle className="w-4 h-4 mr-1" /> Closed</motion.span>
+  );
+  if (!visible) return (
+    <motion.span
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"
+    ><Info className="w-4 h-4 mr-1" /> Hidden</motion.span>
+  );
+  return (
+    <motion.span
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"
+    ><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</motion.span>
+  );
+}
+
+// ---- Weather Widget ----
+function WeatherWidget({ lat, lng }: { lat?: number | null; lng?: number | null }) {
+  const [forecast, setForecast] = useState<any>(null);
+  useEffect(() => {
+    if (typeof lat !== "number" || typeof lng !== "number") return;
+    (async () => {
+      try {
+        const res = await axios.get(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=precipitation_probability,temperature_2m&forecast_days=1`
+        );
+        setForecast(res.data);
+      } catch {}
+    })();
+  }, [lat, lng]);
+  if (!forecast) return null;
+  const rainChance = forecast?.hourly?.precipitation_probability?.[0] || 0;
+  return (
+    <div className="flex items-center gap-2 p-2 bg-blue-50 rounded mt-2">
+      <span>Weather: {rainChance > 30 ? "Rainy ☔️" : "Clear ☀️"}</span>
+      <span>Temp: {forecast?.hourly?.temperature_2m?.[0]}°C</span>
+    </div>
+  );
+}
+
+// ---- Customer Feedback Widget ----
+function CustomerFeedback({ truckId }: { truckId?: string | null }) {
+  const [feedback, setFeedback] = useState<any[]>([]);
+  useEffect(() => {
+    if (!truckId) return;
+    getDocs(collection(db, "trucks", truckId, "reviews")).then(snap => {
+      setFeedback(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).slice(0, 3));
+    });
+  }, [truckId]);
+  if (!feedback.length) return null;
+  return (
+    <div className="mb-4">
+      <h3 className="font-semibold mb-2 text-lg">Latest Customer Reviews</h3>
+      <div className="space-y-2">
+        {feedback.map(f => (
+          <div key={f.id} className="p-3 bg-card border rounded shadow flex items-center">
+            <Star className="text-yellow-400 w-4 h-4 mr-2" />
+            <div className="flex-1">
+              <div className="font-medium">{f.author || "Anonymous"}</div>
+              <div className="text-sm text-muted-foreground">{f.text}</div>
+            </div>
+            <span className="text-xs text-muted-foreground">{f.createdAt?.toDate?.().toLocaleDateString() ?? ""}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- Analytics Mini-Widgets ----
+function AnalyticsWidgets({ truckId }: { truckId?: string | null }) {
+  const [orders, setOrders] = useState(0);
+  const [sales, setSales] = useState(0);
+  const [topItem, setTopItem] = useState("");
+  useEffect(() => {
+    if (!truckId) return;
+    getDocs(collection(db, "trucks", truckId, "orders")).then(snap => {
+      setOrders(snap.size);
+      let sum = 0, items: Record<string, number> = {};
+      snap.docs.forEach(doc => {
+        const o = doc.data();
+        sum += o.total || 0;
+        (o.items || []).forEach((item: any) => { items[item.name] = (items[item.name] || 0) + 1; });
+      });
+      setSales(sum);
+      setTopItem(Object.keys(items).sort((a, b) => items[b] - items[a])[0] || "");
+    });
+  }, [truckId]);
+  return (
+    <div className="flex gap-4 mb-4">
+      <div className="p-3 bg-green-50 rounded font-bold">Orders: {orders}</div>
+      <div className="p-3 bg-yellow-50 rounded font-bold">Sales: ${sales.toFixed(2)}</div>
+      {topItem && <div className="p-3 bg-blue-50 rounded font-bold">Top Item: {topItem}</div>}
+    </div>
+  );
+}
+
+// ---- Real-Time Alerts ----
+function RealTimeAlert({ alerts }: { alerts: any[] }) {
+  if (!alerts?.length) return null;
+  return (
+    <div className="mb-4">
+      {alerts.map(a => (
+        <Alert key={a.id} variant={a.type}>
+          <AlertTitle>{a.title}</AlertTitle>
+          <AlertDescription>{a.message}</AlertDescription>
+        </Alert>
+      ))}
+    </div>
+  );
 }
 
 // ------------- UPGRADED CUSTOMER CARD --------------
@@ -56,72 +216,77 @@ function CustomerTruckCard({
   const menuList = (Array.isArray(truck.todaysMenu) && menuItems.length)
     ? truck.todaysMenu
         .map((id: string) => menuItems.find(m => m.id === id))
-        .filter(Boolean)
+        .filter((m): m is MenuItem => !!m) // type guard, fixes "possibly undefined"
     : [];
-
   return (
-    <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex gap-2 items-center">
-          <MapPin className="text-primary w-5 h-5" />
-          <span>{truck.name || "Your Truck Name"}</span>
-          <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-        </CardTitle>
-        <CardDescription>
-          <span className="block">{truck.cuisine || "Cuisine Type"}</span>
-          <span className="block">{truck.description || "About your truck..."}</span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        <div className="flex gap-4 items-center">
-          <Label>Status:</Label>
-          <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-        </div>
-        <div className="flex gap-4 items-center">
-          <Label>Location:</Label>
-          <span>
-            {truck.currentLocation?.address
-              ? truck.currentLocation.address
-              : <span className="italic text-muted-foreground">No address set</span>
-            }
-            {!truck.currentLocation?.address && truck.currentLocation?.lat && truck.currentLocation?.lng &&
-              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
-            }
-          </span>
-        </div>
-        <div className="flex gap-4 items-center">
-          <Label>Today's Hours:</Label>
-          <span>
-            {(truck.todaysHours?.open && truck.todaysHours?.close)
-              ? `${formatAMPM(truck.todaysHours.open)} – ${formatAMPM(truck.todaysHours.close)}`
-              : <span className="italic text-muted-foreground">Not set</span>
-            }
-          </span>
-        </div>
-        <div>
-          <Label>Today's Menu:</Label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {menuList.length
-              ? menuList.map((item, i) => (
-                  <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                    {item.imageUrl &&
-                      <NextImage
-                        src={item.imageUrl}
-                        alt={item.name}
-                        width={20}
-                        height={20}
-                        className="rounded-full mr-1"
-                      />
-                    }
-                    {item.name}
-                  </span>
-                ))
-              : <span className="italic text-muted-foreground">No menu set for today</span>
-            }
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="w-full"
+    >
+      <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex gap-2 items-center">
+            <MapPin className="text-primary w-5 h-5" />
+            <span>{truck.name || "Your Truck Name"}</span>
+            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
+          </CardTitle>
+          <CardDescription>
+            <span className="block">{truck.cuisine || "Cuisine Type"}</span>
+            <span className="block">{truck.description || "About your truck..."}</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex gap-4 items-center">
+            <Label>Status:</Label>
+            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex gap-4 items-center">
+            <Label>Location:</Label>
+            <span>
+              {truck.currentLocation?.address
+                ? truck.currentLocation.address
+                : <span className="italic text-muted-foreground">No address set</span>
+              }
+              {!truck.currentLocation?.address && truck.currentLocation?.lat && truck.currentLocation?.lng &&
+                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
+              }
+            </span>
+          </div>
+          <div className="flex gap-4 items-center">
+            <Label>Today's Hours:</Label>
+            <span>
+              {(truck.todaysHours?.open && truck.todaysHours?.close)
+                ? `${formatAMPM(truck.todaysHours.open)} – ${formatAMPM(truck.todaysHours.close)}`
+                : <span className="italic text-muted-foreground">Not set</span>
+              }
+            </span>
+          </div>
+          <div>
+            <Label>Today's Menu:</Label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {menuList.length
+                ? menuList.map((item, i) => (
+                    <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                      {item.imageUrl &&
+                        <NextImage
+                          src={item.imageUrl}
+                          alt={item.name}
+                          width={20}
+                          height={20}
+                          className="rounded-full mr-1"
+                        />
+                      }
+                      {item.name}
+                    </span>
+                  ))
+                : <span className="italic text-muted-foreground">No menu set for today</span>
+              }
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -133,8 +298,15 @@ export default function OwnerDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const { toast } = useToast();
   const router = useRouter();
+
+  // Hotkeys (n: new menu, o: open/close, s: schedule, l: leaderboard)
+  useHotkeys('n', () => router.push('/owner/menu'), [router]);
+  useHotkeys('o', () => updateTruck && truckData && updateTruck({ isOpen: !truckData.isOpen }), [truckData]);
+  useHotkeys('s', () => router.push('/owner/schedule'), [router]);
+  useHotkeys('l', () => router.push('/owner/leaderboard'), [router]);
 
   // ----- Fetch Auth + Truck Data -----
   useEffect(() => {
@@ -176,11 +348,15 @@ export default function OwnerDashboardPage() {
     })();
   }, [truckId, truckData?.todaysMenu]);
 
-  const updateTruck = async (updates: Partial<FoodTruck>) => {
+  const updateTruck = useCallback(async (updates: Partial<FoodTruck>) => {
     if (!truckId) return;
-    await updateDoc(doc(db, "trucks", truckId), updates);
-    setTruckData(prev => ({ ...prev, ...updates }));
-  };
+    // Remove nulls for lat/lng if type doesn't allow
+    const sanitizedUpdates: Partial<FoodTruck> = { ...updates };
+    if ('lat' in sanitizedUpdates && sanitizedUpdates.lat === null) delete sanitizedUpdates.lat;
+    if ('lng' in sanitizedUpdates && sanitizedUpdates.lng === null) delete sanitizedUpdates.lng;
+    await updateDoc(doc(db, "trucks", truckId), sanitizedUpdates);
+    setTruckData(prev => ({ ...prev, ...sanitizedUpdates }));
+  }, [truckId]);
 
   const dashboardDisabled = !truckData?.name;
 
@@ -230,10 +406,44 @@ export default function OwnerDashboardPage() {
   // --------- UI START ----------
   const progress = setupProgress(truckData);
 
+  // ---- Social Share Handler ----
+  const handleShare = () => {
+    const url = `${window.location.origin}/trucks/${truckId}`;
+    const text = encodeURIComponent(`Find us today at: ${truckData.currentLocation?.address || "see our map"}! 🍔🚚 ${url}`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+  };
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <OwnerSidebar />
-      <main className="flex-1 px-4 py-8 md:px-8">
+      <main className="flex-1 px-4 py-8 md:px-8 relative">
+
+        {/* Dark Mode Toggle */}
+        <div className="absolute top-4 right-4 z-40">
+          <ThemeToggle />
+        </div>
+
+        {/* Quick-Action Speedbar */}
+        <motion.div
+          className="fixed top-0 left-0 w-full flex justify-center z-30 bg-card/90 py-2 shadow gap-4"
+          initial={{ y: -40 }}
+          animate={{ y: 0 }}
+        >
+          <Button onClick={() => router.push('/owner/menu')} size="sm">+ New Menu</Button>
+          <Button onClick={() => updateTruck({ isOpen: !truckData.isOpen })} size="sm">
+            {truckData.isOpen ? "Close Truck" : "Open Truck"}
+          </Button>
+          <Button onClick={() => router.push('/owner/orders')} size="sm">Orders</Button>
+          <Button onClick={() => router.push('/owner/schedule')} size="sm">Edit Hours</Button>
+          <Button onClick={() => router.push('/owner/leaderboard')} size="sm">Leaderboard</Button>
+        </motion.div>
+
+        {/* Real-Time Alerts */}
+        <RealTimeAlert alerts={alerts} />
+
+        {/* Analytics Mini-Widgets */}
+        <AnalyticsWidgets truckId={truckId} />
+
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-3">
           <div>
@@ -292,8 +502,8 @@ export default function OwnerDashboardPage() {
                     const { latitude, longitude } = pos.coords;
                     await updateTruck({
                       currentLocation: { lat: latitude, lng: longitude },
-                      lat: latitude,     // ROOT LEVEL (for map)
-                      lng: longitude,    // ROOT LEVEL (for map)
+                      lat: latitude,
+                      lng: longitude,
                       locationSetAt: new Date(),
                     });
                     toast({ title: "Location Updated", description: "Customers will see your live GPS location now." });
@@ -309,9 +519,8 @@ export default function OwnerDashboardPage() {
                   if (addr) {
                     await updateTruck({
                       currentLocation: { address: addr },
-                      address: addr,    // ROOT LEVEL
-                      lat: null,        // ROOT LEVEL - clear
-                      lng: null,        // ROOT LEVEL - clear
+                      address: addr,
+                      // lat/lng not set to null (omit)
                       locationSetAt: new Date(),
                     });
                     toast({ title: "Location Updated", description: "Customers will see your entered address now." });
@@ -369,7 +578,8 @@ export default function OwnerDashboardPage() {
                 {(Array.isArray(truckData?.todaysMenu) && menuItems.length)
                   ? truckData.todaysMenu.map((id: string, i: number) => {
                       const item = menuItems.find(m => m.id === id);
-                      return item ? (
+                      if (!item) return null;
+                      return (
                         <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
                           {item.imageUrl &&
                             <NextImage
@@ -381,7 +591,7 @@ export default function OwnerDashboardPage() {
                             />}
                           {item.name}
                         </span>
-                      ) : null;
+                      );
                     })
                   : <span className="italic text-muted-foreground">No menu set for today</span>
                 }
@@ -400,8 +610,17 @@ export default function OwnerDashboardPage() {
                 Show Me to Customers <span className="text-xs text-muted-foreground">(Live on Map)</span>
               </Label>
             </div>
+            {/* Weather Widget */}
+            <WeatherWidget lat={truckData.lat} lng={truckData.lng} />
+            {/* One-Click Social Share */}
+            <div className="mt-4">
+              <Button variant="outline" onClick={handleShare}>Share Today’s Location (X/Twitter)</Button>
+            </div>
           </CardContent>
         </Card>
+
+        {/* CUSTOMER FEEDBACK */}
+        <CustomerFeedback truckId={truckId} />
 
         {/* CUSTOMER PREVIEW */}
         <Card className="mb-10 border-dashed border-blue-300/80 bg-blue-50/60 shadow-none">
@@ -481,6 +700,14 @@ export default function OwnerDashboardPage() {
             icon={<CreditCard className="text-primary" />}
             buttonText="Manage Billing"
             disabled={dashboardDisabled}
+          />
+          <DashboardCard
+            title="Top Trucks Leaderboard"
+            description="See who's trending near you."
+            link="/owner/leaderboard"
+            icon={<Trophy className="text-yellow-400" />}
+            buttonText="View Leaderboard"
+            disabled={false}
           />
         </div>
       </main>
