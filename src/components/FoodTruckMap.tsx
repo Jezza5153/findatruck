@@ -1,19 +1,18 @@
 'use client';
 
-import { useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 import Image from 'next/image';
 import { Star, MapPin, CircleCheck, Clock, Utensils } from 'lucide-react';
 import type { TruckWithMenu, MenuItem } from '@/lib/types';
 
 // ---- Config ----
-const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string; // Set in .env.local
+const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string;
 const DEFAULT_CENTER = { lat: -34.9285, lng: 138.6007 }; // Adelaide
 
 const mapContainerStyle = { width: '100%', height: '580px', borderRadius: '1.5rem' } as const;
 
 function getMarkerIcon(isOpen: boolean) {
-  // You can swap this SVG out for your branding!
   return {
     url: isOpen
       ? '/foodtruck-here.png'
@@ -53,16 +52,13 @@ function getTodaysHours(truck: TruckWithMenu): string {
 }
 
 export default function FoodTruckMap({ trucks }: { trucks: TruckWithMenu[] }) {
-  // Load Google Maps JS API only on client
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: MAPS_API_KEY,
     libraries: ['places'],
   });
 
-  // InfoWindow logic
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
 
-  // Center on first open/visible truck, else Adelaide
   const mapCenter = useMemo(() => {
     const first = trucks.find(t => t.isHere && getTruckPosition(t));
     return first ? getTruckPosition(first)! : DEFAULT_CENTER;
@@ -91,9 +87,6 @@ export default function FoodTruckMap({ trucks }: { trucks: TruckWithMenu[] }) {
           zoomControl: true,
           clickableIcons: false,
           gestureHandling: 'greedy',
-          styles: [
-            // Soft light Google map style (optional)
-          ],
         }}
       >
         {trucksWithLoc.map(truck => {
@@ -105,7 +98,7 @@ export default function FoodTruckMap({ trucks }: { trucks: TruckWithMenu[] }) {
               icon={getMarkerIcon(!!truck.isOpen)}
               onClick={() => handleMarkerClick(truck.id)}
               zIndex={truck.isOpen ? 999 : 1}
-              animation={window?.google?.maps?.Animation?.DROP}
+              // animation={window?.google?.maps?.Animation?.DROP} // Optional: enable for animation, may need type cast
             >
               {activeMarker === truck.id && (
                 <InfoWindow
