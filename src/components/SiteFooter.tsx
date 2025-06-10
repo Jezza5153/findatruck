@@ -22,19 +22,19 @@ export function SiteFooter() {
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">For Customers</h6>
               <ul className="space-y-2">
-                <li><Link href="/map" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><MapPin className="w-4 h-4 mr-1.5"/>Find Trucks</Link></li>
-                <li><Link href="/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><User className="w-4 h-4 mr-1.5"/>Customer Signup</Link></li>
-                <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><User className="w-4 h-4 mr-1.5"/>Login</Link></li>
-                <li><Link href="/featured" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><Star className="w-4 h-4 mr-1.5"/>Featured Trucks</Link></li>
+                <li><Link href="/map" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><MapPin className="w-4 h-4 mr-1.5 inline-block"/>Find Trucks</span></Link></li>
+                <li><Link href="/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><User className="w-4 h-4 mr-1.5 inline-block"/>Customer Signup</span></Link></li>
+                <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><User className="w-4 h-4 mr-1.5 inline-block"/>Login</span></Link></li>
+                <li><Link href="/featured" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><Star className="w-4 h-4 mr-1.5 inline-block"/>Featured Trucks</span></Link></li>
               </ul>
             </div>
 
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">For Owners</h6>
               <ul className="space-y-2">
-                <li><Link href="/owner/portal" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><ChefHat className="w-4 h-4 mr-1.5"/>Owner Portal</Link></li>
-                <li><Link href="/owner/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><ChefHat className="w-4 h-4 mr-1.5"/>Register Truck</Link></li>
-                <li><Link href="/owner/billing" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><CreditCard className="w-4 h-4 mr-1.5"/>Pricing</Link></li>
+                <li><Link href="/owner/portal" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><ChefHat className="w-4 h-4 mr-1.5 inline-block"/>Owner Portal</span></Link></li>
+                <li><Link href="/owner/signup" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><ChefHat className="w-4 h-4 mr-1.5 inline-block"/>Register Truck</span></Link></li>
+                <li><Link href="/owner/billing" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><CreditCard className="w-4 h-4 mr-1.5 inline-block"/>Pricing</span></Link></li>
               </ul>
             </div>
 
@@ -42,17 +42,17 @@ export function SiteFooter() {
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">Resources</h6>
               <ul className="space-y-2">
-                <li><Link href="/help" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><HelpCircle className="w-4 h-4 mr-1.5"/>Help & FAQ</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><Newspaper className="w-4 h-4 mr-1.5"/>Blog (Soon)</Link></li>
-                 <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><Info className="w-4 h-4 mr-1.5"/>About Us (Soon)</Link></li>
+                <li><Link href="/help" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><HelpCircle className="w-4 h-4 mr-1.5 inline-block"/>Help & FAQ</span></Link></li>
+                <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><Newspaper className="w-4 h-4 mr-1.5 inline-block"/>Blog (Soon)</span></Link></li>
+                 <li><Link href="#" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><Info className="w-4 h-4 mr-1.5 inline-block"/>About Us (Soon)</span></Link></li>
               </ul>
             </div>
 
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">Legal</h6>
               <ul className="space-y-2">
-                <li><Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><FileText className="w-4 h-4 mr-1.5"/>Terms of Service</Link></li>
-                <li><Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><ShieldCheck className="w-4 h-4 mr-1.5"/>Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><FileText className="w-4 h-4 mr-1.5 inline-block"/>Terms of Service</span></Link></li>
+                <li><Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors flex items-center"><span><ShieldCheck className="w-4 h-4 mr-1.5 inline-block"/>Privacy Policy</span></Link></li>
               </ul>
             </div>
           </div>

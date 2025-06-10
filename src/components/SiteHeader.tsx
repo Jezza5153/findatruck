@@ -13,14 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserDocument } from '@/lib/types';
 import { cn } from '@/lib/utils'; // Import cn
-
-// ---- Import your stats bar here!
 import HeaderStatsBar from '@/components/HeaderStatsBar';
 
 export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserDocument['role'] | null>(null);
-  const [userName, setUserName] = useState<string | null>(null); // For display
+  const [userName, setUserName] = useState<string | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { toast } = useToast();
@@ -92,7 +90,7 @@ export function SiteHeader() {
   const handleLinkClick = () => setIsSheetOpen(false);
 
   const renderNavLinks = (isMobile = false) => {
-    const mobileBaseClass = "justify-start text-base py-3 w-full"; // Adjusted py for consistency
+    const mobileBaseClass = "justify-start text-base py-3 w-full";
     const desktopBaseClass = "text-sm";
     const iconClass = isMobile ? "mr-3 h-5 w-5" : "mr-2 h-4 w-4";
 
@@ -108,7 +106,10 @@ export function SiteHeader() {
             )}
             onClick={handleLinkClick}
           >
-            <span><Home className={iconClass} />Home</span>
+            <span className="flex items-center">
+              {React.isValidElement(<Home />) && React.cloneElement(<Home />, { className: iconClass })}
+              Home
+            </span>
           </Link>
         )}
         {commonNavLinks.map(link => (
@@ -123,8 +124,8 @@ export function SiteHeader() {
             aria-current={pathname === link.href ? "page" : undefined}
             onClick={handleLinkClick}
           >
-            <span>
-              {React.cloneElement(link.icon, { className: iconClass })}
+            <span className="flex items-center">
+              {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
               {link.label}
             </span>
           </Link>
@@ -143,8 +144,8 @@ export function SiteHeader() {
                 aria-current={pathname === link.href ? "page" : undefined}
                 onClick={handleLinkClick}
               >
-                <span>
-                  {React.cloneElement(link.icon, { className: iconClass })}
+                <span className="flex items-center">
+                  {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
                   {link.label}
                 </span>
               </Link>
@@ -161,20 +162,22 @@ export function SiteHeader() {
                 aria-current={pathname === link.href ? "page" : undefined}
                 onClick={handleLinkClick}
               >
-                <span>
-                  {React.cloneElement(link.icon, { className: iconClass })}
+                <span className="flex items-center">
+                  {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
                   {link.label}
                 </span>
               </Link>
             ))}
             {isMobile && <hr className="my-2 border-border" />}
-            <Button // Logout button is a direct action, not a link
+            <Button
               size={isMobile ? "lg" : "sm"}
               variant={isMobile ? "destructive" : "outline"}
               onClick={handleLogout}
               className={cn(isMobile ? mobileBaseClass : desktopBaseClass)}
             >
-              <LogOut className={iconClass} />Logout
+              <span className="flex items-center">
+                <LogOut className={iconClass} />Logout
+              </span>
             </Button>
           </>
         )}
@@ -189,18 +192,22 @@ export function SiteHeader() {
               )}
               onClick={handleLinkClick}
             >
-              <span><LogInIcon className={iconClass} />Login</span>
+              <span className="flex items-center">
+                <LogInIcon className={iconClass} />Login
+              </span>
             </Link>
             <Link
               href="/signup"
               className={cn(
                 buttonVariants({ variant: isMobile ? "default" : "default", size: isMobile ? "lg" : "sm" }),
                 isMobile ? mobileBaseClass : desktopBaseClass,
-                isMobile ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90' // Ensure mobile primary looks distinct
+                isMobile ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'
               )}
               onClick={handleLinkClick}
             >
-              <span><UserCircle className={iconClass} />Customer Sign Up</span>
+              <span className="flex items-center">
+                <UserCircle className={iconClass} />Customer Sign Up
+              </span>
             </Link>
             {isMobile && (
               <Link
@@ -212,7 +219,9 @@ export function SiteHeader() {
                 )}
                 onClick={handleLinkClick}
               >
-                <span><ChefHat className={iconClass} />Owner Sign Up</span>
+                <span className="flex items-center">
+                  <ChefHat className={iconClass} />Owner Sign Up
+                </span>
               </Link>
             )}
           </>
@@ -248,8 +257,11 @@ export function SiteHeader() {
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2" aria-label="Open menu">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle Menu</span>
+                {/* Defensive wrap for Button's children when Button is child of asChild */}
+                <span className="flex items-center justify-center">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle Menu</span>
+                </span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
@@ -261,9 +273,9 @@ export function SiteHeader() {
                 <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
                 <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
               </SheetHeader>
-              <div className="p-4 flex flex-col gap-2"> {/* Reduced gap for tighter mobile menu */}
+              <div className="p-4 flex flex-col gap-2">
                 {user && !isLoadingAuth && (
-                  <div className="flex items-center gap-3 mb-2 border-b pb-3"> {/* Adjusted padding/margin */}
+                  <div className="flex items-center gap-3 mb-2 border-b pb-3">
                     <UserCircle className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
                     <span className="font-semibold text-base truncate max-w-[160px]" title={userName || undefined}>{userName || "User"}</span>
                   </div>
@@ -280,5 +292,3 @@ export function SiteHeader() {
 }
 
 export default SiteHeader;
-
-    
