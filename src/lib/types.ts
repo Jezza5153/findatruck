@@ -1,8 +1,8 @@
-import type { Timestamp, FieldValue } from 'firebase/firestore';
+import type { Timestamp, FieldValue, GeoPoint } from 'firebase/firestore';
 import type React from 'react';
 
 // =======================
-// LOCATION
+// LOCATION TYPES
 // =======================
 export type TruckLocation = {
   lat?: number;
@@ -10,15 +10,16 @@ export type TruckLocation = {
   address?: string;
   updatedAt?: Timestamp | FieldValue;
   note?: string;
+  coordinates?: GeoPoint; // Optional for native Firestore geospatial queries
 };
 
 // =======================
-// HOURS
+// HOURS TYPES
 // =======================
 export type TodaysHours = {
-  open?: string;    // "09:00" (or empty string for fallback)
-  close?: string;   // "17:00" (or empty string for fallback)
-  note?: string;    // Special message for the day (e.g., "Closed for event")
+  open?: string;    // "09:00"
+  close?: string;   // "17:00"
+  note?: string;    // E.g. "Closed for private event"
 };
 
 export type RegularHoursEntry = {
@@ -37,6 +38,7 @@ export type FoodTruck = {
   description?: string;
   imageUrl?: string;
   imagePath?: string;
+  imageGallery?: string[]; // New: support for image gallery
   ownerUid: string;
 
   address?: string;
@@ -47,10 +49,10 @@ export type FoodTruck = {
   isVisible?: boolean;
 
   currentLocation?: TruckLocation;
-  todaysMenu?: string[];      // menuItem IDs
+  todaysMenu?: string[];            // menuItem IDs
   todaysHours?: TodaysHours;
 
-  regularHours?: Record<string, RegularHoursEntry>; // "monday": {...}
+  regularHours?: Record<string, RegularHoursEntry>;
   specialHours?: Array<{
     date: string;      // "YYYY-MM-DD"
     status: 'open-custom' | 'closed';
@@ -60,14 +62,17 @@ export type FoodTruck = {
   }>;
   isTruckOpenOverride?: boolean | null;
 
+  tags?: string[]; // e.g. ["vegan", "pet-friendly"]
   rating?: number;              // 1.0 - 5.0 (average)
-  numberOfRatings?: number;     // # of ratings ("reviews" count)
+  numberOfRatings?: number;     // # of ratings
   features?: string[];
-  socialMediaLinks?: Record<string, string>;
+  socialMediaLinks?: Record<string, string>; // e.g. { instagram: url, facebook: url }
+  websiteUrl?: string; // External website if any
   contactEmail?: string;
   phone?: string;
   isFeatured?: boolean;
-  subscriptionTier?: string;
+  subscriptionTier?: 'free' | 'plus' | 'pro' | 'enterprise' | string;
+  isFavorite?: boolean; // For logged-in user context, computed
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
   distance?: string;   // Calculated on frontend, e.g., "1.2km"
