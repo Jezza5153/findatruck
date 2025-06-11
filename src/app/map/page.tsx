@@ -1,4 +1,3 @@
-// src/app/map/page.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
@@ -114,11 +113,45 @@ export default function MapPage() {
     try {
       const snap = await getDocs(collection(db, 'trucks'));
       const raw: FoodTruck[] = snap.docs.map(doc => {
-        const data = doc.data();
+        const data = doc.data() ?? {};
+        // Ensure ALL required FoodTruck fields exist
         return {
-          ...data,
           id: doc.id,
-        };
+          name: data.name || 'Unnamed Truck',
+          cuisine: data.cuisine || 'Unknown Cuisine',
+          description: data.description || '',
+          imageUrl: data.imageUrl || '',
+          imagePath: data.imagePath || '',
+          imageGallery: Array.isArray(data.imageGallery) ? data.imageGallery : [],
+          ownerUid: data.ownerUid || '',
+          address: data.address || '',
+          lat: typeof data.lat === 'number' ? data.lat : undefined,
+          lng: typeof data.lng === 'number' ? data.lng : undefined,
+          operatingHoursSummary: data.operatingHoursSummary || '',
+          isOpen: typeof data.isOpen === 'boolean' ? data.isOpen : false,
+          isVisible: typeof data.isVisible === 'boolean' ? data.isVisible : true,
+          currentLocation: data.currentLocation,
+          todaysMenu: Array.isArray(data.todaysMenu) ? data.todaysMenu : [],
+          todaysHours: data.todaysHours,
+          regularHours: data.regularHours,
+          specialHours: data.specialHours,
+          isTruckOpenOverride: data.isTruckOpenOverride ?? null,
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          rating: typeof data.rating === 'number' ? data.rating : undefined,
+          numberOfRatings: typeof data.numberOfRatings === 'number' ? data.numberOfRatings : undefined,
+          features: Array.isArray(data.features) ? data.features : [],
+          socialMediaLinks: data.socialMediaLinks || {},
+          websiteUrl: data.websiteUrl || '',
+          contactEmail: data.contactEmail || '',
+          phone: data.phone || '',
+          isFeatured: typeof data.isFeatured === 'boolean' ? data.isFeatured : false,
+          subscriptionTier: data.subscriptionTier || 'free',
+          isFavorite: typeof data.isFavorite === 'boolean' ? data.isFavorite : false,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          distance: data.distance || '',
+          testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+        } as FoodTruck;
       });
       setTrucks(raw);
     } catch (err: any) {

@@ -1,13 +1,15 @@
 
 'use client';
 
+import { useState } from "react";
 import type { FoodTruck } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Star, Clock, Utensils, Globe, Instagram, Facebook } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
 interface FoodTruckCardProps {
   truck: FoodTruck;
@@ -21,56 +23,61 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
   const isFeatured = !!truck.isFeatured;
   const isFavorite = !!truck.isFavorite;
 
+  const [imgSrc, setImgSrc] = useState(mainImage);
+
   return (
-    <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full bg-card group">
+    <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full bg-card group" role="region" aria-labelledby={`truck-title-${truck.id}`}>
       <Link
         href={`/trucks/${truck.id}`}
         aria-label={`View details for ${truck.name}`}
         className="block relative w-full h-48 bg-muted focus:outline-none focus-visible:ring-2"
         tabIndex={0}
       >
-        {/* Main truck image */}
-        <Image
-          src={mainImage}
-          alt={truck.name || 'Food truck image'}
-          fill
-          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-          sizes="(max-width: 640px) 100vw, 400px"
-          data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
-          onError={(e) => (e.currentTarget.src = placeholderImage)}
-        />
-        {isFeatured && (
-          <span className="absolute top-3 left-3 bg-yellow-400 text-black px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
-            ★ Featured
-          </span>
-        )}
-        {isFavorite && (
-          <span className="absolute top-3 right-3 bg-pink-500 text-white px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
-            ♥
-          </span>
-        )}
-        {/* Image gallery thumbnails if available */}
-        {images.length > 0 && (
-          <div className="absolute bottom-2 right-2 flex gap-1 z-10">
-            {images.map((img, idx) => (
-              <div key={idx} className="w-9 h-9 rounded overflow-hidden border border-white shadow-md">
-                <Image
-                  src={img}
-                  alt={`Gallery image ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="36px"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="relative w-full h-full">
+          <Image
+            src={imgSrc}
+            alt={truck.name || 'Food truck image'}
+            fill
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+            sizes="(max-width: 640px) 100vw, 400px"
+            data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
+            onError={() => setImgSrc(placeholderImage)}
+            unoptimized={imgSrc.startsWith("http") ? false : true}
+          />
+          {isFeatured && (
+            <span className="absolute top-3 left-3 bg-yellow-400 text-black px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
+              ★ Featured
+            </span>
+          )}
+          {isFavorite && (
+            <span className="absolute top-3 right-3 bg-pink-500 text-white px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
+              ♥
+            </span>
+          )}
+          {images.length > 0 && (
+            <div className="absolute bottom-2 right-2 flex gap-1 z-10">
+              {images.map((img, idx) => (
+                <div key={img || idx} className="w-9 h-9 rounded overflow-hidden border border-white shadow-md">
+                  <Image
+                    src={img}
+                    alt={`Gallery image ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="36px"
+                    onError={(e) => (e.currentTarget.src = placeholderImage)}
+                    unoptimized={img.startsWith("http") ? false : true}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </Link>
       <CardHeader className="pb-1 pt-4 px-5">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-lg md:text-2xl font-bold truncate flex-1">
+          <CardTitle className="text-lg md:text-2xl font-bold truncate flex-1" id={`truck-title-${truck.id}`}>
             <Link href={`/trucks/${truck.id}`} className="hover:text-primary transition-colors">
-              {truck.name || "Unnamed Truck"}
+              <span>{truck.name || "Unnamed Truck"}</span> {/* Wrapped text in span */}
             </Link>
           </CardTitle>
           {truck.tags && truck.tags.length > 0 && (
@@ -119,10 +126,12 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
               }`}
             aria-label={isOpen ? "Open Now" : "Closed"}
           >
-            {isOpen ? "Open Now" : "Closed"}
+            {isOpen
+              ? "Open Now"
+              : (truck.operatingHoursSummary ? "Closed" : "Closed Today")
+            }
           </Badge>
         )}
-        {/* Social/website icons */}
         {(truck.websiteUrl || truck.socialMediaLinks) && (
           <div className="flex gap-2 mt-3">
             {truck.websiteUrl && (
@@ -140,17 +149,21 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
                 <Facebook className="w-5 h-5 text-blue-700 hover:text-blue-900 transition-colors" />
               </a>
             )}
-            {/* Add other socials as needed */}
           </div>
         )}
       </CardContent>
       <CardFooter className="pt-4 px-5 pb-5">
-        <Button asChild className="w-full bg-primary hover:bg-primary/90" aria-label={`View details and menu for ${truck.name}`}>
-          <Link href={`/trucks/${truck.id}`}>
-            <span>View Details & Menu</span>
-          </Link>
-        </Button>
+        <Link
+          href={`/trucks/${truck.id}`}
+          className={cn(buttonVariants(), "w-full bg-primary hover:bg-primary/90")}
+          aria-label={`View details and menu for ${truck.name}`}
+        >
+          <span>View Details & Menu</span>
+        </Link>
       </CardFooter>
     </Card>
   );
 }
+    
+
+    

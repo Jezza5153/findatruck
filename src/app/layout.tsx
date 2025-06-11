@@ -1,9 +1,10 @@
+import React from 'react'; // <-- Required for React namespace functions (isValidElement)
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 const inter = Inter({
@@ -38,22 +39,19 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+type RootLayoutProps = {
   children: React.ReactNode;
-}>) {
+};
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr">
       <head>
-        {/* Manifest for PWA, Theme colors for Chrome/Android/iOS */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="hsl(210 40% 98%)" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="hsl(210 40% 10%)" media="(prefers-color-scheme: dark)" />
-        {/* Preconnect for font speed */}
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Set viewport meta directly for best SSR */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
       <body
@@ -62,8 +60,13 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        {/* Optional: Skip-to-content for accessibility */}
-        <a href="#main-content" className="sr-only focus:not-sr-only absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 z-50">Skip to content</a>
+        {/* Accessibility skip link */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 z-50"
+        >
+          Skip to content
+        </a>
         <div className="relative flex min-h-dvh flex-col">
           <SiteHeader />
           <main
@@ -72,7 +75,8 @@ export default function RootLayout({
             tabIndex={-1}
             className="flex-1 outline-none"
           >
-            {children}
+            {/* Robustly ensure no Children.only error */}
+            {React.isValidElement(children) ? children : <div>{children}</div>}
           </main>
           <SiteFooter />
         </div>

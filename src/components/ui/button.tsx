@@ -3,17 +3,14 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-
 import { cn } from '@/lib/utils';
 
-// Variants and sizes with cva
+// CVA for variants and sizes
 const buttonVariants = cva(
   [
-    // Base styling
     'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background',
     'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-    'disabled:pointer-events-none disabled:opacity-50',
-    // SVG icon handling
+    'disabled:pointer-events-none disabled:opacity-50 active:scale-95',
     '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   ].join(' '),
   {
@@ -34,11 +31,13 @@ const buttonVariants = cva(
       },
       loading: {
         true: 'opacity-80 pointer-events-none',
+        false: '', // No extra class when not loading
       }
     },
     defaultVariants: {
       variant: 'default',
       size: 'default',
+      loading: false,
     },
   }
 );
@@ -48,31 +47,47 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
-  icon?: React.ReactNode; // Optionally pass an icon (SVG, etc.)
+  icon?: React.ReactNode;
 }
 
 /**
- * Beautiful, variant-powered Button component.
- * - Supports loading state, icon rendering, and accessibility
- * - Use `asChild` to render as any component (e.g., `Link`)
+ * Beautiful, variant-powered Button component (shadcn/ui-inspired).
+ * - Supports loading, icon, asChild for custom elements (e.g., Next.js Link).
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, icon, children, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      icon,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    // If asChild, use Slot (Radix). Otherwise, <button>.
     const Comp = asChild ? Slot : 'button';
+
+    // ARIA disabled if loading or explicitly disabled
+    const ariaDisabled = props.disabled || loading || undefined;
 
     return (
       <Comp
         className={cn(
-          buttonVariants({ variant, size, loading: loading ? 'true' : undefined }),
+          buttonVariants({ variant, size, loading }),
           className
         )}
         ref={ref}
         aria-busy={loading || undefined}
-        aria-disabled={props.disabled || loading || undefined}
-        disabled={props.disabled || loading}
+        aria-disabled={ariaDisabled}
+        disabled={ariaDisabled}
+        data-loading={!!loading}
         {...props}
       >
-        {/* Icon always left-aligned, loader takes precedence */}
+        {/* Loader takes precedence over icon */}
         {loading ? (
           <span className="mr-2 animate-spin" aria-hidden="true">
             <svg className="size-4" viewBox="0 0 16 16" fill="none">
@@ -96,6 +111,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           icon && <span className="mr-2">{icon}</span>
         )}
+        {/* Use <span> for text for correct spacing */}
         <span>{children}</span>
       </Comp>
     );

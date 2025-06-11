@@ -1,10 +1,23 @@
-
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button, buttonVariants } from '@/components/ui/button'; // Import buttonVariants
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, Utensils, LogOut, UserCircle, Home, MapPin, HelpCircle, Bell, Gift, LogIn as LogInIcon, Star, ChefHat, Settings } from 'lucide-react';
+import {
+  Menu,
+  Utensils,
+  LogOut,
+  UserCircle,
+  Home,
+  MapPin,
+  HelpCircle,
+  Bell,
+  Gift,
+  LogIn as LogInIcon,
+  Star,
+  ChefHat,
+  Settings,
+} from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
@@ -12,7 +25,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, usePathname } from 'next/navigation';
 import type { UserDocument } from '@/lib/types';
-import { cn } from '@/lib/utils'; // Import cn
+import { cn } from '@/lib/utils';
 import HeaderStatsBar from '@/components/HeaderStatsBar';
 
 export function SiteHeader() {
@@ -23,26 +36,36 @@ export function SiteHeader() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathnameRaw = usePathname();
+  // Normalize trailing slashes (for accurate active links)
+  const pathname = pathnameRaw?.endsWith('/') && pathnameRaw.length > 1
+    ? pathnameRaw.slice(0, -1)
+    : pathnameRaw;
 
   useEffect(() => {
     setIsLoadingAuth(true);
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const userDocRef = doc(db, "users", currentUser.uid);
+        const userDocRef = doc(db, 'users', currentUser.uid);
         try {
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data() as UserDocument;
             setUserRole(userData.role);
-            setUserName(userData.truckName || userData.name || currentUser.displayName || currentUser.email || "User");
+            setUserName(
+              userData.truckName ||
+              userData.name ||
+              currentUser.displayName ||
+              currentUser.email ||
+              'User'
+            );
           } else {
             setUserRole(null);
             setUserName(null);
           }
         } catch (error) {
-          console.error("Error fetching user document:", error);
+          console.error('Error fetching user document:', error);
           setUserRole(null);
           setUserName(null);
         }
@@ -62,37 +85,43 @@ export function SiteHeader() {
       setUserRole(null);
       setUserName(null);
       setIsSheetOpen(false);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
       router.push('/');
     } catch (error) {
-      toast({ title: "Logout Failed", description: "Could not log you out. Please try again.", variant: "destructive" });
+      toast({
+        title: 'Logout Failed',
+        description: 'Could not log you out. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
   const BrandIcon = Utensils;
 
+  // Navigation Links (centralized for DRY code)
   const commonNavLinks = [
-    { href: "/map", label: "Find Trucks", icon: <MapPin /> },
-    { href: "/featured", label: "Featured", icon: <Star /> },
-    { href: "/help", label: "Help & FAQ", icon: <HelpCircle /> },
+    { href: '/map', label: 'Find Trucks', icon: <MapPin /> },
+    { href: '/featured', label: 'Featured', icon: <Star /> },
+    { href: '/help', label: 'Help & FAQ', icon: <HelpCircle /> },
   ];
-
   const customerAuthNavLinks = [
-    { href: "/customer/dashboard", label: "My Dashboard", icon: <Settings /> },
-    { href: "/customer/notifications", label: "Notifications", icon: <Bell /> },
-    { href: "/customer/rewards", label: "Rewards", icon: <Gift /> },
+    { href: '/customer/dashboard', label: 'My Dashboard', icon: <Settings /> },
+    { href: '/customer/notifications', label: 'Notifications', icon: <Bell /> },
+    { href: '/customer/rewards', label: 'Rewards', icon: <Gift /> },
   ];
-
   const ownerAuthNavLinks = [
-    { href: "/owner/dashboard", label: "Owner Dashboard", icon: <ChefHat /> },
+    { href: '/owner/dashboard', label: 'Owner Dashboard', icon: <ChefHat /> },
   ];
 
   const handleLinkClick = () => setIsSheetOpen(false);
 
+  /**
+   * Render Navigation Links (handles both mobile & desktop)
+   */
   const renderNavLinks = (isMobile = false) => {
-    const mobileBaseClass = "justify-start text-base py-3 w-full";
-    const desktopBaseClass = "text-sm";
-    const iconClass = isMobile ? "mr-3 h-5 w-5" : "mr-2 h-4 w-4";
+    const mobileBaseClass = 'justify-start text-base py-3 w-full';
+    const desktopBaseClass = 'text-sm';
+    const iconClass = isMobile ? 'mr-3 h-5 w-5' : 'mr-2 h-4 w-4';
 
     return (
       <>
@@ -100,127 +129,140 @@ export function SiteHeader() {
           <Link
             href="/"
             aria-label="Truck Tracker home"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "lg" }),
-              mobileBaseClass
-            )}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'lg' }), mobileBaseClass)}
             onClick={handleLinkClick}
           >
             <span className="flex items-center">
-              {React.isValidElement(<Home />) && React.cloneElement(<Home />, { className: iconClass })}
+              <Home className={iconClass} />
               Home
             </span>
           </Link>
         )}
-        {commonNavLinks.map(link => (
+
+        {commonNavLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             className={cn(
-              buttonVariants({ variant: "ghost", size: isMobile ? "lg" : "sm" }),
+              buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
               isMobile ? mobileBaseClass : desktopBaseClass,
-              pathname === link.href ? 'bg-primary/10 text-primary' : ''
+              pathname === link.href ? 'bg-primary/10 text-primary font-semibold' : ''
             )}
-            aria-current={pathname === link.href ? "page" : undefined}
+            aria-current={pathname === link.href ? 'page' : undefined}
             onClick={handleLinkClick}
           >
             <span className="flex items-center">
-              {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
+              {React.cloneElement(link.icon, { className: iconClass })}
               {link.label}
             </span>
           </Link>
         ))}
+
+        {/* Authenticated navigation */}
         {user && !isLoadingAuth && (
           <>
-            {userRole === 'customer' && customerAuthNavLinks.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: isMobile ? "lg" : "sm" }),
-                  isMobile ? mobileBaseClass : desktopBaseClass,
-                  pathname === link.href ? 'bg-primary/10 text-primary' : ''
-                )}
-                aria-current={pathname === link.href ? "page" : undefined}
-                onClick={handleLinkClick}
-              >
-                <span className="flex items-center">
-                  {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
-                  {link.label}
-                </span>
-              </Link>
-            ))}
-            {userRole === 'owner' && ownerAuthNavLinks.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: isMobile ? "lg" : "sm" }),
-                  isMobile ? `${mobileBaseClass} text-accent border-accent hover:bg-accent/10 hover:text-accent` : desktopBaseClass,
-                  pathname === link.href ? (isMobile ? 'bg-accent/20 text-accent-foreground font-semibold' : 'bg-primary/10 text-primary') : ''
-                )}
-                aria-current={pathname === link.href ? "page" : undefined}
-                onClick={handleLinkClick}
-              >
-                <span className="flex items-center">
-                  {React.isValidElement(link.icon) && React.cloneElement(link.icon, { className: iconClass })}
-                  {link.label}
-                </span>
-              </Link>
-            ))}
+            {userRole === 'customer' &&
+              customerAuthNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
+                    isMobile ? mobileBaseClass : desktopBaseClass,
+                    pathname === link.href ? 'bg-primary/10 text-primary font-semibold' : ''
+                  )}
+                  aria-current={pathname === link.href ? 'page' : undefined}
+                  onClick={handleLinkClick}
+                >
+                  <span className="flex items-center">
+                    {React.cloneElement(link.icon, { className: iconClass })}
+                    {link.label}
+                  </span>
+                </Link>
+              ))}
+            {userRole === 'owner' &&
+              ownerAuthNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
+                    isMobile
+                      ? `${mobileBaseClass} text-accent border-accent hover:bg-accent/10 hover:text-accent`
+                      : desktopBaseClass,
+                    pathname === link.href
+                      ? isMobile
+                        ? 'bg-accent/20 text-accent-foreground font-semibold'
+                        : 'bg-primary/10 text-primary font-semibold'
+                      : ''
+                  )}
+                  aria-current={pathname === link.href ? 'page' : undefined}
+                  onClick={handleLinkClick}
+                >
+                  <span className="flex items-center">
+                    {React.cloneElement(link.icon, { className: iconClass })}
+                    {link.label}
+                  </span>
+                </Link>
+              ))}
             {isMobile && <hr className="my-2 border-border" />}
             <Button
-              size={isMobile ? "lg" : "sm"}
-              variant={isMobile ? "destructive" : "outline"}
+              size={isMobile ? 'lg' : 'sm'}
+              variant={isMobile ? 'destructive' : 'outline'}
               onClick={handleLogout}
               className={cn(isMobile ? mobileBaseClass : desktopBaseClass)}
             >
               <span className="flex items-center">
-                <LogOut className={iconClass} />Logout
+                <LogOut className={iconClass} />
+                Logout
               </span>
             </Button>
           </>
         )}
+
+        {/* Not authenticated */}
         {!user && !isLoadingAuth && (
           <>
             {isMobile && <hr className="my-2 border-border" />}
             <Link
               href="/login"
               className={cn(
-                buttonVariants({ variant: "ghost", size: isMobile ? "lg" : "sm" }),
+                buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
                 isMobile ? mobileBaseClass : desktopBaseClass
               )}
               onClick={handleLinkClick}
             >
               <span className="flex items-center">
-                <LogInIcon className={iconClass} />Login
+                <LogInIcon className={iconClass} />
+                Login
               </span>
             </Link>
             <Link
               href="/signup"
               className={cn(
-                buttonVariants({ variant: isMobile ? "default" : "default", size: isMobile ? "lg" : "sm" }),
-                isMobile ? mobileBaseClass : desktopBaseClass,
-                isMobile ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                buttonVariants({ variant: 'default', size: isMobile ? 'lg' : 'sm' }),
+                isMobile ? `${mobileBaseClass} bg-primary text-primary-foreground hover:bg-primary/90` : 'bg-primary text-primary-foreground hover:bg-primary/90'
               )}
               onClick={handleLinkClick}
             >
               <span className="flex items-center">
-                <UserCircle className={iconClass} />Customer Sign Up
+                <UserCircle className={iconClass} />
+                Customer Sign Up
               </span>
             </Link>
             {isMobile && (
               <Link
                 href="/owner/signup"
                 className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
+                  buttonVariants({ variant: 'outline', size: 'lg' }),
                   mobileBaseClass,
                   'text-accent border-accent hover:bg-accent/10 hover:text-accent'
                 )}
                 onClick={handleLinkClick}
               >
                 <span className="flex items-center">
-                  <ChefHat className={iconClass} />Owner Sign Up
+                  <ChefHat className={iconClass} />
+                  Owner Sign Up
                 </span>
               </Link>
             )}
@@ -233,31 +275,37 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2 group" aria-label="Truck Tracker Home" onClick={isSheetOpen ? handleLinkClick : undefined}>
+        {/* Brand/logo */}
+        <Link
+          href="/"
+          className="mr-6 flex items-center space-x-2 group"
+          aria-label="Truck Tracker Home"
+          onClick={isSheetOpen ? handleLinkClick : undefined}
+        >
           <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
           <span className="font-bold sm:inline-block text-lg tracking-tight">Truck Tracker</span>
         </Link>
+        {/* Stats bar (centered) */}
         <div className="flex-1 flex items-center justify-center">
           <div className="relative h-0 w-full">
             <HeaderStatsBar />
           </div>
         </div>
+        {/* Desktop nav and menu trigger */}
         <div className="flex items-center gap-2">
-          <nav className="hidden md:flex gap-1 items-center">
-            {renderNavLinks(false)}
-          </nav>
+          <nav className="hidden md:flex gap-1 items-center">{renderNavLinks(false)}</nav>
           {user && !isLoadingAuth && (
             <div className="hidden md:flex items-center gap-3 ml-2">
               <UserCircle className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
               <span className="text-sm font-medium text-muted-foreground truncate max-w-[110px]" title={userName || undefined}>
-                {userName || "User"}
+                {userName || 'User'}
               </span>
             </div>
           )}
+          {/* Mobile Menu */}
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2" aria-label="Open menu">
-                {/* Defensive wrap for Button's children when Button is child of asChild */}
                 <span className="flex items-center justify-center">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle Menu</span>
@@ -265,19 +313,27 @@ export function SiteHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
-              <SheetHeader className="p-4 border-b">
+              <SheetHeader className="p-4 border-b relative">
                 <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="Truck Tracker Home">
                   <BrandIcon className="h-6 w-6 text-primary" />
                   <SheetTitle>Truck Tracker</SheetTitle>
                 </Link>
-                <VisuallyHidden><SheetTitle>Menu</SheetTitle></VisuallyHidden>
-                <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary" />
+                <VisuallyHidden>
+                  <SheetTitle>Menu</SheetTitle>
+                </VisuallyHidden>
+                {/* Place SheetClose in top-right */}
+                <SheetClose
+                  className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
+                  aria-label="Close menu"
+                />
               </SheetHeader>
               <div className="p-4 flex flex-col gap-2">
                 {user && !isLoadingAuth && (
                   <div className="flex items-center gap-3 mb-2 border-b pb-3">
                     <UserCircle className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
-                    <span className="font-semibold text-base truncate max-w-[160px]" title={userName || undefined}>{userName || "User"}</span>
+                    <span className="font-semibold text-base truncate max-w-[160px]" title={userName || undefined}>
+                      {userName || 'User'}
+                    </span>
                   </div>
                 )}
                 {renderNavLinks(true)}
@@ -286,6 +342,7 @@ export function SiteHeader() {
           </Sheet>
         </div>
       </div>
+      {/* Gradient shadow under header */}
       <div className="absolute left-0 right-0 top-16 h-2 bg-gradient-to-b from-background/70 to-transparent pointer-events-none z-30" />
     </header>
   );
