@@ -30,8 +30,8 @@ const buttonVariants = cva(
         icon: 'h-10 w-10 p-0',
       },
       loading: {
-        true: 'opacity-80 pointer-events-none',
-        false: '', // No extra class when not loading
+        true: 'opacity-70 pointer-events-none',
+        false: '',
       }
     },
     defaultVariants: {
@@ -51,8 +51,7 @@ export interface ButtonProps
 }
 
 /**
- * Beautiful, variant-powered Button component (shadcn/ui-inspired).
- * - Supports loading, icon, asChild for custom elements (e.g., Next.js Link).
+ * PROOFED Button component – children-safe for both Slot and native button.
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -68,88 +67,47 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // If asChild, use Slot (Radix). Otherwise, <button>.
     const Comp = asChild ? Slot : 'button';
-
-    // ARIA disabled if loading or explicitly disabled
     const ariaDisabled = props.disabled || loading || undefined;
 
-    return (
+    // Always wrap children for Slot use!
+    const content = (
+      <>
+        {icon && <span className="mr-2">{icon}</span>}
+        <span>{children}</span>
+      </>
+    );
+
+    return asChild ? (
+      // When asChild, pass a single element as child!
       <Comp
         className={cn(
           buttonVariants({ variant, size, loading }),
           className
         )}
         ref={ref}
-        aria-busy={loading || undefined}
         aria-disabled={ariaDisabled}
         disabled={ariaDisabled}
         data-loading={!!loading}
         {...props}
       >
-        {/* Render a single child for Slot when asChild is true */}
-        {asChild ? (
-          // Wrap the content in a single element (e.g., <span> or div)
-          <span className="mr-2 animate-spin" aria-hidden="true">
-            {/* Loader takes precedence over icon */}
-            {loading ? (
-              <span className="mr-2 animate-spin" aria-hidden="true">
-                <svg className="size-4" viewBox="0 0 16 16" fill="none">
-                  <circle
-                    className="opacity-30"
-                    cx="8"
-                    cy="8"
-                    r="7"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M15 8a7 7 0 01-7 7"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="opacity-70"
-                  />
-                </svg>
-              </span>
-            ) : (
-              icon && <span className="mr-2">{icon}</span>
-            )}
-            {/* Use <span> for text for correct spacing */}
-            <span>{children}</span>
-          </span>
-        ) : (
-          // Original rendering for a standard button
-          <>
-            {/* Loader takes precedence over icon */}
-            {loading ? (
-              <span className="mr-2 animate-spin" aria-hidden="true">
-                <svg className="size-4" viewBox="0 0 16 16" fill="none">
-                  <circle
-                    className="opacity-30"
-                    cx="8"
-                    cy="8"
-                    r="7"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M15 8a7 7 0 01-7 7"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="opacity-70"
-                  />
-                </svg>
-              </span>
-            ) : (
-              icon && <span className="mr-2">{icon}</span>
-            )}
-            {/* Use <span> for text for correct spacing */}
-            <span>{children}</span>
-          </>
-        )}
+        {/* Wrap in span so Slot gets only one child */}
+        <span className="flex items-center w-full">{content}</span>
       </Comp>
+    ) : (
+      <button
+        className={cn(
+          buttonVariants({ variant, size, loading }),
+          className
+        )}
+        ref={ref}
+        aria-disabled={ariaDisabled}
+        disabled={ariaDisabled}
+        data-loading={!!loading}
+        {...props}
+      >
+        {content}
+      </button>
     );
   }
 );

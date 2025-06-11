@@ -2,38 +2,37 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Star, MapPin, Utensils, UserPlus, ArrowRight, User, ChefHat, LogIn } from 'lucide-react';
+import {
+  Star, MapPin, Utensils, UserPlus, ArrowRight, User, ChefHat, LogIn
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MapStatsHeader from '@/components/MapStatsHeader';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
+// If you have a floating stats bar elsewhere, don't import MapStatsHeader here
 
 export default function HomePage() {
   return (
-    <div>
-      {/* Live stats bar */}
-      <section className="mb-6 animate-fade-in">
-        <MapStatsHeader />
-      </section>
+    <div className="relative">
+      {/* Floating stats bar appears only as a floater, not here */}
 
       {/* Hero Section */}
       <section
-        className="w-full py-16 bg-gradient-to-r from-yellow-200 via-white to-green-100 mb-4 shadow-md animate-fade-in"
+        className="w-full py-20 bg-gradient-to-r from-yellow-100 via-white to-green-50 shadow animate-fade-in"
         aria-labelledby="hero-title"
       >
         <div className="container mx-auto flex flex-col items-center text-center">
           <h1
             id="hero-title"
-            className="text-4xl md:text-6xl font-extrabold mb-3 text-primary drop-shadow-lg"
+            className="text-5xl md:text-6xl font-extrabold mb-3 text-primary drop-shadow-lg"
           >
             Find Your Next Favorite Food Truck
           </h1>
-          <p className="text-lg md:text-2xl mb-6 text-muted-foreground max-w-xl">
+          <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-xl mx-auto">
             Discover real-time locations, menus, and exclusive deals from the best food trucks in your city.
           </p>
           <Button
             size="lg"
             asChild
-            className="mt-3 px-8 py-4 text-lg rounded-xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150"
+            className="px-8 py-4 text-lg rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150"
             aria-label="Find Food Trucks"
           >
             <Link href="/map">
@@ -45,17 +44,27 @@ export default function HomePage() {
       </section>
 
       {/* New User CTA Section */}
-      <section className="w-full py-10 bg-white/80 mb-6 shadow-sm animate-fade-in" aria-label="Get Started">
-        <div className="container mx-auto flex flex-col items-center gap-6">
+      <section className="w-full py-12 bg-white/90 mb-6 shadow-sm animate-fade-in" aria-label="Get Started">
+        <div className="container mx-auto flex flex-col items-center gap-8">
           <h2 className="text-2xl font-semibold text-primary mb-2">Get Started</h2>
           <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
-            <Button asChild size="lg" className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md">
+            <Button
+              asChild
+              size="lg"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md"
+              aria-label="Sign up as Customer"
+            >
               <Link href="/signup">
                 <User className="w-6 h-6" />
                 I am a New Customer
               </Link>
             </Button>
-            <Button asChild size="lg" className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md">
+            <Button
+              asChild
+              size="lg"
+              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md"
+              aria-label="Sign up as Owner"
+            >
               <Link href="/owner/signup">
                 <ChefHat className="w-6 h-6" />
                 I am a New Owner
@@ -64,7 +73,11 @@ export default function HomePage() {
           </div>
           <div className="mt-2 text-base text-muted-foreground flex items-center gap-2">
             Already have an account?
-            <Link href="/login" className="inline-flex items-center text-primary font-medium hover:underline ml-1">
+            <Link
+              href="/login"
+              className="inline-flex items-center text-primary font-semibold hover:underline ml-1"
+              aria-label="Login"
+            >
               <LogIn className="w-4 h-4 mr-1" />
               Log in here
             </Link>
@@ -73,12 +86,13 @@ export default function HomePage() {
       </section>
 
       {/* Featured Trucks Preview */}
-      <section className="container mx-auto py-10 animate-fade-in" aria-labelledby="featured-title">
+      <section className="container mx-auto py-12 animate-fade-in" aria-labelledby="featured-title">
         <h2
           id="featured-title"
           className="text-3xl font-bold mb-8 text-primary flex items-center"
         >
-          <Star className="h-7 w-7 text-yellow-400 fill-yellow-400 mr-2" /> Featured Trucks
+          <Star className="h-7 w-7 text-yellow-400 fill-yellow-400 mr-2" />
+          Featured Trucks
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <FoodTruckCard
@@ -132,7 +146,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="w-full bg-muted py-14" aria-labelledby="how-it-works-title">
+      <section className="w-full bg-muted/60 py-14 animate-fade-in" aria-labelledby="how-it-works-title">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-10 text-primary" id="how-it-works-title">
             How It Works
@@ -177,6 +191,8 @@ export default function HomePage() {
           </Button>
         </div>
       </section>
+
+      {/* Fade-in Animation */}
       <style jsx global>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(16px);}
