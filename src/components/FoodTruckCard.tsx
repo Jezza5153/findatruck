@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { FoodTruck } from '@/lib/types';
@@ -145,7 +146,9 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
       </CardContent>
       <CardFooter className="pt-4 px-5 pb-5">
         <Button asChild className="w-full bg-primary hover:bg-primary/90" aria-label={`View details and menu for ${truck.name}`}>
-          <Link href={`/trucks/${truck.id}`}>View Details & Menu</Link>
+          <Link href={`/trucks/${truck.id}`}>
+            <span>View Details & Menu</span>
+          </Link>
         </Button>
       </CardFooter>
     </Card>
