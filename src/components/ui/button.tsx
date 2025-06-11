@@ -87,32 +87,68 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         data-loading={!!loading}
         {...props}
       >
-        {/* Loader takes precedence over icon */}
-        {loading ? (
+        {/* Render a single child for Slot when asChild is true */}
+        {asChild ? (
+          // Wrap the content in a single element (e.g., <span> or div)
           <span className="mr-2 animate-spin" aria-hidden="true">
-            <svg className="size-4" viewBox="0 0 16 16" fill="none">
-              <circle
-                className="opacity-30"
-                cx="8"
-                cy="8"
-                r="7"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <path
-                d="M15 8a7 7 0 01-7 7"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="opacity-70"
-              />
-            </svg>
+            {/* Loader takes precedence over icon */}
+            {loading ? (
+              <span className="mr-2 animate-spin" aria-hidden="true">
+                <svg className="size-4" viewBox="0 0 16 16" fill="none">
+                  <circle
+                    className="opacity-30"
+                    cx="8"
+                    cy="8"
+                    r="7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M15 8a7 7 0 01-7 7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="opacity-70"
+                  />
+                </svg>
+              </span>
+            ) : (
+              icon && <span className="mr-2">{icon}</span>
+            )}
+            {/* Use <span> for text for correct spacing */}
+            <span>{children}</span>
           </span>
         ) : (
-          icon && <span className="mr-2">{icon}</span>
+          // Original rendering for a standard button
+          <>
+            {/* Loader takes precedence over icon */}
+            {loading ? (
+              <span className="mr-2 animate-spin" aria-hidden="true">
+                <svg className="size-4" viewBox="0 0 16 16" fill="none">
+                  <circle
+                    className="opacity-30"
+                    cx="8"
+                    cy="8"
+                    r="7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M15 8a7 7 0 01-7 7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="opacity-70"
+                  />
+                </svg>
+              </span>
+            ) : (
+              icon && <span className="mr-2">{icon}</span>
+            )}
+            {/* Use <span> for text for correct spacing */}
+            <span>{children}</span>
+          </>
         )}
-        {/* Use <span> for text for correct spacing */}
-        <span>{children}</span>
       </Comp>
     );
   }

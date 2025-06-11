@@ -127,15 +127,17 @@ export default function FeaturedTrucksPage() {
       )}
 
       {!isLoading && !error && featuredTrucks.length === 0 && (
-        <div className="text-center py-10" aria-label="No featured trucks">
-          <Star className="h-16 w-16 text-muted-foreground mx-auto mb-5" />
-          <p className="text-xl font-semibold text-muted-foreground mb-3">No featured trucks yet.</p>
-          <p className="text-muted-foreground mb-6">
-            Check back soon or browse all trucks on the map!
-          </p>
-          <Link href="/map" className={cn(buttonVariants())}>
-             <span>Explore All Trucks</span>
-          </Link>
+        <div className="text-center py-10" aria-label="No featured trucks"> {/* Keep the outer div for layout */}
+          <> {/* Wrap inner elements in a fragment */}
+            <Star className="h-16 w-16 text-muted-foreground mx-auto mb-5" />
+            <p className="text-xl font-semibold text-muted-foreground mb-3">No featured trucks yet.</p>
+            <p className="text-muted-foreground mb-6">
+              Check back soon or browse all trucks on the map!
+            </p>
+            <Link href="/map" className={cn(buttonVariants())}>
+               <span>Explore All Trucks</span>
+            </Link>
+          </>
         </div>
       )}
 
@@ -145,9 +147,11 @@ export default function FeaturedTrucksPage() {
           Want to get featured and reach more hungry customers?
           Learn about premium listing options and owner benefits!
         </p>
-        <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
-            <span>Owner Portal &amp; Subscriptions</span>
-        </Link>
+        <> {/* Wrap inner elements in a fragment */}
+          <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
+              <span>Owner Portal &amp; Subscriptions</span>
+          </Link>
+        </>
       </div>
     </main>
   );
