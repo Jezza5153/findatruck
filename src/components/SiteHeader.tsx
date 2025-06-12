@@ -37,6 +37,7 @@ export function SiteHeader() {
   const { toast } = useToast();
   const router = useRouter();
   const pathnameRaw = usePathname();
+
   // Normalize trailing slashes (for accurate active links)
   const pathname = pathnameRaw?.endsWith('/') && pathnameRaw.length > 1
     ? pathnameRaw.slice(0, -1)
@@ -65,7 +66,6 @@ export function SiteHeader() {
             setUserName(null);
           }
         } catch (error) {
-          console.error('Error fetching user document:', error);
           setUserRole(null);
           setUserName(null);
         }
@@ -96,6 +96,7 @@ export function SiteHeader() {
     }
   };
 
+  // Main icon for branding
   const BrandIcon = Utensils;
 
   // Navigation Links (centralized for DRY code)
@@ -128,7 +129,7 @@ export function SiteHeader() {
         {isMobile && (
           <Link
             href="/"
-            aria-label="Truck Tracker home"
+            aria-label="FindATruck Home"
             className={cn(buttonVariants({ variant: 'ghost', size: 'lg' }), mobileBaseClass)}
             onClick={handleLinkClick}
           >
@@ -279,11 +280,11 @@ export function SiteHeader() {
         <Link
           href="/"
           className="mr-6 flex items-center space-x-2 group"
-          aria-label="Truck Tracker Home"
+          aria-label="FindATruck Home"
           onClick={isSheetOpen ? handleLinkClick : undefined}
         >
           <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-          <span className="font-bold sm:inline-block text-lg tracking-tight">Truck Tracker</span>
+          <span className="font-bold sm:inline-block text-lg tracking-tight">FindATruck</span>
         </Link>
         {/* Stats bar (centered) */}
         <div className="flex-1 flex items-center justify-center">
@@ -295,9 +296,9 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex gap-1 items-center">{renderNavLinks(false)}</nav>
           {user && !isLoadingAuth && (
-            <div className="hidden md:flex items-center gap-3 ml-2">
+            <div className="hidden md:flex items-center gap-3 ml-2 max-w-[180px]">
               <UserCircle className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm font-medium text-muted-foreground truncate max-w-[110px]" title={userName || undefined}>
+              <span className="text-sm font-medium text-muted-foreground truncate" title={userName || undefined}>
                 {userName || 'User'}
               </span>
             </div>
@@ -312,11 +313,11 @@ export function SiteHeader() {
                 </span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="FindATruck Menu">
               <SheetHeader className="p-4 border-b relative">
-                <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="Truck Tracker Home">
+                <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="FindATruck Home">
                   <BrandIcon className="h-6 w-6 text-primary" />
-                  <SheetTitle>Truck Tracker</SheetTitle>
+                  <SheetTitle>FindATruck</SheetTitle>
                 </Link>
                 <VisuallyHidden>
                   <SheetTitle>Menu</SheetTitle>
