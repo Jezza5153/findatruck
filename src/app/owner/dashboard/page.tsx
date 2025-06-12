@@ -3,205 +3,94 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import {
+  Card, CardContent, CardHeader, CardTitle, CardDescription
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
-  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, UserPlus, Menu as MenuIcon, ChevronLeft, ArrowLeftRight, Sun, Moon
+  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, Trophy, Home, CheckCircle2, Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import type { UserDocument, FoodTruck, MenuItem } from '@/lib/types';
-import NextImage from "next/image";
-import { motion, AnimatePresence } from 'framer-motion';
-import { useHotkeys } from 'react-hotkeys-hook';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
 
-// --- Theme Toggle Button ---
-function ThemeToggle() {
-  const [dark, setDark] = useState(false);
+function AnalyticsWidgets({ truckId }: { truckId?: string | null }) {
+  const [orders, setOrders] = useState(0);
+  const [sales, setSales] = useState(0);
+  const [topItem, setTopItem] = useState("");
   useEffect(() => {
-    const theme = localStorage.theme;
-    if (
-      window.matchMedia('(prefers-color-scheme: dark)').matches ||
-      theme === 'dark'
-    ) {
-      document.documentElement.classList.add('dark');
-      setDark(true);
-    }
-  }, []);
-  function toggle() {
-    setDark(d => {
-      if (!d) {
-        document.documentElement.classList.add('dark');
-        localStorage.theme = 'dark';
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.theme = 'light';
-      }
-      return !d;
+    if (!truckId) return;
+    getDocs(collection(db, "trucks", truckId, "orders")).then(snap => {
+      setOrders(snap.size);
+      let sum = 0, items: Record<string, number> = {};
+      snap.docs.forEach(doc => {
+        const o = doc.data();
+        sum += o.total || 0;
+        (o.items || []).forEach((item: any) => { items[item.name] = (items[item.name] || 0) + 1; });
+      });
+      setSales(sum);
+      setTopItem(Object.keys(items).sort((a, b) => items[b] - items[a])[0] || "");
     });
-  }
+  }, [truckId]);
   return (
-    <motion.button
-      aria-label="Toggle dark mode"
-      className="rounded-full border p-2 shadow hover:scale-110 transition bg-white dark:bg-gray-900"
-      onClick={toggle}
-      initial={{ scale: 0.8 }}
-      animate={{ scale: 1 }}
-    >
-      {dark ? <Sun className="text-yellow-400 w-5 h-5" /> : <Moon className="text-gray-700 w-5 h-5" />}
-    </motion.button>
-  );
-}
-
-// --- Sidebar Navigation ---
-function OwnerSidebar({ current, onNav, open, setOpen }: { current: string; onNav: (route: string) => void; open: boolean; setOpen: (o: boolean) => void }) {
-  // Sidebar nav structure
-  const nav = [
-    { label: "Dashboard", icon: <MenuSquare />, route: "/owner/dashboard" },
-    { label: "Profile", icon: <Edit />, route: "/owner/profile" },
-    { label: "Menu", icon: <MenuSquare />, route: "/owner/menu" },
-    { label: "Hours", icon: <CalendarClock />, route: "/owner/schedule" },
-    { label: "Orders", icon: <Eye />, route: "/owner/orders" },
-    { label: "Analytics", icon: <LineChart />, route: "/owner/analytics" },
-    { label: "Billing", icon: <CreditCard />, route: "/owner/billing" },
-    { label: "Leaderboard", icon: <Trophy className="text-yellow-400" />, route: "/owner/leaderboard" },
-  ];
-  return (
-    <AnimatePresence>
-      {(open || typeof window === 'undefined' || window.innerWidth >= 768) && (
-        <motion.aside
-          className={`fixed z-40 md:static left-0 top-0 h-full md:h-auto bg-card/95 border-r border-primary/10 shadow-lg flex flex-col w-64 md:w-56 px-2 py-6 transition-all ${open ? 'block' : 'hidden md:block'}`}
-          initial={{ x: -320, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -320, opacity: 0 }}
-        >
-          <div className="flex items-center justify-between mb-8 px-2">
-            <span className="font-bold text-primary text-xl tracking-tight">FindATruck</span>
-            <button className="md:hidden" onClick={() => setOpen(false)}>
-              <ChevronLeft />
-            </button>
-          </div>
-          <nav className="flex flex-col gap-1">
-            {nav.map(n => (
-              <Button
-                key={n.label}
-                variant={current === n.route ? "secondary" : "ghost"}
-                className={`justify-start gap-2 px-4 py-2 rounded-xl text-base ${current === n.route ? 'font-bold' : ''}`}
-                onClick={() => { setOpen(false); onNav(n.route); }}
-              >
-                {n.icon}
-                {n.label}
-              </Button>
-            ))}
-          </nav>
-          <div className="flex-grow" />
-        </motion.aside>
+    <div className="flex flex-wrap gap-4 mb-6 mt-2">
+      <div className="flex items-center gap-2 text-sm px-3 py-2 rounded bg-green-50 text-green-800 font-bold">
+        <CheckCircle2 className="w-4 h-4" /> Orders: {orders}
+      </div>
+      <div className="flex items-center gap-2 text-sm px-3 py-2 rounded bg-yellow-50 text-yellow-800 font-bold">
+        <CreditCard className="w-4 h-4" /> Sales: ${sales.toFixed(2)}
+      </div>
+      {topItem && (
+        <div className="flex items-center gap-2 text-sm px-3 py-2 rounded bg-blue-50 text-blue-800 font-bold">
+          <Star className="w-4 h-4" /> Top Item: {topItem}
+        </div>
       )}
-    </AnimatePresence>
+    </div>
   );
 }
 
-// --- Status Pill ---
-function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
-  if (!open) return (
-    <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"><XCircle className="w-4 h-4 mr-1" /> Closed</span>
-  );
-  if (!visible) return (
-    <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"><Info className="w-4 h-4 mr-1" /> Hidden</span>
-  );
+interface DashboardCardProps {
+  title: string;
+  description: string;
+  link: string;
+  icon: React.ReactNode;
+  buttonText: string;
+  disabled?: boolean;
+}
+function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</span>
+    <Card className={`hover:shadow-lg transition-all flex flex-col border-primary/10 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center text-xl font-semibold gap-2">
+          <span className="mr-2 h-6 w-6">{icon}</span> {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <div className="flex-grow" />
+      <CardContent className="pt-0">
+        <Button className="w-full" asChild disabled={disabled}>
+          <Link href={disabled ? "#" : link}>{buttonText}</Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
-// --- Customer Preview Card ---
-function CustomerTruckCard({
-  truck,
-  menuItems
-}: {
-  truck: Partial<FoodTruck>,
-  menuItems: MenuItem[]
-}) {
-  const menuList = (Array.isArray(truck.todaysMenu) && menuItems.length)
-    ? truck.todaysMenu
-        .map((id: string) => menuItems.find(m => m.id === id))
-        .filter((m): m is MenuItem => !!m)
-    : [];
-  return (
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="w-full"
-    >
-      <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <MapPin className="text-primary w-5 h-5" />
-            <span>{truck.name || "Your Truck Name"}</span>
-            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-          </CardTitle>
-          <CardDescription>
-            <span className="block">{truck.cuisine || "Cuisine Type"}</span>
-            <span className="block">{truck.description || "About your truck..."}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <div className="flex gap-4 items-center">
-            <Label>Status:</Label>
-            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-          </div>
-          <div className="flex gap-4 items-center">
-            <Label>Location:</Label>
-            <span>
-              {truck.currentLocation?.address
-                ? truck.currentLocation.address
-                : <span className="italic text-muted-foreground">No address set</span>
-              }
-              {!truck.currentLocation?.address && truck.currentLocation?.lat && truck.currentLocation?.lng &&
-                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
-              }
-            </span>
-          </div>
-          <div className="flex gap-4 items-center">
-            <Label>Today's Hours:</Label>
-            <span>
-              {(truck.todaysHours?.open && truck.todaysHours?.close)
-                ? `${truck.todaysHours.open} – ${truck.todaysHours.close}`
-                : <span className="italic text-muted-foreground">Not set</span>
-              }
-            </span>
-          </div>
-          <div>
-            <Label>Today's Menu:</Label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {menuList.length
-                ? menuList.map((item, i) => (
-                    <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                      {item.imageUrl &&
-                        <NextImage
-                          src={item.imageUrl}
-                          alt={item.name}
-                          width={20}
-                          height={20}
-                          className="rounded-full mr-1"
-                        />
-                      }
-                      {item.name}
-                    </span>
-                  ))
-                : <span className="italic text-muted-foreground">No menu set for today</span>
-              }
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+function setupProgress(truck?: Partial<FoodTruck>) {
+  if (!truck) return 0;
+  let n = 0;
+  if (truck.name) n++;
+  if (truck.cuisine) n++;
+  if (truck.currentLocation && truck.currentLocation.address) n++;
+  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
+  if (truck.todaysHours && truck.todaysHours.open && truck.todaysHours.close) n++;
+  return Math.round((n / 5) * 100);
 }
 
 export default function OwnerDashboardPage() {
@@ -209,30 +98,22 @@ export default function OwnerDashboardPage() {
   const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
   const [truckId, setTruckId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
-  // Hotkeys
-  useHotkeys('ctrl+n', () => router.push('/owner/menu'), [router]);
-
-  // Auth + data fetch
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setIsLoading(true); setTruckData(null);
+      setIsLoading(true); setTruckData(null); setError(null);
       if (!user) {
-        router.push('/login?redirect=/owner/dashboard');
-        setIsLoading(false);
-        return;
+        router.push('/login?redirect=/owner/dashboard'); setIsLoading(false); return;
       }
       setCurrentUser(user);
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (!userDocSnap.exists()) {
         toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
-        router.push('/login');
-        setIsLoading(false); return;
+        router.push('/login'); setIsLoading(false); return;
       }
       const userData = userDocSnap.data() as UserDocument;
       if (userData.role !== 'owner') {
@@ -244,37 +125,31 @@ export default function OwnerDashboardPage() {
       const truckDocRef = doc(db, "trucks", resolvedTruckId);
       const snap = await getDoc(truckDocRef);
       if (snap.exists()) setTruckData(snap.data() as Partial<FoodTruck>);
+      else setError("Truck profile not found.");
       setIsLoading(false);
     });
     return () => unsubscribe();
   }, [router, toast]);
 
-  // Fetch menu items for preview
-  useEffect(() => {
-    if (!truckId || !truckData?.todaysMenu?.length) { setMenuItems([]); return; }
-    (async () => {
-      const itemsCol = collection(db, "trucks", truckId, "menuItems");
-      const itemsSnap = await getDocs(itemsCol);
-      setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
-    })();
-  }, [truckId, truckData?.todaysMenu]);
-
-  // Save truck updates (with auto feedback)
   const updateTruck = useCallback(async (updates: Partial<FoodTruck>) => {
     if (!truckId) return;
-    await updateDoc(doc(db, "trucks", truckId), updates);
-    setTruckData(prev => ({ ...prev, ...updates }));
-    toast({ title: "Saved!", description: "Truck profile auto-saved." });
-  }, [truckId, toast]);
+    const sanitizedUpdates: Partial<FoodTruck> = { ...updates };
+    if ('lat' in sanitizedUpdates && sanitizedUpdates.lat === null) delete sanitizedUpdates.lat;
+    if ('lng' in sanitizedUpdates && sanitizedUpdates.lng === null) delete sanitizedUpdates.lng;
+    await updateDoc(doc(db, "trucks", truckId), sanitizedUpdates);
+    setTruckData(prev => ({ ...prev, ...sanitizedUpdates }));
+  }, [truckId]);
 
-  // --- Loading & Auth States ---
-  if (isLoading) return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
-      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      <span className="ml-3 text-xl font-semibold tracking-tight">Loading owner dashboard...</span>
-    </div>
-  );
+  const dashboardDisabled = !truckData?.name;
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <span className="ml-3 text-xl font-semibold tracking-tight">Loading owner dashboard...</span>
+      </div>
+    );
+  }
   if (!currentUser) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
@@ -289,214 +164,185 @@ export default function OwnerDashboardPage() {
       </div>
     );
   }
-
   if (!truckData) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
         <div className="text-lg font-medium">Setting up your truck profile...</div>
+        <div className="text-muted-foreground mt-2 mb-6">Please refresh the page if this takes longer than 20 seconds.</div>
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Truck Not Ready</AlertTitle>
+          <AlertDescription>
+            {error || "Your truck profile is still being set up in the background. Most dashboard actions will be unavailable until this completes."}
+            <Button variant="link" className="ml-2 p-0 h-auto" onClick={() => window.location.reload()}>
+              Retry Now
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
-  // -- Main dashboard layout --
+  const progress = setupProgress(truckData);
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* MOBILE FAB */}
-      <Button
-        className="fixed z-50 md:hidden bottom-6 right-6 rounded-full w-16 h-16 p-0 shadow-xl bg-primary"
-        onClick={() => setSidebarOpen(true)}
-      >
-        <MenuIcon className="w-8 h-8 text-white" />
-      </Button>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        {/* --- SIDEBAR (Collapsible, real, mobile responsive) --- */}
+        <Sidebar collapsible="offcanvas" variant="sidebar" side="left">
+          <SidebarHeader className="flex items-center justify-between px-4 py-2">
+            <span className="font-bold text-xl tracking-tight">🍔 FoodieTruck</span>
+            <SidebarTrigger className="ml-auto" />
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/dashboard"><Home className="w-4 h-4 mr-2" /> Dashboard</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/profile"><Edit className="w-4 h-4 mr-2" /> Profile</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/menu"><MenuSquare className="w-4 h-4 mr-2" /> Menu</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/schedule"><CalendarClock className="w-4 h-4 mr-2" /> Hours</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/orders"><Eye className="w-4 h-4 mr-2" /> Orders</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/analytics"><LineChart className="w-4 h-4 mr-2" /> Analytics</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/billing"><CreditCard className="w-4 h-4 mr-2" /> Billing</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/owner/leaderboard"><Trophy className="w-4 h-4 mr-2" /> Leaderboard</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
 
-      {/* SIDEBAR */}
-      <OwnerSidebar current="/owner/dashboard" onNav={router.push} open={sidebarOpen} setOpen={setSidebarOpen} />
+        {/* --- MAIN DASHBOARD AREA --- */}
+        <SidebarInset>
+          <main className="flex-1 px-4 py-8 md:px-10 max-w-[1200px] mx-auto w-full">
+            {/* --- Analytics (discreet row) --- */}
+            <AnalyticsWidgets truckId={truckId} />
 
-      {/* MAIN */}
-      <main className="flex-1 flex flex-col px-2 py-6 md:px-8 md:py-10 max-w-6xl mx-auto relative">
-        {/* THEME TOGGLE */}
-        <div className="absolute top-4 right-4 z-40">
-          <ThemeToggle />
-        </div>
-
-        <div className="flex items-center gap-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary drop-shadow-sm">Owner Dashboard</h1>
-          <StatusPill open={truckData.isOpen} visible={truckData.isVisible} />
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-2 flex-wrap mb-8">
-          <Button size="sm" variant="outline" onClick={() => router.push('/owner/menu')}>
-            <MenuSquare className="mr-2 w-4 h-4" /> New Menu
-          </Button>
-          <Button
-            size="sm"
-            variant={truckData.isOpen ? "destructive" : "secondary"}
-            onClick={() => updateTruck({ isOpen: !truckData.isOpen })}
-          >
-            <ArrowLeftRight className="mr-2 w-4 h-4" />
-            {truckData.isOpen ? "Close Truck" : "Open Truck"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => router.push('/owner/orders')}>
-            <Eye className="mr-2 w-4 h-4" /> Orders
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => router.push('/owner/schedule')}>
-            <CalendarClock className="mr-2 w-4 h-4" /> Edit Hours
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => router.push('/owner/leaderboard')}>
-            <Trophy className="mr-2 w-4 h-4 text-yellow-400" /> Leaderboard
-          </Button>
-        </div>
-
-        {/* Presence */}
-        <Card className="mb-8 shadow-md border-2 border-primary/10 bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>
-              <Globe2 className="inline w-6 h-6 mr-2 text-primary" />
-              I'm Here! <span className="font-normal text-muted-foreground">Live Presence</span>
-            </CardTitle>
-            <CardDescription>
-              Share your location, today's menu, and hours. Let customers find and follow you!
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* LOCATION */}
-            <div className="mb-4 flex gap-2 items-center flex-wrap">
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if (!navigator.geolocation) {
-                    toast({ title: "Location Not Supported", description: "Enable GPS or enter address manually.", variant: "destructive" }); return;
-                  }
-                  navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    await updateTruck({
-                      currentLocation: { lat: latitude, lng: longitude },
-                      lat: latitude,
-                      lng: longitude,
-                      locationSetAt: new Date(),
-                    });
-                    toast({ title: "Location Updated", description: "Customers will see your live GPS location now." });
-                  });
-                }}>
-                📍 Use My Location
-              </Button>
-              <span className="text-muted-foreground">or</span>
-              <Button
-                variant="secondary"
-                onClick={async () => {
-                  const addr = prompt("Enter your current address (e.g. 123 Main St):");
-                  if (addr) {
-                    await updateTruck({
-                      currentLocation: { address: addr },
-                      address: addr,
-                      locationSetAt: new Date(),
-                    });
-                    toast({ title: "Location Updated", description: "Customers will see your entered address now." });
-                  }
-                }}>
-                Enter Address Manually
-              </Button>
-              {truckData?.currentLocation && (
-                <span className="ml-4 text-sm font-medium">
-                  Current: <span className="text-muted-foreground">
-                  {truckData.currentLocation.address
-                    ? truckData.currentLocation.address
-                    : <span className="italic text-muted-foreground">No address set</span>}
-                  {!truckData.currentLocation.address && truckData.currentLocation.lat && truckData.currentLocation.lng &&
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
-                  }
-                  </span>
-                </span>
-              )}
-            </div>
-            {/* HOURS */}
-            <div className="mb-4 flex gap-2 items-center">
-              <Label className="mr-2">Today's Hours:</Label>
-              <input
-                type="time"
-                value={typeof truckData?.todaysHours === 'object' ? truckData.todaysHours?.open || "" : ""}
-                onChange={async e => {
-                  const open = e.target.value;
-                  let hours: any = typeof truckData?.todaysHours === 'object' ? { ...truckData?.todaysHours } : {};
-                  hours.open = open;
-                  await updateTruck({ todaysHours: hours });
-                }}
-                className="w-32 border rounded px-2 py-1"
-              />
-              <span>to</span>
-              <input
-                type="time"
-                value={typeof truckData?.todaysHours === 'object' ? truckData.todaysHours?.close || "" : ""}
-                onChange={async e => {
-                  const close = e.target.value;
-                  let hours: any = typeof truckData?.todaysHours === 'object' ? { ...truckData?.todaysHours } : {};
-                  hours.close = close;
-                  await updateTruck({ todaysHours: hours });
-                }}
-                className="w-32 border rounded px-2 py-1"
-              />
-            </div>
-            {/* MENU */}
-            <div className="mb-4">
-              <Label className="mr-2">Today's Menu:</Label>
-              <Button asChild variant="link" className="p-0 h-auto ml-1">
-                <Link href="/owner/menu">Edit Today's Menu</Link>
-              </Button>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(Array.isArray(truckData?.todaysMenu) && menuItems.length)
-                  ? truckData.todaysMenu.map((id: string, i: number) => {
-                      const item = menuItems.find(m => m.id === id);
-                      if (!item) return null;
-                      return (
-                        <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                          {item.imageUrl &&
-                            <NextImage
-                              src={item.imageUrl}
-                              alt={item.name}
-                              width={20}
-                              height={20}
-                              className="rounded-full mr-1"
-                            />}
-                          {item.name}
-                        </span>
-                      );
-                    })
-                  : <span className="italic text-muted-foreground">No menu set for today</span>
-                }
+            {/* --- Owner Dashboard Header & Truck Status --- */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-3">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-primary drop-shadow-sm">Owner Dashboard</h1>
+                <p className="text-muted-foreground font-medium">
+                  Manage <span className="font-semibold">{truckData?.name || "your food truck"}</span>'s presence and operations.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center space-x-3 p-3 border rounded-xl shadow-sm bg-card">
+                  <Label htmlFor="truck-status-toggle" className={`text-sm font-medium ${truckData.isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                    Truck Status: {truckData.isOpen ? "Open" : "Closed"}
+                  </Label>
+                  <Switch
+                    id="truck-status-toggle"
+                    checked={!!truckData.isOpen}
+                    onCheckedChange={dashboardDisabled ? undefined : async (checked) => {
+                      await updateTruck({ isOpen: checked });
+                      toast({ title: "Status Updated", description: `Your truck is now marked as ${checked ? "Open" : "Closed"}.` });
+                    }}
+                    aria-label={`Toggle truck status to ${truckData.isOpen ? "closed" : "open"}`}
+                    disabled={dashboardDisabled}
+                  />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="block">Setup Progress:</span>
+                  <div className="h-2 w-36 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-2 rounded-full bg-primary transition-all`} style={{ width: `${progress}%` }} />
+                  </div>
+                  <span className="ml-1">{progress}%</span>
+                </div>
               </div>
             </div>
-            {/* VISIBILITY */}
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={!!truckData?.isVisible}
-                onCheckedChange={async (checked: boolean) => {
-                  await updateTruck({ isVisible: checked });
-                }}
-                id="visible-toggle"
-              />
-              <Label htmlFor="visible-toggle">
-                Show Me to Customers <span className="text-xs text-muted-foreground">(Live on Map)</span>
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* CUSTOMER PREVIEW */}
-        <Card className="mb-10 border-dashed border-blue-300/80 bg-blue-50/60 shadow-none">
-          <CardHeader>
-            <CardTitle>
-              <EyeIcon className="inline w-5 h-5 mr-2 text-primary" />
-              Preview: What Customers See
-            </CardTitle>
-            <CardDescription>This is your live customer card.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CustomerTruckCard truck={truckData} menuItems={menuItems} />
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+            {/* --- Dashboard Cards (as before) --- */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <DashboardCard
+                title="Truck Profile"
+                description="Manage name, cuisine, photos, and description."
+                link="/owner/profile"
+                icon={<Edit className="text-primary" />}
+                buttonText="Edit Profile"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="Manage Menu"
+                description="Update items, prices, categories, and availability."
+                link="/owner/menu"
+                icon={<MenuSquare className="text-primary" />}
+                buttonText="Edit Menu"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="Set Schedule"
+                description="Define your regular and special operating hours."
+                link="/owner/schedule"
+                icon={<CalendarClock className="text-primary" />}
+                buttonText="Set Hours"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="View Live Orders"
+                description="Track incoming orders and update their statuses."
+                link="/owner/orders"
+                icon={<Eye className="text-primary" />}
+                buttonText="See Orders"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="Performance Analytics"
+                description="Track sales, popular items, revenue, and ratings."
+                link="/owner/analytics"
+                icon={<LineChart className="text-primary" />}
+                buttonText="View Analytics"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="Billing & Subscription"
+                description="Manage premium features, payments, and invoices."
+                link="/owner/billing"
+                icon={<CreditCard className="text-primary" />}
+                buttonText="Manage Billing"
+                disabled={dashboardDisabled}
+              />
+              <DashboardCard
+                title="Top Trucks Leaderboard"
+                description="See who's trending near you."
+                link="/owner/leaderboard"
+                icon={<Trophy className="text-yellow-400" />}
+                buttonText="View Leaderboard"
+                disabled={false}
+              />
+            </div>
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
