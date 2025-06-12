@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
-  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, UserPlus, Menu as MenuIcon, ChevronLeft
+  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, UserPlus, Menu as MenuIcon, ChevronLeft, ArrowLeftRight, Sun, Moon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
@@ -81,7 +81,7 @@ function OwnerSidebar({ current, onNav, open, setOpen }: { current: string; onNa
           exit={{ x: -320, opacity: 0 }}
         >
           <div className="flex items-center justify-between mb-8 px-2">
-            <span className="font-bold text-primary text-xl tracking-tight">FoodieTruck</span>
+            <span className="font-bold text-primary text-xl tracking-tight">FindATruck</span>
             <button className="md:hidden" onClick={() => setOpen(false)}>
               <ChevronLeft />
             </button>
