@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from "react";
@@ -17,8 +16,18 @@ interface FoodTruckCardProps {
 
 export function FoodTruckCard({ truck }: FoodTruckCardProps) {
   const placeholderImage = `https://placehold.co/400x200.png?text=${encodeURIComponent(truck.name || 'Food Truck')}`;
-  const mainImage = truck.imageUrl || (truck.imageGallery && truck.imageGallery[0]) || placeholderImage;
-  const images = truck.imageGallery && truck.imageGallery.length > 1 ? truck.imageGallery.slice(0, 3) : [];
+  const mainImage =
+    truck.imageUrl ||
+    (Array.isArray(truck.imageGallery) && truck.imageGallery.length > 0
+      ? truck.imageGallery[0]
+      : placeholderImage);
+
+  // Always an array, never undefined
+  const gallery = Array.isArray(truck.imageGallery) && truck.imageGallery.length > 1
+    ? truck.imageGallery.slice(1, 4)
+    : [];
+  const tags = Array.isArray(truck.tags) ? truck.tags.slice(0, 2) : [];
+
   const isOpen = !!truck.isOpen;
   const isFeatured = !!truck.isFeatured;
   const isFavorite = !!truck.isFavorite;
@@ -26,7 +35,11 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
   const [imgSrc, setImgSrc] = useState(mainImage);
 
   return (
-    <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full bg-card group" role="region" aria-labelledby={`truck-title-${truck.id}`}>
+    <Card
+      className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full bg-card group"
+      role="region"
+      aria-labelledby={`truck-title-${truck.id}`}
+    >
       <Link
         href={`/trucks/${truck.id}`}
         aria-label={`View details for ${truck.name}`}
@@ -43,28 +56,33 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
             data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
             onError={() => setImgSrc(placeholderImage)}
             unoptimized={imgSrc.startsWith("http") ? false : true}
+            priority
           />
-          {isFeatured && (
-            <span className="absolute top-3 left-3 bg-yellow-400 text-black px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
-              ★ Featured
-            </span>
-          )}
-          {isFavorite && (
-            <span className="absolute top-3 right-3 bg-pink-500 text-white px-2 py-0.5 text-xs font-bold rounded shadow-md z-10">
-              ♥
-            </span>
-          )}
-          {images.length > 0 && (
-            <div className="absolute bottom-2 right-2 flex gap-1 z-10">
-              {images.map((img, idx) => (
-                <div key={img || idx} className="w-9 h-9 rounded overflow-hidden border border-white shadow-md">
+          {/* Feature + Favorite: Small, stylish pill overlays */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+            {isFeatured && (
+              <span className="inline-flex items-center bg-yellow-400/80 text-black px-2 py-0.5 text-xs font-semibold rounded-full shadow-sm ring-1 ring-yellow-500/40">
+                <Star className="w-4 h-4 mr-1 -ml-1" /> Featured
+              </span>
+            )}
+            {isFavorite && (
+              <span className="inline-flex items-center bg-pink-500/90 text-white px-2 py-0.5 text-xs font-semibold rounded-full shadow-sm ring-1 ring-pink-500/40">
+                ♥ Favorite
+              </span>
+            )}
+          </div>
+          {/* Tiny gallery chips: More subtle, right side, under top bar */}
+          {gallery.length > 0 && (
+            <div className="absolute top-3 right-3 flex gap-1 z-10">
+              {gallery.map((img, idx) => (
+                <div key={img || idx} className="w-8 h-8 rounded overflow-hidden border border-white shadow ring-1 ring-black/10">
                   <Image
                     src={img}
-                    alt={`Gallery image ${idx + 1}`}
+                    alt={`Gallery image ${idx + 2}`}
                     fill
                     className="object-cover"
-                    sizes="36px"
-                    onError={(e) => (e.currentTarget.src = placeholderImage)}
+                    sizes="32px"
+                    onError={e => (e.currentTarget.src = placeholderImage)}
                     unoptimized={img.startsWith("http") ? false : true}
                   />
                 </div>
@@ -77,15 +95,11 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg md:text-2xl font-bold truncate flex-1" id={`truck-title-${truck.id}`}>
             <Link href={`/trucks/${truck.id}`} className="hover:text-primary transition-colors">
-              <span>{truck.name || "Unnamed Truck"}</span> {/* Wrapped text in span */}
+              <span>{truck.name || "Unnamed Truck"}</span>
             </Link>
           </CardTitle>
-          {truck.tags && truck.tags.length > 0 && (
-            <div className="flex gap-1">
-              {truck.tags.slice(0, 2).map((tag) => (
-                <Badge variant="secondary" key={tag}>{tag}</Badge>
-              ))}
-            </div>
+          {tags.length > 0 && (
+            <div className="flex gap-1">{tags.map(tag => <Badge variant="secondary" key={tag}>{tag}</Badge>)}</div>
           )}
         </div>
         <CardDescription className="text-sm text-primary flex items-center pt-1">
@@ -95,7 +109,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
       <CardContent className="flex-grow px-5 pb-0 pt-1 space-y-1.5 text-sm">
         <p className="text-muted-foreground mb-2 line-clamp-3 min-h-[3.25rem]">{truck.description || "No description available."}</p>
         <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
-          {(truck.rating !== undefined && truck.rating > 0) && (
+          {(typeof truck.rating === 'number' && truck.rating > 0) && (
             <span className="flex items-center text-muted-foreground">
               <Star className="w-4 h-4 mr-1.5 text-yellow-400 fill-yellow-400" />
               {truck.rating.toFixed(1)}
@@ -164,6 +178,3 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
     </Card>
   );
 }
-    
-
-    

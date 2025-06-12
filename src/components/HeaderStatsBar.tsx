@@ -72,7 +72,6 @@ export default function HeaderStatsBar() {
         const trucksRef = collection(db, 'trucks');
         const usersRef = collection(db, 'users');
         const openTrucksQuery = query(trucksRef, where("isOpen", "==", true));
-        // Firestore rules allow listing/counting both
         const [trucksSnap, usersSnap, openTrucksSnap] = await Promise.all([
           getCountFromServer(trucksRef),
           getCountFromServer(usersRef),
@@ -94,19 +93,34 @@ export default function HeaderStatsBar() {
 
   return (
     <div
-      className="flex items-center justify-center gap-5 sm:gap-10 py-2 rounded-xl bg-background/75 shadow-lg border border-border mx-auto max-w-2xl
-      transition-all duration-200"
-      style={{ minHeight: 50, marginTop: 2, marginBottom: 2 }}
+      className="
+        mx-auto max-w-xl
+        flex items-center justify-center gap-3 sm:gap-6
+        py-2 px-3
+        rounded-2xl
+        bg-white/65 dark:bg-black/40
+        shadow-[0_2px_12px_0_rgba(0,0,0,0.04)]
+        backdrop-blur-md
+        border border-transparent
+        transition-all
+        ring-1 ring-border/30
+        "
+      style={{
+        minHeight: 44,
+        marginTop: 10,
+        marginBottom: 10,
+        zIndex: 30,
+      }}
       role="region"
       aria-label="Platform Statistics"
     >
-      <StatItem icon={<Truck className="text-primary" />} value={truckCount} label="Total Trucks" />
+      <StatItem icon={<Truck className="text-primary" size={20} />} value={truckCount} label="Trucks" />
       <Separator />
-      <StatItem icon={<Users className="text-primary" />} value={userCount} label="Registered Users" />
+      <StatItem icon={<Users className="text-primary" size={20} />} value={userCount} label="Users" />
       <Separator />
-      <StatItem icon={<CheckCircle className="text-green-600" />} value={openTrucksCount} label="Open Now" />
+      <StatItem icon={<CheckCircle className="text-green-500" size={20} />} value={openTrucksCount} label="Open Now" />
       {error && (
-        <span className="ml-3 text-red-400 text-xs">{error}</span>
+        <span className="ml-3 text-red-400 text-xs font-normal">{error}</span>
       )}
     </div>
   );
@@ -114,16 +128,18 @@ export default function HeaderStatsBar() {
 
 function StatItem({ icon, value, label }: { icon: React.ReactNode, value: number | null, label: string }) {
   return (
-    <div className="flex items-center gap-2 px-2 min-w-[90px]">
-      <span className="text-2xl">{icon}</span>
-      <div>
-        <span className="font-bold text-lg block leading-5">{value !== null ? <CountUp value={value} /> : '...'}</span>
-        <span className="block text-xs text-muted-foreground font-medium">{label}</span>
+    <div className="flex items-center gap-2 px-2 min-w-[70px] group">
+      <span className="text-xl opacity-70 group-hover:opacity-100 transition">{icon}</span>
+      <div className="flex flex-col leading-tight">
+        <span className="font-semibold text-base text-neutral-800 dark:text-neutral-200">
+          {value !== null ? <CountUp value={value} /> : <span className="animate-pulse">...</span>}
+        </span>
+        <span className="block text-[11px] text-muted-foreground font-medium tracking-wide">{label}</span>
       </div>
     </div>
   );
 }
 
 function Separator() {
-  return <span className="mx-1 w-px h-7 bg-border hidden sm:inline-block" />;
+  return <span className="mx-1 w-px h-6 bg-border/30 hidden sm:inline-block rounded-full" />;
 }
