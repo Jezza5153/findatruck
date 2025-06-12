@@ -1,4 +1,5 @@
 'use client';
+
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
-  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun
+  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, EyeIcon, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun, ArrowLeftRight, UserPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
@@ -21,7 +22,7 @@ import { motion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import axios from 'axios';
 
-// ---- Dark Mode Toggle ----
+// ------------- Theme Toggle -------------
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
@@ -59,29 +60,7 @@ function ThemeToggle() {
   );
 }
 
-// Helper: format time as 12-hour (am/pm)
-function formatAMPM(time: string = '') {
-  if (!time.includes(':')) return time;
-  let [hour, min] = time.split(':');
-  let h = parseInt(hour, 10);
-  let ampm = h >= 12 ? 'pm' : 'am';
-  let h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12.toString().padStart(2, '0')}:${min} ${ampm}`;
-}
-
-// Helper: setup progress
-function setupProgress(truck?: Partial<FoodTruck>) {
-  if (!truck) return 0;
-  let n = 0;
-  if (truck.name) n++;
-  if (truck.cuisine) n++;
-  if (truck.currentLocation && truck.currentLocation.address) n++;
-  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
-  if (truck.todaysHours && truck.todaysHours.open && truck.todaysHours.close) n++;
-  return Math.round((n / 5) * 100);
-}
-
-// Helper: status display (now animated)
+// ----------- Status Pill --------------
 function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
   if (!open) return (
     <motion.span
@@ -109,7 +88,7 @@ function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
   );
 }
 
-// ---- Weather Widget ----
+// ----------- Weather Widget -----------
 function WeatherWidget({ lat, lng }: { lat?: number | null; lng?: number | null }) {
   const [forecast, setForecast] = useState<any>(null);
   useEffect(() => {
@@ -133,7 +112,7 @@ function WeatherWidget({ lat, lng }: { lat?: number | null; lng?: number | null 
   );
 }
 
-// ---- Customer Feedback Widget ----
+// ------------- Customer Feedback --------------
 function CustomerFeedback({ truckId }: { truckId?: string | null }) {
   const [feedback, setFeedback] = useState<any[]>([]);
   useEffect(() => {
@@ -162,7 +141,7 @@ function CustomerFeedback({ truckId }: { truckId?: string | null }) {
   );
 }
 
-// ---- Analytics Mini-Widgets ----
+// ----------- Analytics Widgets ------------
 function AnalyticsWidgets({ truckId }: { truckId?: string | null }) {
   const [orders, setOrders] = useState(0);
   const [sales, setSales] = useState(0);
@@ -182,7 +161,7 @@ function AnalyticsWidgets({ truckId }: { truckId?: string | null }) {
     });
   }, [truckId]);
   return (
-    <div className="flex gap-4 mb-4">
+    <div className="flex gap-4 mb-4 mt-28 md:mt-0">
       <div className="p-3 bg-green-50 rounded font-bold">Orders: {orders}</div>
       <div className="p-3 bg-yellow-50 rounded font-bold">Sales: ${sales.toFixed(2)}</div>
       {topItem && <div className="p-3 bg-blue-50 rounded font-bold">Top Item: {topItem}</div>}
@@ -190,7 +169,7 @@ function AnalyticsWidgets({ truckId }: { truckId?: string | null }) {
   );
 }
 
-// ---- Real-Time Alerts ----
+// ----------- Real Time Alerts -------------
 function RealTimeAlert({ alerts }: { alerts: any[] }) {
   if (!alerts?.length) return null;
   return (
@@ -205,7 +184,29 @@ function RealTimeAlert({ alerts }: { alerts: any[] }) {
   );
 }
 
-// ------------- UPGRADED CUSTOMER CARD --------------
+// ----------- Format AM/PM -------------
+function formatAMPM(time: string = '') {
+  if (!time.includes(':')) return time;
+  let [hour, min] = time.split(':');
+  let h = parseInt(hour, 10);
+  let ampm = h >= 12 ? 'pm' : 'am';
+  let h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12.toString().padStart(2, '0')}:${min} ${ampm}`;
+}
+
+// ----------- Setup Progress ------------
+function setupProgress(truck?: Partial<FoodTruck>) {
+  if (!truck) return 0;
+  let n = 0;
+  if (truck.name) n++;
+  if (truck.cuisine) n++;
+  if (truck.currentLocation && truck.currentLocation.address) n++;
+  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
+  if (truck.todaysHours && truck.todaysHours.open && truck.todaysHours.close) n++;
+  return Math.round((n / 5) * 100);
+}
+
+// ----------- Customer Card Preview ------------
 function CustomerTruckCard({
   truck,
   menuItems
@@ -216,7 +217,7 @@ function CustomerTruckCard({
   const menuList = (Array.isArray(truck.todaysMenu) && menuItems.length)
     ? truck.todaysMenu
         .map((id: string) => menuItems.find(m => m.id === id))
-        .filter((m): m is MenuItem => !!m) // type guard, fixes "possibly undefined"
+        .filter((m): m is MenuItem => !!m)
     : [];
   return (
     <motion.div
@@ -290,7 +291,85 @@ function CustomerTruckCard({
   );
 }
 
-// --------------- MAIN DASHBOARD -------------------
+// ----------- Quick Actions Sidebar ------------
+function QuickActionsSidebar({ truckData, updateTruck, router, dashboardDisabled }: any) {
+  return (
+    <aside className="hidden md:flex flex-col gap-2 px-2 py-6 min-w-[170px] bg-card/90 border-r border-primary/10 shadow-lg z-30 mt-4 rounded-xl ml-2">
+      <span className="text-xs uppercase text-muted-foreground mb-2 tracking-wide font-semibold pl-2">
+        Quick Actions
+      </span>
+      <Button
+        onClick={() => router.push('/owner/menu')}
+        size="sm"
+        variant="outline"
+        className="justify-start"
+        icon={<MenuSquare className="mr-2 w-4 h-4" />}
+        disabled={dashboardDisabled}
+      >New Menu</Button>
+      <Button
+        onClick={() => updateTruck({ isOpen: !truckData.isOpen })}
+        size="sm"
+        variant={truckData.isOpen ? "destructive" : "secondary"}
+        className="justify-start"
+        icon={<ArrowLeftRight className="mr-2 w-4 h-4" />}
+        disabled={dashboardDisabled}
+      >{truckData.isOpen ? "Close Truck" : "Open Truck"}</Button>
+      <Button
+        onClick={() => router.push('/owner/orders')}
+        size="sm"
+        variant="outline"
+        className="justify-start"
+        icon={<Eye className="mr-2 w-4 h-4" />}
+        disabled={dashboardDisabled}
+      >Orders</Button>
+      <Button
+        onClick={() => router.push('/owner/schedule')}
+        size="sm"
+        variant="outline"
+        className="justify-start"
+        icon={<CalendarClock className="mr-2 w-4 h-4" />}
+        disabled={dashboardDisabled}
+      >Edit Hours</Button>
+      <Button
+        onClick={() => router.push('/owner/leaderboard')}
+        size="sm"
+        variant="outline"
+        className="justify-start"
+        icon={<Trophy className="mr-2 w-4 h-4 text-yellow-400" />}
+      >Leaderboard</Button>
+    </aside>
+  );
+}
+
+// ----------- Dashboard Card ------------
+interface DashboardCardProps {
+  title: string;
+  description: string;
+  link: string;
+  icon: React.ReactNode;
+  buttonText: string;
+  disabled?: boolean;
+}
+function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
+  return (
+    <Card className={`hover:shadow-lg transition-all flex flex-col border-primary/10 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center text-xl font-semibold gap-2">
+          <span className="mr-2 h-6 w-6">{icon}</span> {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <div className="flex-grow" />
+      <CardContent className="pt-0">
+        <Button className="w-full" asChild disabled={disabled}>
+          <Link href={disabled ? "#" : link}>{buttonText}</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ----------- Main Dashboard Page ------------
 export default function OwnerDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
@@ -302,7 +381,7 @@ export default function OwnerDashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Hotkeys (n: new menu, o: open/close, s: schedule, l: leaderboard)
+  // Hotkeys
   useHotkeys('n', () => router.push('/owner/menu'), [router]);
   useHotkeys('o', () => updateTruck && truckData && updateTruck({ isOpen: !truckData.isOpen }), [truckData]);
   useHotkeys('s', () => router.push('/owner/schedule'), [router]);
@@ -350,7 +429,6 @@ export default function OwnerDashboardPage() {
 
   const updateTruck = useCallback(async (updates: Partial<FoodTruck>) => {
     if (!truckId) return;
-    // Remove nulls for lat/lng if type doesn't allow
     const sanitizedUpdates: Partial<FoodTruck> = { ...updates };
     if ('lat' in sanitizedUpdates && sanitizedUpdates.lat === null) delete sanitizedUpdates.lat;
     if ('lng' in sanitizedUpdates && sanitizedUpdates.lng === null) delete sanitizedUpdates.lng;
@@ -403,7 +481,6 @@ export default function OwnerDashboardPage() {
     );
   }
 
-  // --------- UI START ----------
   const progress = setupProgress(truckData);
 
   // ---- Social Share Handler ----
@@ -413,39 +490,59 @@ export default function OwnerDashboardPage() {
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
   };
 
+  // ---------------- UI START -----------------
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      {/* OWNER MAIN NAVIGATION SIDEBAR */}
       <OwnerSidebar />
+
+      {/* QUICK ACTIONS SIDEBAR */}
+      <QuickActionsSidebar
+        truckData={truckData}
+        updateTruck={updateTruck}
+        router={router}
+        dashboardDisabled={dashboardDisabled}
+      />
+
+      {/* MAIN CONTENT */}
       <main className="flex-1 px-4 py-8 md:px-8 relative">
 
-        {/* Dark Mode Toggle */}
+        {/* Theme Toggle */}
         <div className="absolute top-4 right-4 z-40">
           <ThemeToggle />
         </div>
 
-        {/* Quick-Action Speedbar */}
+        {/* Stats Floater */}
         <motion.div
-          className="fixed top-0 left-0 w-full flex justify-center z-30 bg-card/90 py-2 shadow gap-4"
-          initial={{ y: -40 }}
-          animate={{ y: 0 }}
+          className="fixed left-1/2 transform -translate-x-1/2 top-4 z-40 bg-white/90 border shadow-xl rounded-2xl flex gap-8 px-8 py-4"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          style={{ pointerEvents: 'none' }}
         >
-          <Button onClick={() => router.push('/owner/menu')} size="sm">+ New Menu</Button>
-          <Button onClick={() => updateTruck({ isOpen: !truckData.isOpen })} size="sm">
-            {truckData.isOpen ? "Close Truck" : "Open Truck"}
-          </Button>
-          <Button onClick={() => router.push('/owner/orders')} size="sm">Orders</Button>
-          <Button onClick={() => router.push('/owner/schedule')} size="sm">Edit Hours</Button>
-          <Button onClick={() => router.push('/owner/leaderboard')} size="sm">Leaderboard</Button>
+          <div className="flex flex-col items-center">
+            <MapPin className="w-6 h-6 text-blue-500" />
+            <span className="font-bold text-xl">5</span>
+            <span className="text-xs text-muted-foreground font-semibold">Total Trucks</span>
+          </div>
+          <div className="border-l h-8 my-auto" />
+          <div className="flex flex-col items-center">
+            <UserPlus className="w-6 h-6 text-blue-500" />
+            <span className="font-bold text-xl">8</span>
+            <span className="text-xs text-muted-foreground font-semibold">Registered Users</span>
+          </div>
+          <div className="border-l h-8 my-auto" />
+          <div className="flex flex-col items-center">
+            <CheckCircle2 className="w-6 h-6 text-green-500" />
+            <span className="font-bold text-xl">4</span>
+            <span className="text-xs text-muted-foreground font-semibold">Open Now</span>
+          </div>
         </motion.div>
-
-        {/* Real-Time Alerts */}
-        <RealTimeAlert alerts={alerts} />
 
         {/* Analytics Mini-Widgets */}
         <AnalyticsWidgets truckId={truckId} />
 
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-3 mt-20">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-primary drop-shadow-sm">Owner Dashboard</h1>
             <p className="text-muted-foreground font-medium">
@@ -477,6 +574,9 @@ export default function OwnerDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Real-Time Alerts */}
+        <RealTimeAlert alerts={alerts} />
 
         {/* PRESENCE TOOLS */}
         <Card className="mb-8 shadow-md border-2 border-primary/10 bg-white/70 backdrop-blur-sm">
@@ -520,7 +620,6 @@ export default function OwnerDashboardPage() {
                     await updateTruck({
                       currentLocation: { address: addr },
                       address: addr,
-                      // lat/lng not set to null (omit)
                       locationSetAt: new Date(),
                     });
                     toast({ title: "Location Updated", description: "Customers will see your entered address now." });
@@ -712,33 +811,5 @@ export default function OwnerDashboardPage() {
         </div>
       </main>
     </div>
-  );
-}
-
-// ---- DashboardCard Component ----
-interface DashboardCardProps {
-  title: string;
-  description: string;
-  link: string;
-  icon: React.ReactNode;
-  buttonText: string;
-  disabled?: boolean;
-}
-function DashboardCard({ title, description, link, icon, buttonText, disabled }: DashboardCardProps) {
-  return (
-    <Card className={`hover:shadow-lg transition-all flex flex-col border-primary/10 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center text-xl font-semibold gap-2">
-          <span className="mr-2 h-6 w-6">{icon}</span> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <div className="flex-grow" />
-      <CardContent className="pt-0">
-        <Button className="w-full" asChild disabled={disabled}>
-          <Link href={disabled ? "#" : link}>{buttonText}</Link>
-        </Button>
-      </CardContent>
-    </Card>
   );
 }

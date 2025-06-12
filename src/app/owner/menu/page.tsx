@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import NextImage from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck, CheckCircle, Move, XCircle, Info } from "lucide-react";
+import { Utensils, PlusCircle, Edit3, Trash2, Image as ImageIcon, DollarSign, Tag, Loader2, AlertTriangle, LayoutDashboard, List, Users, ReceiptText, Truck, CheckCircle, Move, XCircle, Info, Eye, Copy, ToggleRight, ToggleLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import type { UserDocument } from '@/lib/types';
-
 import {
   DragDropContext,
   Droppable,
@@ -31,6 +30,7 @@ import {
   DropResult
 } from "@hello-pangea/dnd";
 
+// --- Types ---
 type MenuItem = {
   id: string;
   name: string;
@@ -45,30 +45,40 @@ type MenuItem = {
   updatedAt?: any;
   order?: number;
 };
-
 type MenuCategory = {
   id: string;
   name: string;
   createdAt?: any;
   order?: number;
 };
-
 // --- Preset tags ---
 const PRESET_TAGS = [
   "Vegan", "Vegetarian", "Gluten-free", "Spicy", "Dairy-free", "Nut-free"
 ];
-
-// --- UTILITY: Remove undefined fields (for Firestore!) ---
+// --- Utility: Remove undefined fields ---
 function removeUndefinedFields<T extends Record<string, any>>(obj: T) {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined)
   ) as Partial<T>;
 }
-
-// --- UTILITY: Draft storage ---
+// --- Utility: Draft storage ---
 const DRAFT_KEY = "foodietruck_menuitem_draft";
 const DRAFT_CATEGORY_KEY = "foodietruck_category_draft";
 
+// --- Utility: Category Color Coding ---
+const CATEGORY_COLORS = [
+  "bg-blue-100 text-blue-900",
+  "bg-green-100 text-green-900",
+  "bg-yellow-100 text-yellow-900",
+  "bg-purple-100 text-purple-900",
+  "bg-pink-100 text-pink-900",
+  "bg-orange-100 text-orange-900",
+];
+function getCategoryColor(idx: number) {
+  return CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+}
+
+// --- Sidebar (move to components/ownersidebar.tsx if you wish) ---
 function OwnerSidebar({ active }: { active: string }) {
   const nav = [
     { href: '/owner/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
@@ -78,22 +88,24 @@ function OwnerSidebar({ active }: { active: string }) {
     { href: '/owner/truck', icon: <Truck />, label: 'My Truck' }
   ];
   return (
-    <aside className="sidebar-nav">
-      <div className="sidebar-header">Owner Panel</div>
-      {nav.map(link => (
-        <Link key={link.href} href={link.href} className={`sidebar-link${active === link.href ? ' active' : ''}`}>
-          {link.icon}
-          {link.label}
-        </Link>
-      ))}
+    <aside className="sidebar-nav sticky top-0 h-screen hidden md:flex flex-col bg-white border-r min-w-[220px] z-10">
+      <div className="sidebar-header font-bold text-lg px-6 py-4 border-b">Owner Panel</div>
+      <nav className="flex-1 py-6 px-4 flex flex-col gap-2">
+        {nav.map(link => (
+          <Link key={link.href} href={link.href} className={`sidebar-link flex items-center gap-2 p-2 rounded-md transition-all ${active === link.href ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted/70'}`}>
+            {link.icon}
+            {link.label}
+          </Link>
+        ))}
+      </nav>
     </aside>
   );
 }
 
+// --- Main Page ---
 export default function OwnerMenuPage() {
   const { toast } = useToast();
   const router = useRouter();
-
   // --- STATE ---
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -108,7 +120,6 @@ export default function OwnerMenuPage() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [currentCategoryName, setCurrentCategoryName] = useState('');
   const [categoryOrder, setCategoryOrder] = useState(0);
-
   // --- Item Dialog ---
   const [itemName, setItemName] = useState('');
   const [itemDescription, setItemDescription] = useState('');
@@ -120,10 +131,15 @@ export default function OwnerMenuPage() {
   const [itemImageFile, setItemImageFile] = useState<File | null>(null);
   const [itemImagePreview, setItemImagePreview] = useState<string | undefined>(undefined);
   const [itemOrder, setItemOrder] = useState(0);
-
   const [todaysMenuIds, setTodaysMenuIds] = useState<string[]>([]);
   const [menuActionLog, setMenuActionLog] = useState<{id: string, count: number, name: string}[]>([]);
   const [savingTodayMenu, setSavingTodayMenu] = useState(false);
+  // --- New for upgrades ---
+  const [isMenuLive, setIsMenuLive] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [bulkSelect, setBulkSelect] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const fabRef = useRef<HTMLButtonElement>(null);
 
   // --- AUTH & OWNER TRUCK RESOLUTION ---
   useEffect(() => {
@@ -205,6 +221,12 @@ export default function OwnerMenuPage() {
       } else {
         setMenuActionLog([]);
       }
+      // --- Menu Publish Toggle ---
+      if (truckSnap.exists() && typeof truckSnap.data().menuLive === "boolean") {
+        setIsMenuLive(!!truckSnap.data().menuLive);
+      } else {
+        setIsMenuLive(true);
+      }
 
       if (fetchedCategories.length > 0 && !itemCategoryName) {
         setItemCategoryName(fetchedCategories[0].name);
@@ -216,7 +238,6 @@ export default function OwnerMenuPage() {
       if (!silent) setIsLoading(false);
     }
   }
-
   useEffect(() => {
     if (!truckId) {
       setIsLoading(false);
@@ -402,6 +423,22 @@ export default function OwnerMenuPage() {
     setIsSubmitting(false);
   };
 
+  // --- Duplicate Menu Item ---
+  const handleDuplicateItem = (item: MenuItem) => {
+    setEditingItem(null);
+    setIsItemDialogOpen(true);
+    setItemName(item.name + " (Copy)");
+    setItemDescription(item.description || "");
+    setItemPrice(item.price?.toString() || "");
+    setItemCategoryName(item.category || "");
+    setItemTags(item.tags || []);
+    setItemCustomTag('');
+    setItemOutOfStock(false);
+    setItemImageFile(null);
+    setItemImagePreview(item.imageUrl || undefined);
+    setItemOrder(0);
+  };
+
   // --- TODAY'S MENU HANDLER ---
   const handleToggleTodayMenu = async (itemId: string) => {
     if (!truckId) return;
@@ -435,6 +472,39 @@ export default function OwnerMenuPage() {
       toast({ title: "Error updating today's menu", description: e.message || String(e), variant: "destructive" });
     }
     setSavingTodayMenu(false);
+  };
+
+  // --- Bulk Out-Of-Stock ---
+  const handleBulkOutOfStock = async () => {
+    if (!truckId || bulkSelect.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const batch = writeBatch(db);
+      bulkSelect.forEach(itemId => {
+        batch.update(doc(db, "trucks", truckId, "menuItems", itemId), { outOfStock: true });
+      });
+      await batch.commit();
+      toast({ title: "Bulk Out-Of-Stock", description: `Set ${bulkSelect.length} item(s) out of stock.` });
+      setBulkSelect([]);
+      await fetchMenuData(true);
+    } catch (e: any) {
+      toast({ title: "Bulk Out-Of-Stock Error", description: e.message || String(e), variant: "destructive" });
+    }
+    setIsSubmitting(false);
+  };
+
+  // --- Menu Live Toggle ---
+  const handleMenuLiveToggle = async () => {
+    if (!truckId) return;
+    setIsSubmitting(true);
+    try {
+      await setDoc(doc(db, "trucks", truckId), { menuLive: !isMenuLive }, { merge: true });
+      setIsMenuLive(!isMenuLive);
+      toast({ title: "Menu Publish State Changed", description: `Menu is now ${!isMenuLive ? "Live" : "Draft"}.` });
+    } catch (e: any) {
+      toast({ title: "Error toggling menu live state", description: e.message || String(e), variant: "destructive" });
+    }
+    setIsSubmitting(false);
   };
 
   // --- DIALOG AND FORM HELPERS ---
@@ -487,7 +557,7 @@ export default function OwnerMenuPage() {
     setIsItemDialogOpen(true);
   };
 
-  // --- AUTOSAVE DRAFTS ---
+  // --- AUTOSAVE DRAFTS (Items) ---
   useEffect(() => {
     if (!isItemDialogOpen) return;
     const draft = {
@@ -506,11 +576,46 @@ export default function OwnerMenuPage() {
     setItemCustomTag('');
   };
 
+  // --- SEARCH & FILTER ---
+  function filterItems(items: MenuItem[]) {
+    if (!searchTerm.trim()) return items;
+    const term = searchTerm.trim().toLowerCase();
+    return items.filter(item =>
+      item.name.toLowerCase().includes(term) ||
+      (item.description && item.description.toLowerCase().includes(term)) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(term))) ||
+      (item.category && item.category.toLowerCase().includes(term))
+    );
+  }
+
+  // --- FAB Scroll to top on mobile ---
+  useEffect(() => {
+    if (isItemDialogOpen && fabRef.current) {
+      fabRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isItemDialogOpen]);
+
   // --- RENDER ---
   return (
     <div className="flex min-h-screen bg-background">
       <OwnerSidebar active="/owner/menu" />
       <main className="flex-1 px-2 md:px-8 py-8">
+        {/* --- Mobile FABs --- */}
+        <button
+          ref={fabRef}
+          className="md:hidden fixed z-40 right-6 bottom-24 w-16 h-16 flex items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary/80 transition-all text-3xl"
+          onClick={openNewItemDialog}
+          aria-label="Add New Item"
+        >
+          <PlusCircle className="w-9 h-9" />
+        </button>
+        <button
+          className="md:hidden fixed z-40 right-6 bottom-6 w-14 h-14 flex items-center justify-center rounded-full bg-muted text-primary border shadow-lg hover:bg-primary/10 transition-all"
+          onClick={openNewCategoryDialog}
+          aria-label="Add New Category"
+        >
+          <List className="w-7 h-7" />
+        </button>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center min-h-[70vh]">
             <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
@@ -531,13 +636,47 @@ export default function OwnerMenuPage() {
           </div>
         ) : (
           <div className="container mx-auto px-0 md:px-2">
+            {/* --- Title & Menu Live Toggle --- */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <h1 className="text-3xl md:text-4xl font-bold text-primary flex items-center mb-4 sm:mb-0">
                 <Utensils className="mr-3 h-8 w-8" /> Manage Your Menu
               </h1>
-              <Button asChild variant="outline">
-                <Link href="/owner/dashboard">Back to Dashboard</Link>
+              <div className="flex gap-3 items-center">
+                <Button asChild variant="outline" className="hidden md:block">
+                  <Link href="/owner/dashboard">Back to Dashboard</Link>
+                </Button>
+                <Button variant={showPreview ? "secondary" : "outline"} onClick={() => setShowPreview(p => !p)}><Eye className="mr-2 w-4 h-4" /> {showPreview ? "Hide" : "Show"} Customer Preview</Button>
+                <button
+                  className={`ml-2 flex items-center px-3 py-2 rounded-md shadow border cursor-pointer ${isMenuLive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-300'}`}
+                  onClick={handleMenuLiveToggle}
+                  disabled={isSubmitting}
+                  title="Toggle menu published/draft"
+                >
+                  {isMenuLive ? <ToggleRight className="mr-1 w-5 h-5 text-green-600" /> : <ToggleLeft className="mr-1 w-5 h-5 text-gray-600" />}
+                  {isMenuLive ? 'Menu Live' : 'Draft'}
+                </button>
+              </div>
+            </div>
+            {/* --- Search Bar and Bulk Out-Of-Stock --- */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+              <div className="relative w-full sm:w-80">
+                <Input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Search menu by name, tag, category..."
+                  className="pl-9"
+                />
+                <Search className="absolute left-2 top-2.5 w-5 h-5 text-muted-foreground" />
+              </div>
+              <Button
+                variant={bulkSelect.length > 0 ? "destructive" : "outline"}
+                disabled={bulkSelect.length === 0 || isSubmitting}
+                onClick={handleBulkOutOfStock}
+                className="ml-0 sm:ml-4"
+              >
+                Set Out of Stock ({bulkSelect.length})
               </Button>
+              <div className="flex-1" />
             </div>
             {/* --- Today's Menu (at the top) --- */}
             <Card className="mb-8 shadow-lg">
@@ -554,12 +693,12 @@ export default function OwnerMenuPage() {
                   <div className="text-sm text-muted-foreground">Add categories and menu items below to select your daily menu.</div>
                 ) : (
                   <div className="space-y-4">
-                    {categories.map(category => {
-                      const items = menuItems.filter(item => item.category === category.name).sort((a,b) => (a.order||0)-(b.order||0));
+                    {categories.map((category, idx) => {
+                      const items = filterItems(menuItems.filter(item => item.category === category.name)).sort((a,b) => (a.order||0)-(b.order||0));
                       if (!items.length) return null;
                       return (
                         <div key={category.id} className="mb-2">
-                          <div className="font-semibold text-primary mb-2">{category.name}</div>
+                          <div className={`font-semibold px-2 py-1 rounded mb-2 inline-block ${getCategoryColor(idx)}`}>{category.name}</div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {items.map(item => (
                               <div key={item.id} className="flex items-center gap-2 p-2 border rounded bg-muted/60">
@@ -587,29 +726,6 @@ export default function OwnerMenuPage() {
                       );
                     })}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-            {/* --- Analytics Widget --- */}
-            <Card className="mb-6 bg-blue-50/40 border-blue-300/30">
-              <CardHeader className="flex-row items-center gap-4">
-                <LineChart className="h-5 w-5 text-primary mr-2" />
-                <CardTitle className="text-base">Today's Menu Analytics</CardTitle>
-                <CardDescription className="text-xs ml-2">Most frequently toggled items this week</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {menuActionLog.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">No analytics yet. Start adding items to your daily menu!</span>
-                ) : (
-                  <ul className="list-inside text-sm">
-                    {[...menuActionLog].sort((a,b)=>b.count-a.count).slice(0,3).map((log, i) => (
-                      <li key={log.id} className="flex items-center gap-1">
-                        <span className="font-bold">{i+1}.</span>
-                        <span>{log.name}</span>
-                        <span className="text-xs text-muted-foreground ml-2">({log.count} times)</span>
-                      </li>
-                    ))}
-                  </ul>
                 )}
               </CardContent>
             </Card>
@@ -698,7 +814,7 @@ export default function OwnerMenuPage() {
                   <div>
                     <Label htmlFor="itemImageFile"><ImageIcon className="inline mr-1 h-4 w-4" />Item Image (Optional)</Label>
                     <Input id="itemImageFile" type="file" accept="image/png, image/jpeg, image/webp" onChange={handleImageFileChange} className="mt-1" />
-                    {itemImagePreview && <div className="mt-2 relative w-24 h-24"><NextImage src={itemImagePreview} alt="Preview" fill className="rounded object-cover border" /></div>}
+                    {itemImagePreview && <div className="mt-2 relative w-24 h-24"><NextImage src={itemImagePreview} alt="Preview" fill className="rounded object-cover border" loading="lazy" /></div>}
                   </div>
                 </div>
                 <DialogFooter>
@@ -728,7 +844,7 @@ export default function OwnerMenuPage() {
                                 <div
                                   ref={prov.innerRef}
                                   {...prov.draggableProps}
-                                  className={`flex justify-between items-center p-2.5 border rounded-md bg-muted/40 hover:bg-muted/70 mb-1 ${snap.isDragging ? "shadow-lg" : ""}`}
+                                  className={`flex justify-between items-center p-2.5 border rounded-md ${getCategoryColor(idx)} hover:bg-opacity-80 mb-1 transition-all duration-200 ${snap.isDragging ? "shadow-lg scale-[1.01]" : ""}`}
                                 >
                                   <span {...prov.dragHandleProps} title="Drag to reorder"><Move className="inline w-4 h-4 mr-1 text-muted-foreground cursor-move" /></span>
                                   <span className="font-medium flex-1">{cat.name}</span>
@@ -750,16 +866,20 @@ export default function OwnerMenuPage() {
               {/* DragDrop for Items within categories */}
               <Card className="md:col-span-2 shadow-lg">
                 <CardHeader>
-                  <div className="flex justify-between items-center"><CardTitle className="text-xl">Menu Items</CardTitle><Button onClick={openNewItemDialog} disabled={categories.length === 0}><PlusCircle className="mr-2 h-4 w-4" /> Add New Item</Button></div>
-                  <CardDescription>Add, edit, or remove items from your menu. Items are grouped by category below. Drag to reorder within category.</CardDescription>
+                  <div className="flex justify-between items-center"><CardTitle className="text-xl">Menu Items</CardTitle>
+                    <div className="flex gap-2">
+                      <Button onClick={openNewItemDialog} disabled={categories.length === 0} className="hidden md:flex"><PlusCircle className="mr-2 h-4 w-4" /> Add New Item</Button>
+                    </div>
+                  </div>
+                  <CardDescription>Add, edit, duplicate, or remove items from your menu. Items are grouped by category below. Drag to reorder within category.</CardDescription>
                   {categories.length === 0 && <p className="text-xs text-destructive pt-2">Please add a category before adding menu items.</p>}
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {categories.length > 0 ? categories.map(category => {
-                    const items = menuItems.filter(item => item.category === category.name).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                  {categories.length > 0 ? categories.map((category, catIdx) => {
+                    const items = filterItems(menuItems.filter(item => item.category === category.name)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
                     return items.length > 0 ? (
                       <div key={category.id}>
-                        <h3 className="text-lg font-semibold mb-3 text-primary border-b pb-1">{category.name}</h3>
+                        <h3 className={`text-lg font-semibold mb-3 border-b pb-1 px-2 inline-block rounded ${getCategoryColor(catIdx)}`}>{category.name}</h3>
                         <DragDropContext onDragEnd={result => onDragEndItem(category.id, result)}>
                           <Droppable droppableId={category.id}>
                             {(provided) => (
@@ -770,13 +890,23 @@ export default function OwnerMenuPage() {
                                       <Card
                                         ref={prov.innerRef}
                                         {...prov.draggableProps}
-                                        className={`bg-card p-0 overflow-hidden shadow-sm ${snap.isDragging ? "ring-2 ring-primary/40" : ""}`}
+                                        className={`bg-card p-0 overflow-hidden shadow-sm transition-all duration-200 ${snap.isDragging ? "ring-2 ring-primary/40 scale-[1.01]" : ""}`}
                                       >
-                                        <div className="flex flex-col sm:flex-row">
-                                          <span {...prov.dragHandleProps} title="Drag to reorder">
+                                        <div className="flex flex-col sm:flex-row relative">
+                                          <span {...prov.dragHandleProps} title="Drag to reorder" className="flex-none">
                                             <Move className="w-4 h-4 text-muted-foreground cursor-move m-3" />
                                           </span>
-                                          {item.imageUrl && <div className="w-full sm:w-1/3 h-40 sm:h-auto relative"><NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" /></div>}
+                                          <Checkbox
+                                            className="absolute right-4 top-4"
+                                            checked={bulkSelect.includes(item.id)}
+                                            onCheckedChange={c => setBulkSelect(c ? [...bulkSelect, item.id] : bulkSelect.filter(id => id !== item.id))}
+                                            aria-label="Select for bulk"
+                                          />
+                                          {item.imageUrl && (
+                                            <div className="w-full sm:w-1/3 h-40 sm:h-auto relative min-w-[140px] max-w-[180px]">
+                                              <NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" loading="lazy" />
+                                            </div>
+                                          )}
                                           <div className={`flex-1 p-4 flex flex-col justify-between ${item.imageUrl ? 'sm:w-2/3' : 'w-full'}`}>
                                             <div>
                                               <CardTitle className="text-lg mb-1 flex items-center gap-2">
@@ -796,8 +926,9 @@ export default function OwnerMenuPage() {
                                                 </div>
                                               )}
                                             </div>
-                                            <div className="flex justify-end space-x-2 mt-auto pt-2">
+                                            <div className="flex flex-wrap justify-end gap-2 mt-auto pt-2">
                                               <Button variant="outline" size="sm" onClick={() => openEditItemDialog(item)}> <Edit3 className="mr-1 h-3 w-3" /> Edit </Button>
+                                              <Button variant="secondary" size="sm" onClick={() => handleDuplicateItem(item)}><Copy className="mr-1 h-3 w-3" /> Duplicate</Button>
                                               <Button variant="destructive" size="sm" onClick={() => handleDeleteItem(item)}> <Trash2 className="mr-1 h-3 w-3" /> Delete </Button>
                                             </div>
                                           </div>
@@ -818,6 +949,47 @@ export default function OwnerMenuPage() {
                 </CardContent>
               </Card>
             </div>
+            {/* --- Customer Preview Card --- */}
+            {showPreview && (
+              <Card className="mt-10 shadow-xl border-2 border-green-400/60 bg-gradient-to-br from-white to-green-50 animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="text-2xl flex items-center gap-2"><Eye className="w-7 h-7 text-green-500" /> Customer Menu Preview (Live)</CardTitle>
+                  <CardDescription>This is exactly how your menu looks to customers right now.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {categories.map((category, idx) => {
+                      const items = menuItems.filter(item => item.category === category.name && !item.outOfStock && todaysMenuIds.includes(item.id)).sort((a,b) => (a.order||0)-(b.order||0));
+                      if (!items.length) return null;
+                      return (
+                        <div key={category.id}>
+                          <div className={`font-bold mb-3 px-2 py-1 rounded text-lg ${getCategoryColor(idx)}`}>{category.name}</div>
+                          <div className="space-y-3">
+                            {items.map(item => (
+                              <Card key={item.id} className="overflow-hidden shadow-sm">
+                                {item.imageUrl && <div className="w-full h-36 relative"><NextImage src={item.imageUrl} alt={item.name} fill className="object-cover" loading="lazy" /></div>}
+                                <div className="p-3">
+                                  <div className="font-semibold text-base">{item.name}</div>
+                                  <div className="text-xs font-bold text-green-700 mb-1">${item.price.toFixed(2)}</div>
+                                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                                  {item.tags && item.tags.length > 0 && (
+                                    <div className="flex gap-1 flex-wrap mt-1">
+                                      {item.tags.map(t => (
+                                        <span key={t} className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px]">{t}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </main>
@@ -827,3 +999,7 @@ export default function OwnerMenuPage() {
 
 // Add this missing icon if not imported already
 function LineChart(props: any) { return <svg viewBox="0 0 24 24" fill="none" {...props}><path d="M3 17L9 11L13 15L21 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 21H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>; }
+
+// Fade in for preview (add to global.css or use tailwind plugin)
+// .animate-fade-in { animation: fadeIn 0.5s ease; }
+// @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
