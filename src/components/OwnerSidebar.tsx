@@ -13,7 +13,7 @@ const menu = [
   { href: "/owner/billing", label: "Billing", icon: <CreditCard /> },
 ];
 
-export function OwnerSidebar() {
+const OwnerSidebar = () => {
   const pathname = usePathname();
   return (
     <aside className="hidden md:flex flex-col w-60 min-h-screen bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-border))] px-4 py-6">
@@ -35,4 +35,6 @@ export function OwnerSidebar() {
       </nav>
     </aside>
   );
-}
+};
+
+export default OwnerSidebar;

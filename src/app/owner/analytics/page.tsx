@@ -1,5 +1,6 @@
 'use client';
-import { OwnerSidebar } from '@/components/OwnerSidebar';
+import OwnerSidebar from '@/components/OwnerSidebar'; // DEFAULT import!
+import AnalyticsWidgets from '@/components/AnalyticsWidgets';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Star, DollarSign, ShoppingBag, Clock, Users, Utensils, Loader2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
@@ -11,8 +12,9 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import type { UserDocument } from '@/lib/types';
+// If you want to use Chart.js or Recharts, import it here. This is just a placeholder for now.
 
-// Dummy chart until you wire up Recharts/Chart.js
+// Dummy chart until you wire up a real chart component!
 function PlaceholderChart() {
   return (
     <div className="h-[250px] w-full bg-muted/50 rounded-md flex items-center justify-center text-muted-foreground border border-dashed">
@@ -74,7 +76,7 @@ export default function OwnerAnalyticsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // TODO: Replace this with your Firestore logic.
+        // Replace with your Firestore or API call in real use
         await new Promise(resolve => setTimeout(resolve, 800));
         setAnalyticsData({
           totalRevenue: 1250.75,
@@ -246,6 +248,7 @@ export default function OwnerAnalyticsPage() {
               <CardDescription>Visual representation of your sales trends (placeholder).</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* REPLACE PlaceholderChart with a real chart component if/when ready */}
               <PlaceholderChart />
               <p className="text-xs text-muted-foreground mt-2">This section will feature charts showing revenue, order volume, etc.</p>
             </CardContent>

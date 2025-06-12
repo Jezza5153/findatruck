@@ -20,7 +20,7 @@ interface CustomerFeedbackProps {
   truckId?: string | null;
 }
 
-export function CustomerFeedback({ truckId }: CustomerFeedbackProps) {
+const CustomerFeedback = ({ truckId }: CustomerFeedbackProps) => {
   const [feedback, setFeedback] = useState<Review[]>([]);
 
   useEffect(() => {
@@ -87,4 +87,6 @@ export function CustomerFeedback({ truckId }: CustomerFeedbackProps) {
       </div>
     </div>
   );
-}
+};
+
+export default CustomerFeedback;

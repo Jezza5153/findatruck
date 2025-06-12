@@ -1,7 +1,7 @@
 'use client';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-export function RealTimeAlert({ alerts }) {
+const RealTimeAlert = ({ alerts }: { alerts: Array<{ id: string; type: string; title: string; message: string }> }) => {
   if (!alerts?.length) return null;
   return (
     <div className="mb-4">
@@ -13,4 +13,6 @@ export function RealTimeAlert({ alerts }) {
       ))}
     </div>
   );
-}
+};
+
+export default RealTimeAlert;

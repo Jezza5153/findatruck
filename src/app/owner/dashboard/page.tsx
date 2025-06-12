@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import {
-  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun, UserPlus
+  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun, UserPlus, Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase';
@@ -17,7 +17,6 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import type { UserDocument, FoodTruck, MenuItem } from '@/lib/types';
 import OwnerSidebar from '@/components/OwnerSidebar';
-import HeaderStatsBar from '@/components/HeaderStatsBar';
 import AnalyticsWidgets from '@/components/AnalyticsWidgets';
 import CustomerFeedback from '@/components/CustomerFeedback';
 import WeatherWidget from '@/components/WeatherWidget';
@@ -101,7 +100,7 @@ function setupProgress(truck?: Partial<FoodTruck>) {
   return Math.round((n / 5) * 100);
 }
 
-// ---- Customer Card Preview -----------
+// ---- Customer Card Preview (defensive image loading) -----------
 function CustomerTruckCard({
   truck,
   menuItems
@@ -158,20 +157,34 @@ function CustomerTruckCard({
             <Label>Today's Menu:</Label>
             <div className="flex flex-wrap gap-2 mt-1">
               {menuList.length
-                ? menuList.map((item, i) => (
-                    <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                      {item.imageUrl &&
-                        <NextImage
-                          src={item.imageUrl}
-                          alt={item.name}
-                          width={20}
-                          height={20}
-                          className="rounded-full mr-1"
-                        />
-                      }
-                      {item.name}
-                    </span>
-                  ))
+                ? menuList.map((item, i) => {
+                    // Defensive: imageUrl is non-empty and valid
+                    const isImg = typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http');
+                    return (
+                      <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                        {isImg
+                          ? (
+                              <NextImage
+                                src={item.imageUrl}
+                                alt={item.name}
+                                width={20}
+                                height={20}
+                                className="rounded-full mr-1"
+                                unoptimized
+                                onError={(e) => {
+                                  if (process.env.NODE_ENV === 'development') {
+                                    // eslint-disable-next-line no-console
+                                    console.warn('Failed to load image:', item.imageUrl);
+                                  }
+                                }}
+                              />
+                            )
+                          : <ImageIcon className="w-4 h-4 mr-1 text-gray-300" />
+                        }
+                        {item.name}
+                      </span>
+                    );
+                  })
                 : <span className="italic text-muted-foreground">No menu set for today</span>
               }
             </div>
