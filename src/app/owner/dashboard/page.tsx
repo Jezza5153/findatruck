@@ -1,11 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -25,7 +24,6 @@ import FoodTruckMap from '@/components/FoodTruckMap';
 import RealTimeAlert from '@/components/RealTimeAlert';
 import { motion } from 'framer-motion';
 import NextImage from 'next/image';
-import { cn } from '@/lib/utils';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -102,7 +100,7 @@ function setupProgress(truck?: Partial<FoodTruck>) {
   return Math.round((n / 5) * 100);
 }
 
-// ---- Customer Card Preview (defensive image loading) -----------
+// ---- Customer Card Preview -----------
 function CustomerTruckCard({
   truck,
   menuItems
@@ -216,24 +214,30 @@ export default function OwnerDashboardPage() {
         router.push('/login?redirect=/owner/dashboard'); setIsLoading(false); return;
       }
       setCurrentUser(user);
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) {
-        toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
-        router.push('/login'); setIsLoading(false); return;
+
+      try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (!userDocSnap.exists()) {
+          toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
+          router.push('/login'); setIsLoading(false); return;
+        }
+        const userData = userDocSnap.data() as UserDocument;
+        if (userData.role !== 'owner') {
+          toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
+          router.push('/'); setIsLoading(false); return;
+        }
+        const resolvedTruckId = userData.truckId || user.uid;
+        setTruckId(resolvedTruckId);
+        const truckDocRef = doc(db, "trucks", resolvedTruckId);
+        const snap = await getDoc(truckDocRef);
+        if (snap.exists()) setTruckData(snap.data() as Partial<FoodTruck>);
+        else setError("Truck profile not found.");
+        setIsLoading(false);
+      } catch (err: any) {
+        setError("Could not connect to Firestore. Please check your Firebase config.");
+        setIsLoading(false);
       }
-      const userData = userDocSnap.data() as UserDocument;
-      if (userData.role !== 'owner') {
-        toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
-        router.push('/'); setIsLoading(false); return;
-      }
-      const resolvedTruckId = userData.truckId || user.uid;
-      setTruckId(resolvedTruckId);
-      const truckDocRef = doc(db, "trucks", resolvedTruckId);
-      const snap = await getDoc(truckDocRef);
-      if (snap.exists()) setTruckData(snap.data() as Partial<FoodTruck>);
-      else setError("Truck profile not found.");
-      setIsLoading(false);
     });
     return () => unsubscribe();
   }, [router, toast]);
@@ -242,9 +246,13 @@ export default function OwnerDashboardPage() {
   useEffect(() => {
     if (!truckId || !truckData?.todaysMenu?.length) { setMenuItems([]); return; }
     (async () => {
-      const itemsCol = collection(db, "trucks", truckId, "menuItems");
-      const itemsSnap = await getDocs(itemsCol);
-      setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
+      try {
+        const itemsCol = collection(db, "trucks", truckId, "menuItems");
+        const itemsSnap = await getDocs(itemsCol);
+        setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
+      } catch (err) {
+        setMenuItems([]);
+      }
     })();
   }, [truckId, truckData?.todaysMenu]);
 
@@ -253,9 +261,13 @@ export default function OwnerDashboardPage() {
     const sanitizedUpdates: Partial<FoodTruck> = { ...updates };
     if ('lat' in sanitizedUpdates && sanitizedUpdates.lat === null) delete sanitizedUpdates.lat;
     if ('lng' in sanitizedUpdates && sanitizedUpdates.lng === null) delete sanitizedUpdates.lng;
-    await updateDoc(doc(db, "trucks", truckId), sanitizedUpdates);
-    setTruckData(prev => ({ ...prev, ...sanitizedUpdates }));
-  }, [truckId]);
+    try {
+      await updateDoc(doc(db, "trucks", truckId), sanitizedUpdates);
+      setTruckData(prev => ({ ...prev, ...sanitizedUpdates }));
+    } catch (e) {
+      toast({ title: "Update failed", description: "Could not update truck data. Please check your connection.", variant: "destructive" });
+    }
+  }, [truckId, toast]);
 
   const dashboardDisabled = !truckData?.name;
 
@@ -277,7 +289,7 @@ export default function OwnerDashboardPage() {
           <AlertDescription>You need to be logged in as an owner to view this page.</AlertDescription>
         </Alert>
         <Button asChild className="mt-6">
-          <Link href="/login?redirect=/owner/dashboard"><span>Login as Owner</span></Link>
+          <Link href="/login?redirect=/owner/dashboard">Login as Owner</Link>
         </Button>
       </div>
     );
@@ -320,40 +332,21 @@ export default function OwnerDashboardPage() {
       {/* MAIN CONTENT */}
       <main className="flex-1 px-2 py-8 md:px-8 relative">
         {/* Theme Toggle */}
-        <div className="absolute top-4 right-4 z-40">
-          <ThemeToggle />
+        <div className="absolute top-4 right-4 z-30"><ThemeToggle /></div>
+        {/* Heading */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Owner Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Welcome back, <span className="font-semibold">{truckData.ownerName || currentUser.email}</span>!</p>
+          </div>
         </div>
 
-        {/* Header and Stats */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-3 mt-10">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-primary drop-shadow-sm">Owner Dashboard</h1>
-            <p className="text-muted-foreground font-medium">
-              Manage <span className="font-semibold">{truckData?.name || "your food truck"}</span>'s profile, sales, and analytics.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center space-x-3 p-3 border rounded-xl shadow-sm bg-card">
-              <Label htmlFor="truck-status-toggle" className={`text-sm font-medium ${truckData.isOpen ? 'text-green-600' : 'text-red-600'}`}>
-                Truck Status: {truckData.isOpen ? "Open" : "Closed"}
-              </Label>
-              <Switch
-                id="truck-status-toggle"
-                checked={!!truckData.isOpen}
-                onCheckedChange={dashboardDisabled ? undefined : async (checked) => {
-                  await updateTruck({ isOpen: checked });
-                  toast({ title: "Status Updated", description: `Your truck is now marked as ${checked ? "Open" : "Closed"}.` });
-                }}
-                aria-label={`Toggle truck status to ${truckData.isOpen ? "closed" : "open"}`}
-                disabled={dashboardDisabled}
-              />
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
-              <span className="block">Setup Progress:</span>
-              <div className="h-2 w-36 rounded-full bg-muted overflow-hidden">
-                <div className={`h-2 rounded-full bg-primary transition-all`} style={{ width: `${progress}%` }} />
-              </div>
-              <span className="ml-1">{progress}%</span>
+        {/* Profile Completion */}
+        <div className="flex items-center gap-4 mb-8">
+          <span className="font-semibold text-primary">{progress}% Profile Complete</span>
+          <div className="flex-1">
+            <div className="h-2 w-36 rounded-full bg-muted overflow-hidden">
+              <div className={`h-2 rounded-full bg-primary transition-all`} style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>
@@ -371,7 +364,7 @@ export default function OwnerDashboardPage() {
                 <CardDescription>Overview of your truck’s performance.</CardDescription>
               </CardHeader>
               <CardContent>
-                <AnalyticsWidgets truckId={truckId} />
+                <AnalyticsWidgets truckId={truckId!} />
               </CardContent>
             </Card>
             <Card>
@@ -381,11 +374,11 @@ export default function OwnerDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  <Link href="/owner/profile" className={cn(buttonVariants({ variant: "outline" }))}><span><Edit className="w-4 h-4 mr-1" />Edit Profile</span></Link>
-                  <Link href="/owner/menu" className={cn(buttonVariants({ variant: "outline" }))}><span><MenuSquare className="w-4 h-4 mr-1" />Edit Menu</span></Link>
-                  <Link href="/owner/schedule" className={cn(buttonVariants({ variant: "outline" }))}><span><CalendarClock className="w-4 h-4 mr-1" />Set Hours</span></Link>
-                  <Link href="/owner/analytics" className={cn(buttonVariants({ variant: "outline" }))}><span><LineChart className="w-4 h-4 mr-1" />Full Analytics</span></Link>
-                  <Link href="/owner/leaderboard" className={cn(buttonVariants({ variant: "outline" }))}><span><Trophy className="w-4 h-4 mr-1" />Leaderboard</span></Link>
+                  <Button asChild variant="outline"><Link href="/owner/profile"><Edit className="w-4 h-4 mr-1" />Edit Profile</Link></Button>
+                  <Button asChild variant="outline"><Link href="/owner/menu"><MenuSquare className="w-4 h-4 mr-1" />Edit Menu</Link></Button>
+                  <Button asChild variant="outline"><Link href="/owner/schedule"><CalendarClock className="w-4 h-4 mr-1" />Set Hours</Link></Button>
+                  <Button asChild variant="outline"><Link href="/owner/analytics"><LineChart className="w-4 h-4 mr-1" />Full Analytics</Link></Button>
+                  <Button asChild variant="outline"><Link href="/owner/leaderboard"><Trophy className="w-4 h-4 mr-1" />Leaderboard</Link></Button>
                   <Button variant="secondary" onClick={handleShare}><Star className="w-4 h-4 mr-1" />Share on X</Button>
                 </div>
               </CardContent>
@@ -412,7 +405,7 @@ export default function OwnerDashboardPage() {
                   <CardTitle>Latest Customer Reviews</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CustomerFeedback truckId={truckId} />
+                  <CustomerFeedback truckId={truckId!} />
                 </CardContent>
               </Card>
               <Card>
@@ -431,7 +424,7 @@ export default function OwnerDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="rounded-xl overflow-hidden min-h-[250px]">
-                  <FoodTruckMap currentTruckId={truckId} highlightMyTruck />
+                  <FoodTruckMap currentTruckId={truckId!} highlightMyTruck />
                 </div>
               </CardContent>
             </Card>
@@ -445,9 +438,9 @@ export default function OwnerDashboardPage() {
             <AlertTitle>Profile Incomplete</AlertTitle>
             <AlertDescription>
               Your truck profile is missing. Please&nbsp;
-              <Link href="/owner/profile" className={cn(buttonVariants({ variant: "link" }), "p-0 h-auto ml-1 text-destructive hover:underline")}>
-                complete your profile
-              </Link>
+              <Button asChild variant="link" className="p-0 h-auto ml-1 text-destructive hover:underline">
+                <Link href="/owner/profile">complete your profile</Link>
+              </Button>
               &nbsp;before using dashboard features.
             </AlertDescription>
           </Alert>
