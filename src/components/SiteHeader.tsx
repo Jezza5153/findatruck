@@ -284,8 +284,10 @@ export function SiteHeader() {
           aria-label="Truck Tracker Home"
           onClick={isSheetOpen ? handleLinkClick : undefined}
         >
-          <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-          <span className="font-bold sm:inline-block text-lg tracking-tight">Truck Tracker</span>
+          <span className="flex items-center"> {/* Wrapper for single child */}
+            <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
+            <span className="font-bold sm:inline-block text-lg tracking-tight ml-2">Truck Tracker</span>
+          </span>
         </Link>
         {/* Stats bar (centered) */}
         <div className="flex-1 flex items-center justify-center">
@@ -308,8 +310,7 @@ export function SiteHeader() {
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2" aria-label="Open menu">
-                {/* Ensured single child for Button when asChild is used by SheetTrigger */}
-                <span className="flex items-center justify-center">
+                <span className="flex items-center justify-center"> {/* Ensures single child for Button */}
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle Menu</span>
                 </span>
@@ -318,13 +319,14 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
               <SheetHeader className="p-4 border-b relative">
                 <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="Truck Tracker Home">
-                  <BrandIcon className="h-6 w-6 text-primary" />
-                  <SheetTitle>Truck Tracker</SheetTitle>
+                  <span className="flex items-center"> {/* Wrapper for single child */}
+                    <BrandIcon className="h-6 w-6 text-primary" />
+                    <SheetTitle>Truck Tracker</SheetTitle>
+                  </span>
                 </Link>
                 <VisuallyHidden>
                   <SheetTitle>Menu</SheetTitle>
                 </VisuallyHidden>
-                {/* SheetClose uses a span wrapper internally now */}
                 <SheetClose
                   className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
                   aria-label="Close menu"

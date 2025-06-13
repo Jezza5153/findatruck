@@ -35,7 +35,7 @@ export default function HomePage() {
             aria-label="Find Food Trucks"
           >
             <Link href="/map">
-              <span className="flex items-center justify-center"> {/* Single span wrapper */}
+              <span className="flex items-center justify-center"> {/* Ensures single child */}
                 Find Food Trucks
                 <ArrowRight className="ml-3 w-5 h-5" />
               </span>
@@ -56,7 +56,7 @@ export default function HomePage() {
               aria-label="Sign up as Customer"
             >
               <Link href="/signup">
-                <span className="flex items-center justify-center gap-3"> {/* Single span wrapper */}
+                <span className="flex items-center justify-center gap-3"> {/* Ensures single child */}
                   <User className="w-6 h-6" /> I am a New Customer
                 </span>
               </Link>
@@ -68,7 +68,7 @@ export default function HomePage() {
               aria-label="Sign up as Owner"
             >
               <Link href="/owner/signup">
-                <span className="flex items-center justify-center gap-3"> {/* Single span wrapper */}
+                <span className="flex items-center justify-center gap-3"> {/* Ensures single child */}
                   <ChefHat className="w-6 h-6" /> I am a New Owner
                 </span>
               </Link>
@@ -146,7 +146,7 @@ export default function HomePage() {
         </div>
         <div className="text-center mt-8">
           <Link href="/featured" className={cn(buttonVariants({ variant: "outline" }))}>
-            See All Featured
+            <span>See All Featured</span>
           </Link>
         </div>
       </section>
@@ -193,7 +193,7 @@ export default function HomePage() {
             Join the network, reach thousands of new customers, and grow your business.
           </p>
           <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
-            List Your Truck (Owner Portal)
+            <span>List Your Truck (Owner Portal)</span>
           </Link>
         </div>
       </section>

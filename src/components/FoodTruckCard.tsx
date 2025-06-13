@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -46,14 +47,14 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         className="block relative w-full h-48 bg-muted focus:outline-none focus-visible:ring-2"
         tabIndex={0}
       >
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full"> {/* Single child for Link */}
           <Image
             src={imgSrc}
             alt={truck.name || 'Food truck image'}
             fill
             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
             sizes="(max-width: 640px) 100vw, 400px"
-            data-ai-hint={`${truck.cuisine || 'food'} truck photo`}
+            data-ai-hint={`${truck.imagePath || truck.cuisine || 'food'} truck photo`}
             onError={() => setImgSrc(placeholderImage)}
             unoptimized={imgSrc.startsWith("http") ? false : true}
             priority
@@ -95,7 +96,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg md:text-2xl font-bold truncate flex-1" id={`truck-title-${truck.id}`}>
             <Link href={`/trucks/${truck.id}`} className="hover:text-primary transition-colors">
-              <span>{truck.name || "Unnamed Truck"}</span>
+              <span>{truck.name || "Unnamed Truck"}</span> {/* Ensures single child for Link */}
             </Link>
           </CardTitle>
           {tags.length > 0 && (
@@ -172,7 +173,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           className={cn(buttonVariants(), "w-full bg-primary hover:bg-primary/90")}
           aria-label={`View details and menu for ${truck.name}`}
         >
-          <span>View Details & Menu</span>
+          <span>View Details & Menu</span> {/* Ensures single child for Link styled as button */}
         </Link>
       </CardFooter>
     </Card>

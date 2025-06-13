@@ -1,4 +1,4 @@
-import React from 'react'; // <-- Required for React namespace functions (isValidElement)
+import React from 'react'; 
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -75,8 +75,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
             tabIndex={-1}
             className="flex-1 outline-none"
           >
-            {/* Robustly ensure no Children.only error */}
-            {React.isValidElement(children) ? children : <div>{children}</div>}
+            {/* Robustly ensure no Children.only error by always providing a valid element */}
+            {React.isValidElement(children) ? children : <div>{children === null || children === undefined ? null : children}</div>}
           </main>
           <SiteFooter />
         </div>
