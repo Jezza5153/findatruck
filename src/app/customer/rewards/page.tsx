@@ -2,13 +2,14 @@
 'use client';
 import { Gift, Star, Loader2, LogIn } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 interface RewardItem {
   id: string;
@@ -96,9 +97,9 @@ export default function CustomerRewardsPage() {
         <p className="text-lg text-muted-foreground mb-6">
           Log in or create an account to start earning rewards with your favorite food trucks!
         </p>
-        <Button asChild size="lg">
-          <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</Link>
-        </Button>
+        <Link href="/login" className={cn(buttonVariants({ size: "lg" }))}>
+          <span><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</span>
+        </Link>
       </div>
     );
   }

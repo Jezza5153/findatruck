@@ -1,6 +1,7 @@
+
 'use client';
 import React, { Suspense } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import type { UserDocument } from "@/lib/types";
 import * as z from "zod";
+import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -140,16 +142,12 @@ function LoginPageInner() {
                 Don&apos;t have an account?
             </p>
             <div className="flex flex-col sm:flex-row gap-2 w-full">
-                <Button variant="outline" asChild className="w-full">
-                    <Link href="/signup" className="flex items-center justify-center">
-                        <UserPlus className="mr-2 h-4 w-4" /> Customer Signup
-                    </Link>
-                </Button>
-                <Button variant="outline" asChild className="w-full">
-                     <Link href="/owner/signup" className="flex items-center justify-center text-accent border-accent hover:bg-accent/10 hover:text-accent">
-                        <ChefHat className="mr-2 h-4 w-4" /> Owner Signup
-                    </Link>
-                </Button>
+                <Link href="/signup" className={cn(buttonVariants({ variant: "outline" }), "w-full flex items-center justify-center")}>
+                  <span><UserPlus className="mr-2 h-4 w-4" /> Customer Signup</span>
+                </Link>
+                <Link href="/owner/signup" className={cn(buttonVariants({ variant: "outline" }), "w-full flex items-center justify-center text-accent border-accent hover:bg-accent/10 hover:text-accent")}>
+                  <span><ChefHat className="mr-2 h-4 w-4" /> Owner Signup</span>
+                </Link>
             </div>
         </CardFooter>
       </Card>

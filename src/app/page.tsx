@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -5,15 +6,13 @@ import Link from 'next/link';
 import {
   Star, MapPin, Utensils, UserPlus, ArrowRight, User, ChefHat, LogIn
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
-// If you have a floating stats bar elsewhere, don't import MapStatsHeader here
+import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   return (
     <div className="relative">
-      {/* Floating stats bar appears only as a floater, not here */}
-
       {/* Hero Section */}
       <section
         className="w-full py-20 bg-gradient-to-r from-yellow-100 via-white to-green-50 shadow animate-fade-in"
@@ -36,8 +35,10 @@ export default function HomePage() {
             aria-label="Find Food Trucks"
           >
             <Link href="/map">
-              <span>Find Food Trucks</span>
-              <ArrowRight className="ml-3 w-5 h-5" />
+              <span className="flex items-center justify-center"> {/* Single span wrapper */}
+                Find Food Trucks
+                <ArrowRight className="ml-3 w-5 h-5" />
+              </span>
             </Link>
           </Button>
         </div>
@@ -55,8 +56,9 @@ export default function HomePage() {
               aria-label="Sign up as Customer"
             >
               <Link href="/signup">
-                <User className="w-6 h-6" />
-                I am a New Customer
+                <span className="flex items-center justify-center gap-3"> {/* Single span wrapper */}
+                  <User className="w-6 h-6" /> I am a New Customer
+                </span>
               </Link>
             </Button>
             <Button
@@ -66,8 +68,9 @@ export default function HomePage() {
               aria-label="Sign up as Owner"
             >
               <Link href="/owner/signup">
-                <ChefHat className="w-6 h-6" />
-                I am a New Owner
+                <span className="flex items-center justify-center gap-3"> {/* Single span wrapper */}
+                  <ChefHat className="w-6 h-6" /> I am a New Owner
+                </span>
               </Link>
             </Button>
           </div>
@@ -101,12 +104,13 @@ export default function HomePage() {
               name: "Burger Bros",
               cuisine: "American",
               description: "Juicy burgers, loaded fries, cold shakes. The best on four wheels.",
-              imageUrl: "https://placehold.co/400x200/burger",
+              imageUrl: "https://placehold.co/400x200.png",
               ownerUid: "",
               address: "Main Square",
               isOpen: true,
               rating: 4.8,
               isFeatured: true,
+              imagePath: "burger food", 
             }}
           />
           <FoodTruckCard
@@ -115,12 +119,13 @@ export default function HomePage() {
               name: "Sushi Street",
               cuisine: "Japanese",
               description: "Fresh hand-rolled sushi, onigiri, and Asian bowls.",
-              imageUrl: "https://placehold.co/400x200/sushi",
+              imageUrl: "https://placehold.co/400x200.png",
               ownerUid: "",
               address: "Market Park",
               isOpen: false,
               rating: 4.7,
               isFeatured: true,
+              imagePath: "sushi japanese", 
             }}
           />
           <FoodTruckCard
@@ -129,19 +134,20 @@ export default function HomePage() {
               name: "Taco Town",
               cuisine: "Mexican",
               description: "Tacos, nachos, burritos, and street corn—fresh & spicy.",
-              imageUrl: "https://placehold.co/400x200/taco",
+              imageUrl: "https://placehold.co/400x200.png",
               ownerUid: "",
               address: "Harbor Walk",
               isOpen: true,
               rating: 4.9,
               isFeatured: true,
+              imagePath: "taco mexican", 
             }}
           />
         </div>
         <div className="text-center mt-8">
-          <Button variant="outline" asChild aria-label="See All Featured Trucks">
-            <Link href="/featured">See All Featured</Link>
-          </Button>
+          <Link href="/featured" className={cn(buttonVariants({ variant: "outline" }))}>
+            See All Featured
+          </Link>
         </div>
       </section>
 
@@ -186,9 +192,9 @@ export default function HomePage() {
           <p className="mb-6 text-muted-foreground">
             Join the network, reach thousands of new customers, and grow your business.
           </p>
-          <Button size="lg" asChild aria-label="List Your Truck">
-            <Link href="/owner/billing">List Your Truck (Owner Portal)</Link>
-          </Button>
+          <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
+            List Your Truck (Owner Portal)
+          </Link>
         </div>
       </section>
 

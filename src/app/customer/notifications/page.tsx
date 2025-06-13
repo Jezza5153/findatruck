@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 type NotificationItem = {
   id: string;
@@ -101,9 +102,9 @@ export default function CustomerNotificationsPage() {
         <p className="text-lg text-muted-foreground mb-6">
           Please log in to view your notifications.
         </p>
-        <Button asChild size="lg">
-          <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login / Sign Up</Link>
-        </Button>
+        <Link href="/login" className={cn(buttonVariants({ size: "lg" }))}>
+          <span><LogIn className="mr-2 h-4 w-4" />Login / Sign Up</span>
+        </Link>
       </div>
     );
   }
@@ -147,9 +148,9 @@ export default function CustomerNotificationsPage() {
                 {notification.truckName && <p className="text-xs text-muted-foreground mt-1">Truck: {notification.truckName}</p>}
                 {notification.orderId && <p className="text-xs text-muted-foreground mt-1">Order: #{notification.orderId}</p>}
                 {notification.link && (
-                  <Button variant="link" asChild className="p-0 h-auto text-primary text-xs mt-1">
-                    <Link href={notification.link}>View Details</Link>
-                  </Button>
+                  <Link href={notification.link} className={cn(buttonVariants({ variant: "link" }), "p-0 h-auto text-primary text-xs mt-1")}>
+                    View Details
+                  </Link>
                 )}
               </CardContent>
             </Card>

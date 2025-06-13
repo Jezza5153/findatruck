@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -50,9 +51,6 @@ export interface ButtonProps
   icon?: React.ReactNode;
 }
 
-/**
- * PROOFED Button component – children-safe for both Slot and native button.
- */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -70,43 +68,37 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : 'button';
     const ariaDisabled = props.disabled || loading || undefined;
 
-    // Always wrap children for Slot use!
-    const content = (
-      <>
-        {icon && <span className="mr-2">{icon}</span>}
-        <span>{children}</span>
-      </>
-    );
+    if (asChild) {
+      // If asChild is true, Slot will pass props to the single child element.
+      // The child element is responsible for its own content, including any icons.
+      // The `icon` prop of this Button component should be ignored in this case.
+      // The `children` prop should be a single React element.
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, loading }), className)}
+          ref={ref}
+          aria-disabled={ariaDisabled}
+          disabled={ariaDisabled}
+          data-loading={!!loading}
+          {...props}
+        >
+          {children}
+        </Comp>
+      );
+    }
 
-    return asChild ? (
-      // When asChild, pass a single element as child!
-      <Comp
-        className={cn(
-          buttonVariants({ variant, size, loading }),
-          className
-        )}
-        ref={ref}
-        aria-disabled={ariaDisabled}
-        disabled={ariaDisabled}
-        data-loading={!!loading}
-        {...props}
-      >
-        {/* Wrap in span so Slot gets only one child */}
-        <span className="flex items-center w-full">{content}</span>
-      </Comp>
-    ) : (
+    // If not asChild, it's a regular button, and we can render the icon and children.
+    return (
       <button
-        className={cn(
-          buttonVariants({ variant, size, loading }),
-          className
-        )}
+        className={cn(buttonVariants({ variant, size, loading }), className)}
         ref={ref}
         aria-disabled={ariaDisabled}
         disabled={ariaDisabled}
         data-loading={!!loading}
         {...props}
       >
-        {content}
+        {icon && React.isValidElement(icon) && <span className="mr-2 flex-shrink-0">{icon}</span>}
+        {children && <span>{children}</span>}
       </button>
     );
   }

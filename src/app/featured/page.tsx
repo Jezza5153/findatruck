@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Star, Loader2 } from 'lucide-react';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
 import type { FoodTruck } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db } from '@/lib/firebase';
@@ -13,7 +13,6 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { makeSerializable } from '@/lib/makeSerializable';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
 
 
 export default function FeaturedTrucksPage() {
@@ -41,7 +40,7 @@ export default function FeaturedTrucksPage() {
             name: serializableData.name || 'Unnamed Truck',
             cuisine: serializableData.cuisine || 'Unknown Cuisine',
             description: serializableData.description || 'No description provided.',
-            imageUrl: serializableData.imageUrl || `https://placehold.co/400x200.png?text=${encodeURIComponent(serializableData.name || 'Food Truck')}`,
+            imageUrl: serializableData.imageUrl || `https://placehold.co/400x200.png`,
             ownerUid: serializableData.ownerUid || '',
             address: serializableData.address || '',
             lat: typeof serializableData.lat === "number" ? serializableData.lat : undefined,
@@ -57,7 +56,7 @@ export default function FeaturedTrucksPage() {
             testimonials: Array.isArray(serializableData.testimonials) ? serializableData.testimonials : [],
             isFeatured: true,
             // Ensure all other FoodTruck fields are mapped from serializableData
-            imagePath: serializableData.imagePath,
+            imagePath: serializableData.imagePath || `${(serializableData.name || 'food truck').toLowerCase().replace(/\s+/g, '-')}`, // default hint from name
             imageGallery: Array.isArray(serializableData.imageGallery) ? serializableData.imageGallery : [],
             todaysHours: serializableData.todaysHours,
             regularHours: serializableData.regularHours,
@@ -147,11 +146,9 @@ export default function FeaturedTrucksPage() {
           Want to get featured and reach more hungry customers?
           Learn about premium listing options and owner benefits!
         </p>
-        <> {/* Wrap inner elements in a fragment */}
-          <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
-              <span>Owner Portal &amp; Subscriptions</span>
-          </Link>
-        </>
+         <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
+            <span>Owner Portal &amp; Subscriptions</span>
+        </Link>
       </div>
     </main>
   );

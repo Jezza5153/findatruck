@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ import { onAuthStateChanged, type User as FirebaseUser, updateProfile } from 'fi
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { UserProfile, NotificationPreferences, FoodTruck } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 // ---- FIXED TYPES (for safety in this file) ----
 const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
@@ -118,7 +120,7 @@ export default function CustomerDashboardPage() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [toast]); // Added toast to dependency array
 
   // --- Inline edit for name ---
   const handleNameSave = async () => {
@@ -323,7 +325,9 @@ export default function CustomerDashboardPage() {
           <AlertDescription>You need to be logged in to view your dashboard.</AlertDescription>
         </Alert>
         <Button asChild className="mt-6">
-          <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</Link>
+          <Link href="/login">
+            <span><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</span>
+          </Link>
         </Button>
       </div>
     );

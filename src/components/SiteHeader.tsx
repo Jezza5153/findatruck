@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -101,17 +102,17 @@ export function SiteHeader() {
 
   // Navigation Links (centralized for DRY code)
   const commonNavLinks = [
-    { href: '/map', label: 'Find Trucks', icon: <MapPin /> },
-    { href: '/featured', label: 'Featured', icon: <Star /> },
-    { href: '/help', label: 'Help & FAQ', icon: <HelpCircle /> },
+    { href: '/map', label: 'Find Trucks', icon: MapPin },
+    { href: '/featured', label: 'Featured', icon: Star },
+    { href: '/help', label: 'Help & FAQ', icon: HelpCircle },
   ];
   const customerAuthNavLinks = [
-    { href: '/customer/dashboard', label: 'My Dashboard', icon: <Settings /> },
-    { href: '/customer/notifications', label: 'Notifications', icon: <Bell /> },
-    { href: '/customer/rewards', label: 'Rewards', icon: <Gift /> },
+    { href: '/customer/dashboard', label: 'My Dashboard', icon: Settings },
+    { href: '/customer/notifications', label: 'Notifications', icon: Bell },
+    { href: '/customer/rewards', label: 'Rewards', icon: Gift },
   ];
   const ownerAuthNavLinks = [
-    { href: '/owner/dashboard', label: 'Owner Dashboard', icon: <ChefHat /> },
+    { href: '/owner/dashboard', label: 'Owner Dashboard', icon: ChefHat },
   ];
 
   const handleLinkClick = () => setIsSheetOpen(false);
@@ -129,7 +130,7 @@ export function SiteHeader() {
         {isMobile && (
           <Link
             href="/"
-            aria-label="FindATruck Home"
+            aria-label="Truck Tracker Home"
             className={cn(buttonVariants({ variant: 'ghost', size: 'lg' }), mobileBaseClass)}
             onClick={handleLinkClick}
           >
@@ -153,7 +154,7 @@ export function SiteHeader() {
             onClick={handleLinkClick}
           >
             <span className="flex items-center">
-              {React.cloneElement(link.icon, { className: iconClass })}
+              {React.createElement(link.icon, { className: iconClass })}
               {link.label}
             </span>
           </Link>
@@ -176,7 +177,7 @@ export function SiteHeader() {
                   onClick={handleLinkClick}
                 >
                   <span className="flex items-center">
-                    {React.cloneElement(link.icon, { className: iconClass })}
+                    {React.createElement(link.icon, { className: iconClass })}
                     {link.label}
                   </span>
                 </Link>
@@ -201,7 +202,7 @@ export function SiteHeader() {
                   onClick={handleLinkClick}
                 >
                   <span className="flex items-center">
-                    {React.cloneElement(link.icon, { className: iconClass })}
+                    {React.createElement(link.icon, { className: iconClass })}
                     {link.label}
                   </span>
                 </Link>
@@ -280,11 +281,11 @@ export function SiteHeader() {
         <Link
           href="/"
           className="mr-6 flex items-center space-x-2 group"
-          aria-label="FindATruck Home"
+          aria-label="Truck Tracker Home"
           onClick={isSheetOpen ? handleLinkClick : undefined}
         >
           <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-          <span className="font-bold sm:inline-block text-lg tracking-tight">FindATruck</span>
+          <span className="font-bold sm:inline-block text-lg tracking-tight">Truck Tracker</span>
         </Link>
         {/* Stats bar (centered) */}
         <div className="flex-1 flex items-center justify-center">
@@ -307,22 +308,23 @@ export function SiteHeader() {
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" className="md:hidden px-2" aria-label="Open menu">
+                {/* Ensured single child for Button when asChild is used by SheetTrigger */}
                 <span className="flex items-center justify-center">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle Menu</span>
                 </span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="FindATruck Menu">
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
               <SheetHeader className="p-4 border-b relative">
-                <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="FindATruck Home">
+                <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="Truck Tracker Home">
                   <BrandIcon className="h-6 w-6 text-primary" />
-                  <SheetTitle>FindATruck</SheetTitle>
+                  <SheetTitle>Truck Tracker</SheetTitle>
                 </Link>
                 <VisuallyHidden>
                   <SheetTitle>Menu</SheetTitle>
                 </VisuallyHidden>
-                {/* Place SheetClose in top-right */}
+                {/* SheetClose uses a span wrapper internally now */}
                 <SheetClose
                   className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
                   aria-label="Close menu"

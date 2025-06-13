@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { FoodTruck, MenuItem as MenuItemType } from '@/lib/types';
@@ -17,6 +17,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { db, auth } from '@/lib/firebase'; // auth import for user context
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, collection, getDocs, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
+import { makeSerializable } from '@/lib/makeSerializable';
+import { cn } from '@/lib/utils';
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
@@ -49,33 +51,54 @@ export default function FoodTruckProfilePage() {
           const truckDocSnap: DocumentSnapshot<DocumentData> = await getDoc(truckDocRef);
 
           if (truckDocSnap.exists()) {
-            const data = truckDocSnap.data() as Partial<FoodTruck>;
+            const rawData = truckDocSnap.data();
+            const serializableData = makeSerializable(rawData) as Partial<FoodTruck>; // Ensure data is serializable
+            
             const fetchedTruck: FoodTruck = {
               id: truckDocSnap.id,
-              name: data.name || 'Unnamed Truck',
-              cuisine: data.cuisine || 'Unknown Cuisine',
-              description: data.description || 'No description available.',
-              imageUrl: data.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(data.name || 'Food Truck')}`,
-              ownerUid: data.ownerUid || '',
-              lat: typeof data.lat === 'number' ? data.lat : undefined,
-              lng: typeof data.lng === 'number' ? data.lng : undefined,
-              address: data.address || 'Location details not available.',
-              operatingHoursSummary: data.operatingHoursSummary || 'Hours not specified.',
-              isOpen: data.isOpen === undefined ? undefined : Boolean(data.isOpen),
-              rating: typeof data.rating === 'number' ? data.rating : 0, // Default to 0 if undefined
-              numberOfRatings: typeof data.numberOfRatings === 'number' ? data.numberOfRatings : 0,
-              testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
-              contactEmail: data.contactEmail,
-              phone: data.phone,
-              isFeatured: data.isFeatured,
+              name: serializableData.name || 'Unnamed Truck',
+              cuisine: serializableData.cuisine || 'Unknown Cuisine',
+              description: serializableData.description || 'No description available.',
+              imageUrl: serializableData.imageUrl || `https://placehold.co/800x400.png`,
+              ownerUid: serializableData.ownerUid || '',
+              lat: typeof serializableData.lat === 'number' ? serializableData.lat : undefined,
+              lng: typeof serializableData.lng === 'number' ? serializableData.lng : undefined,
+              address: serializableData.address || 'Location details not available.',
+              operatingHoursSummary: serializableData.operatingHoursSummary || 'Hours not specified.',
+              isOpen: serializableData.isOpen === undefined ? undefined : Boolean(serializableData.isOpen),
+              rating: typeof serializableData.rating === 'number' ? serializableData.rating : 0, 
+              numberOfRatings: typeof serializableData.numberOfRatings === 'number' ? serializableData.numberOfRatings : 0,
+              testimonials: Array.isArray(serializableData.testimonials) ? serializableData.testimonials : [],
+              contactEmail: serializableData.contactEmail,
+              phone: serializableData.phone,
+              isFeatured: serializableData.isFeatured,
+              imagePath: serializableData.imagePath || `${(serializableData.name || 'food truck').toLowerCase().replace(/\s+/g, '-')}`, // Default hint
+              // ensure all other serializable fields are mapped
+              imageGallery: serializableData.imageGallery,
+              isVisible: serializableData.isVisible,
+              currentLocation: serializableData.currentLocation,
+              todaysMenu: serializableData.todaysMenu,
+              todaysHours: serializableData.todaysHours,
+              regularHours: serializableData.regularHours,
+              specialHours: serializableData.specialHours,
+              isTruckOpenOverride: serializableData.isTruckOpenOverride,
+              tags: serializableData.tags,
+              features: serializableData.features,
+              socialMediaLinks: serializableData.socialMediaLinks,
+              websiteUrl: serializableData.websiteUrl,
+              subscriptionTier: serializableData.subscriptionTier,
+              isFavorite: serializableData.isFavorite,
+              createdAt: serializableData.createdAt,
+              updatedAt: serializableData.updatedAt,
+              distance: serializableData.distance,
             };
             setTruck(fetchedTruck);
 
             const menuItemsCollectionRef = collection(db, "trucks", truckId, "menuItems");
             const menuItemsSnap = await getDocs(menuItemsCollectionRef);
-            const fetchedMenuItems: MenuItemType[] = menuItemsSnap.docs.map(docSnap => ({
-                id: docSnap.id, ...docSnap.data()
-            } as MenuItemType));
+            const fetchedMenuItems: MenuItemType[] = menuItemsSnap.docs.map(docSnap => 
+              makeSerializable({ id: docSnap.id, ...docSnap.data() }) as MenuItemType // Serialize menu items
+            );
             setMenuItems(fetchedMenuItems);
 
           } else { setError(`Food truck with ID "${truckId}" not found.`); }
@@ -208,12 +231,12 @@ export default function FoodTruckProfilePage() {
       <Card className="overflow-hidden shadow-xl">
         <div className="relative h-64 md:h-96">
           <Image
-            src={truck.imageUrl || `https://placehold.co/800x400.png?text=${encodeURIComponent(truck.name)}`}
+            src={truck.imageUrl || `https://placehold.co/800x400.png`}
             alt={truck.name}
             layout="fill"
             objectFit="cover"
             className="bg-muted"
-            data-ai-hint={`${truck.cuisine || 'food'} truck`}
+            data-ai-hint={truck.imagePath || `${truck.cuisine || 'food'} truck`}
             priority
             onError={(e) => (e.currentTarget.src = `https://placehold.co/800x400.png?text=${encodeURIComponent(truck.name)}`)}
           />
