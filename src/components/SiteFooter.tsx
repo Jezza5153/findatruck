@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import {
   Utensils,
@@ -25,22 +26,22 @@ export function SiteFooter() {
               <Link
                 href="/"
                 className="inline-flex items-center text-xl font-bold text-primary mb-2"
-                aria-label="Home - FindATruck"
+                aria-label="Home - Truck Tracker"
               >
                 <span className="inline-flex items-center">
                   <Utensils className="h-7 w-7 mr-2 transition-transform hover:-rotate-6" />
-                  FindATruck
+                  Truck Tracker
                 </span>
               </Link>
               <p className="text-sm text-muted-foreground">
-                Your local food trucks, mapped live.
+                Your guide to the best food on wheels.
               </p>
             </div>
 
             {/* For Customers */}
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                For Customers
+                <span>For Customers</span>
               </h6>
               <ul className="space-y-2">
                 <li>
@@ -48,8 +49,10 @@ export function SiteFooter() {
                     href="/map"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <MapPin className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Find Trucks
+                    <span>
+                      <MapPin className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Find Trucks
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -57,8 +60,10 @@ export function SiteFooter() {
                     href="/signup"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Customer Signup
+                   <span>
+                      <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Customer Signup
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -66,8 +71,10 @@ export function SiteFooter() {
                     href="/login"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Login
+                    <span>
+                      <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Login
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -75,8 +82,10 @@ export function SiteFooter() {
                     href="/featured"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <Star className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Featured Trucks
+                    <span>
+                      <Star className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Featured Trucks
+                    </span>
                   </Link>
                 </li>
               </ul>
@@ -85,7 +94,7 @@ export function SiteFooter() {
             {/* For Owners */}
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                For Owners
+                <span>For Owners</span>
               </h6>
               <ul className="space-y-2">
                 <li>
@@ -93,8 +102,10 @@ export function SiteFooter() {
                     href="/owner/portal"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Owner Portal
+                    <span>
+                      <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Owner Portal
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -102,8 +113,10 @@ export function SiteFooter() {
                     href="/owner/signup"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Register Truck
+                    <span>
+                      <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Register Truck
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -111,8 +124,10 @@ export function SiteFooter() {
                     href="/owner/billing"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <CreditCard className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Pricing
+                    <span>
+                      <CreditCard className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Pricing
+                    </span>
                   </Link>
                 </li>
               </ul>
@@ -121,7 +136,7 @@ export function SiteFooter() {
             {/* Resources */}
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                Resources
+                <span>Resources</span>
               </h6>
               <ul className="space-y-2">
                 <li>
@@ -129,8 +144,10 @@ export function SiteFooter() {
                     href="/help"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <HelpCircle className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Help & FAQ
+                    <span>
+                      <HelpCircle className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Help & FAQ
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -161,7 +178,7 @@ export function SiteFooter() {
             {/* Legal */}
             <div className="text-sm">
               <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                Legal
+                <span>Legal</span>
               </h6>
               <ul className="space-y-2">
                 <li>
@@ -169,8 +186,10 @@ export function SiteFooter() {
                     href="/terms"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <FileText className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Terms of Service
+                    <span>
+                      <FileText className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Terms of Service
+                    </span>
                   </Link>
                 </li>
                 <li>
@@ -178,8 +197,10 @@ export function SiteFooter() {
                     href="/privacy"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                    <ShieldCheck className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                    Privacy Policy
+                    <span>
+                      <ShieldCheck className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      Privacy Policy
+                    </span>
                   </Link>
                 </li>
               </ul>
@@ -189,7 +210,7 @@ export function SiteFooter() {
 
         <div className="border-t py-6">
           <p className="text-center text-xs text-muted-foreground">
-            &copy; {currentYear} FindATruck. All rights reserved. Operated by Firebase Studio.
+            &copy; {currentYear} Truck Tracker. All rights reserved. Operated by Firebase Studio.
           </p>
         </div>
       </div>

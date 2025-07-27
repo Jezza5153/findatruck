@@ -1,9 +1,12 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChefHat, LogIn, UserPlus, MapPin, ArrowLeftCircle } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function OwnerPortalPage() {
   return (
@@ -26,33 +29,28 @@ export default function OwnerPortalPage() {
         </CardHeader>
         <CardContent className="space-y-7">
           <div className="flex flex-col gap-4">
-            <Button
-              asChild
-              size="lg"
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6 rounded-xl shadow-md transition-all"
+            <Link 
+              href="/owner/login" 
+              prefetch 
+              className={cn(buttonVariants({ size: "lg" }), "w-full bg-accent text-accent-foreground hover:bg-accent/90 text-lg py-6 rounded-xl shadow-md transition-all")}
               aria-label="Owner Login"
             >
-              <Link href="/owner/login" prefetch>
-                <span>
-                  <LogIn className="mr-2 h-6 w-6" aria-hidden="true" />
-                  Owner Login
-                </span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="w-full border-accent text-accent hover:bg-accent/10 hover:text-accent text-lg py-6 rounded-xl transition-all"
+              <span>
+                <LogIn className="mr-2 h-6 w-6" aria-hidden="true" />
+                Owner Login
+              </span>
+            </Link>
+             <Link 
+              href="/owner/signup" 
+              prefetch
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }), "w-full border-accent text-accent hover:bg-accent/10 hover:text-accent text-lg py-6 rounded-xl transition-all")}
               aria-label="Register Your Truck"
             >
-              <Link href="/owner/signup" prefetch>
-                <span>
-                  <UserPlus className="mr-2 h-6 w-6" aria-hidden="true" />
-                  Register Your Truck
-                </span>
-              </Link>
-            </Button>
+              <span>
+                <UserPlus className="mr-2 h-6 w-6" aria-hidden="true" />
+                Register Your Truck
+              </span>
+            </Link>
           </div>
           <div className="border-t border-border/30 pt-6 text-center">
             <div className="mb-3 text-muted-foreground font-medium flex items-center justify-center gap-2">
@@ -60,32 +58,28 @@ export default function OwnerPortalPage() {
               Not an owner? Start exploring or join as a customer!
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full mt-1">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full"
+              <Link 
+                href="/map" 
+                prefetch
+                className={cn(buttonVariants({ variant: "outline" }), "w-full")}
                 aria-label="Find Food Trucks"
               >
-                <Link href="/map" prefetch>
                 <span>
                   <MapPin className="mr-2 h-4 w-4" aria-hidden="true" />
                   Find Food Trucks
                 </span>
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="secondary"
-                className="w-full"
+              </Link>
+              <Link 
+                href="/signup" 
+                prefetch
+                className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
                 aria-label="Customer Signup"
               >
-                <Link href="/signup" prefetch>
                 <span>
                   <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
                   Customer Signup
                 </span>
-                </Link>
-              </Button>
+              </Link>
             </div>
           </div>
         </CardContent>

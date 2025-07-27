@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, collection, getDocs, updateDoc, arrayUnion, arrayRemove, type DocumentSnapshot, type DocumentData } from 'firebase/firestore';
 import { makeSerializable } from '@/lib/makeSerializable';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function FoodTruckProfilePage() {
   const params = useParams();
@@ -363,7 +364,7 @@ export default function FoodTruckProfilePage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="py-0">
-                    <ScrollArea className="max-h-40 pr-3"> {/* Added ScrollArea */}
+                    <ScrollArea className="max-h-40 pr-3">
                         <ul className="space-y-2 mb-3">
                             {cart.map(cartItem => (
                                 <li key={cartItem.item.id} className="flex justify-between text-sm">
@@ -391,14 +392,3 @@ export default function FoodTruckProfilePage() {
     </div>
   );
 }
-
-// Helper component for ScrollArea (can be moved to ui if used elsewhere)
-const ScrollArea = React.forwardRef<
-  React.ElementRef<typeof import('@radix-ui/react-scroll-area').Root>,
-  React.ComponentPropsWithoutRef<typeof import('@radix-ui/react-scroll-area').Root>
->(({ className, children, ...props }, ref) => (
-  <div className={cn("relative overflow-hidden", className)} ref={ref as any}>
-    <div className="h-full w-full rounded-[inherit] overflow-y-auto">{children}</div>
-  </div>
-));
-ScrollArea.displayName = "ScrollArea";

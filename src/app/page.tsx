@@ -28,19 +28,16 @@ export default function HomePage() {
           <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-xl mx-auto">
             Discover real-time locations, menus, and exclusive deals from the best food trucks in your city.
           </p>
-          <Button
-            size="lg"
-            asChild
-            className="px-8 py-4 text-lg rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150"
+          <Link 
+            href="/map"
+            className={cn(buttonVariants({ size: "lg" }), "px-8 py-4 text-lg rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150")}
             aria-label="Find Food Trucks"
           >
-            <Link href="/map">
-              <span className="flex items-center justify-center"> {/* Ensures single child */}
-                Find Food Trucks
-                <ArrowRight className="ml-3 w-5 h-5" />
-              </span>
-            </Link>
-          </Button>
+            <span className="flex items-center justify-center">
+              Find Food Trucks
+              <ArrowRight className="ml-3 w-5 h-5" />
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -49,30 +46,24 @@ export default function HomePage() {
         <div className="container mx-auto flex flex-col items-center gap-8">
           <h2 className="text-2xl font-semibold text-primary mb-2">Get Started</h2>
           <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
-            <Button
-              asChild
-              size="lg"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md"
+             <Link 
+              href="/signup"
+              className={cn(buttonVariants({ size: "lg" }), "flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md")}
               aria-label="Sign up as Customer"
             >
-              <Link href="/signup">
-                <span className="flex items-center justify-center gap-3"> {/* Ensures single child */}
-                  <User className="w-6 h-6" /> I am a New Customer
-                </span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md"
+              <span className="flex items-center justify-center gap-3">
+                <User className="w-6 h-6" /> I am a New Customer
+              </span>
+            </Link>
+            <Link 
+              href="/owner/signup"
+              className={cn(buttonVariants({ size: "lg" }), "flex-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-lg py-6 px-6 flex items-center justify-center gap-3 shadow-md")}
               aria-label="Sign up as Owner"
             >
-              <Link href="/owner/signup">
-                <span className="flex items-center justify-center gap-3"> {/* Ensures single child */}
-                  <ChefHat className="w-6 h-6" /> I am a New Owner
-                </span>
-              </Link>
-            </Button>
+              <span className="flex items-center justify-center gap-3">
+                <ChefHat className="w-6 h-6" /> I am a New Owner
+              </span>
+            </Link>
           </div>
           <div className="mt-2 text-base text-muted-foreground flex items-center gap-2">
             Already have an account?
