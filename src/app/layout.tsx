@@ -1,25 +1,24 @@
 import React from 'react'; // <-- Required for React namespace functions (isValidElement)
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
 export const metadata: Metadata = {
   title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
-  description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
+  description:
+    'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
   manifest: '/manifest.json',
   keywords: [
-    'food trucks', 'mobile food', 'local food', 'street food', 'find food',
-    'food near me', 'truck tracker'
+    'food trucks',
+    'mobile food',
+    'local food',
+    'street food',
+    'find food',
+    'food near me',
+    'truck tracker',
   ],
   authors: [{ name: 'Firebase Studio Project' }],
   openGraph: {
@@ -48,18 +47,22 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" dir="ltr">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="hsl(210 40% 98%)" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="hsl(210 40% 10%)" media="(prefers-color-scheme: dark)" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta
+          name="theme-color"
+          content="hsl(210 40% 98%)"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="hsl(210 40% 10%)"
+          media="(prefers-color-scheme: dark)"
+        />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1"
+        />
       </head>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable
-        )}
-      >
+      <body className={cn('min-h-screen bg-background font-sans antialiased')}>
         {/* Accessibility skip link */}
         <a
           href="#main-content"

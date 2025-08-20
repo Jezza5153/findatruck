@@ -1,7 +1,5 @@
-import {genkit, type Genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import { defineSchema,GenerationCommonConfigSchema } from 'genkit';
-
+import { genkit, type Genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 // Helper function to get environment variable with a default
 function getEnv(name: string, defaultValue: string = ''): string {
@@ -24,7 +22,9 @@ if (!googleApiKey && process.env.NODE_ENV !== 'test') {
 
 export const ai: Genkit = genkit({
   plugins: [
-    googleAI({ apiKey: googleApiKey || "YOUR_GOOGLE_GEMINI_API_KEY_PLACEHOLDER" }), // Provide a placeholder if not set
+    googleAI({
+      apiKey: googleApiKey || 'YOUR_GOOGLE_GEMINI_API_KEY_PLACEHOLDER',
+    }), // Provide a placeholder if not set
   ],
   // Default model for text generation
   model: 'googleai/gemini-1.5-flash-latest', // Or your preferred model
@@ -57,15 +57,7 @@ export const ai: Genkit = genkit({
   // logLevel: 'info',
 });
 
-// Schemas for common config options (if you want to use them in prompts/flows)
-export const SafetySettingsSchema = defineSchema(
-  'SafetySettings',
-  GenerationCommonConfigSchema.shape.safetySettings.unwrap().element
-);
-export const GenerationConfigSchema = defineSchema(
-  'GenerationConfig',
-  GenerationCommonConfigSchema.shape.generationConfig.unwrap()
-);
+// Schemas for common config options can be defined here if needed
 
 // You can also export predefined model instances for convenience
 // export const geminiFlash = ai.getModel('googleai/gemini-1.5-flash-latest');
