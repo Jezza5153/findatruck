@@ -2,50 +2,43 @@
 
 import React from 'react';
 import Link from 'next/link';
-import {
-  Star, MapPin, Utensils, UserPlus, ArrowRight, User, ChefHat, LogIn
-} from 'lucide-react';
+import { Star, MapPin, Utensils, UserPlus, ArrowRight, User, ChefHat, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FoodTruckCard } from '@/components/FoodTruckCard';
+import { Page, PageSection, PageHeader, Container } from '@/design/layout';
+import { H1 } from '@/design/typography';
 // If you have a floating stats bar elsewhere, don't import MapStatsHeader here
 
 export default function HomePage() {
   return (
-    <div className="relative">
+    <Page className="relative">
       {/* Floating stats bar appears only as a floater, not here */}
 
-      {/* Hero Section */}
-      <section
-        className="w-full py-20 bg-gradient-to-r from-yellow-100 via-white to-green-50 shadow animate-fade-in"
-        aria-labelledby="hero-title"
-      >
-        <div className="container mx-auto flex flex-col items-center text-center">
-          <h1
-            id="hero-title"
-            className="text-5xl md:text-6xl font-extrabold mb-3 text-primary drop-shadow-lg"
-          >
-            Find Your Next Favorite Food Truck
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-xl mx-auto">
-            Discover real-time locations, menus, and exclusive deals from the best food trucks in your city.
-          </p>
-          <Button
-            size="lg"
-            asChild
-            className="px-8 py-4 text-lg rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150"
-            aria-label="Find Food Trucks"
-          >
-            <Link href="/map">
-              <span>Find Food Trucks</span>
-              <ArrowRight className="ml-3 w-5 h-5" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+      <PageSection className="w-full py-20 bg-gradient-to-r from-yellow-100 via-white to-green-50 shadow animate-fade-in">
+        <Container className="flex flex-col items-center text-center">
+          <PageHeader
+            title={<H1 className="text-primary drop-shadow-lg">Find Your Next Favorite Food Truck</H1>}
+            description="Discover real-time locations, menus, and exclusive deals from the best food trucks in your city."
+            actions={
+              <Button
+                size="lg"
+                asChild
+                className="px-8 py-4 text-lg rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-transform duration-150"
+                aria-label="Find Food Trucks"
+              >
+                <Link href="/map">
+                  <span>Find Food Trucks</span>
+                  <ArrowRight className="ml-3 w-5 h-5" />
+                </Link>
+              </Button>
+            }
+          />
+        </Container>
+      </PageSection>
 
       {/* New User CTA Section */}
-      <section className="w-full py-12 bg-white/90 mb-6 shadow-sm animate-fade-in" aria-label="Get Started">
-        <div className="container mx-auto flex flex-col items-center gap-8">
+      <PageSection className="w-full py-12 bg-white/90 mb-6 shadow-sm animate-fade-in" aria-label="Get Started">
+        <Container className="flex flex-col items-center gap-8">
           <h2 className="text-2xl font-semibold text-primary mb-2">Get Started</h2>
           <div className="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
             <Button
@@ -82,19 +75,20 @@ export default function HomePage() {
               Log in here
             </Link>
           </div>
-        </div>
-      </section>
+        </Container>
+      </PageSection>
 
       {/* Featured Trucks Preview */}
-      <section className="container mx-auto py-12 animate-fade-in" aria-labelledby="featured-title">
-        <h2
-          id="featured-title"
-          className="text-3xl font-bold mb-8 text-primary flex items-center"
-        >
-          <Star className="h-7 w-7 text-yellow-400 fill-yellow-400 mr-2" />
-          Featured Trucks
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <PageSection className="py-12 animate-fade-in" aria-labelledby="featured-title">
+        <Container>
+          <h2
+            id="featured-title"
+            className="text-3xl font-bold mb-8 text-primary flex items-center"
+          >
+            <Star className="h-7 w-7 text-yellow-400 fill-yellow-400 mr-2" />
+            Featured Trucks
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <FoodTruckCard
             truck={{
               id: "demo1",
@@ -138,16 +132,17 @@ export default function HomePage() {
             }}
           />
         </div>
-        <div className="text-center mt-8">
-          <Button variant="outline" asChild aria-label="See All Featured Trucks">
-            <Link href="/featured">See All Featured</Link>
-          </Button>
-        </div>
-      </section>
+          <div className="text-center mt-8">
+            <Button variant="outline" asChild aria-label="See All Featured Trucks">
+              <Link href="/featured">See All Featured</Link>
+            </Button>
+          </div>
+        </Container>
+      </PageSection>
 
       {/* How It Works */}
-      <section className="w-full bg-muted/60 py-14 animate-fade-in" aria-labelledby="how-it-works-title">
-        <div className="container mx-auto text-center">
+      <PageSection className="w-full bg-muted/60 py-14 animate-fade-in" aria-labelledby="how-it-works-title">
+        <Container className="text-center">
           <h2 className="text-3xl font-bold mb-10 text-primary" id="how-it-works-title">
             How It Works
           </h2>
@@ -174,12 +169,12 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        </Container>
+      </PageSection>
 
       {/* For Food Truck Owners */}
-      <section className="container mx-auto py-14 text-center animate-fade-in" aria-labelledby="owner-cta-title">
-        <div className="max-w-2xl mx-auto">
+      <PageSection className="py-14 text-center animate-fade-in" aria-labelledby="owner-cta-title">
+        <Container className="max-w-2xl">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 flex items-center justify-center" id="owner-cta-title">
             <UserPlus className="h-7 w-7 text-accent mr-2" /> Own a Food Truck?
           </h2>
@@ -189,8 +184,8 @@ export default function HomePage() {
           <Button size="lg" asChild aria-label="List Your Truck">
             <Link href="/owner/billing">List Your Truck (Owner Portal)</Link>
           </Button>
-        </div>
-      </section>
+        </Container>
+      </PageSection>
 
       {/* Fade-in Animation */}
       <style jsx global>{`
@@ -200,6 +195,6 @@ export default function HomePage() {
         }
         .animate-fade-in { animation: fade-in 0.8s cubic-bezier(.23,1.12,.69,.88) both; }
       `}</style>
-    </div>
+    </Page>
   );
 }

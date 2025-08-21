@@ -39,6 +39,8 @@
     --chart-4: 30 90% 55%; /* Orange - can be an additional accent */
     --chart-5: 300 70% 60%; /* Purple - can be an additional accent */
     --radius: 0.5rem;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 
     /* Sidebar variables - using new theme */
     --sidebar-background: 210 40% 96%; /* Slightly off-white blue */
@@ -85,6 +87,8 @@
     --chart-3: 100 70% 55%;
     --chart-4: 30 90% 60%;
     --chart-5: 300 70% 65%;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
 
     /* Sidebar variables - dark theme adjustments */
     --sidebar-background: 210 40% 12%; /* Darker blue-gray */
