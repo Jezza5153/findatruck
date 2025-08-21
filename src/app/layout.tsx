@@ -2,8 +2,7 @@ import React from 'react'; // <-- Required for React namespace functions (isVali
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { SiteHeader } from '@/components/SiteHeader';
-import { SiteFooter } from '@/components/SiteFooter';
+import { AppShell } from '@/components/shell/AppShell';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
@@ -67,19 +66,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         >
           Skip to content
         </a>
-        <div className="relative flex min-h-dvh flex-col">
-          <SiteHeader />
-          <main
-            id="main-content"
-            role="main"
-            tabIndex={-1}
-            className="flex-1 outline-none"
-          >
-            {/* Robustly ensure no Children.only error */}
-            {React.isValidElement(children) ? children : <div>{children}</div>}
-          </main>
-          <SiteFooter />
-        </div>
+        <AppShell>
+          {/* Robustly ensure no Children.only error */}
+          {React.isValidElement(children) ? children : <div>{children}</div>}
+        </AppShell>
         <Toaster />
       </body>
     </html>
