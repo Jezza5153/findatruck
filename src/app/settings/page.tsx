@@ -105,19 +105,19 @@ export default function SettingsPage() {
 
     if (status === 'loading' || isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+                <IconLoader2 className="w-10 h-10 text-orange-500 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white pb-24">
+        <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50 pb-24">
             {/* Header */}
             <div className="pt-8 pb-6 px-4">
                 <div className="container mx-auto max-w-2xl">
-                    <h1 className="text-2xl font-bold">Settings</h1>
-                    <p className="text-slate-400">Customize your FindATruck experience</p>
+                    <h1 className="text-2xl font-bold text-slate-800">Settings ⚙️</h1>
+                    <p className="text-slate-500">Customize your FindATruck experience</p>
                 </div>
             </div>
 
@@ -126,23 +126,23 @@ export default function SettingsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-800/50 rounded-xl border border-slate-700/30 p-6"
+                    className="bg-white rounded-3xl border-2 border-orange-100 p-6 shadow-md"
                 >
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                            <IconMapPin className="w-5 h-5 text-blue-400" />
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <IconMapPin className="w-5 h-5 text-orange-600" />
                         </div>
                         <div>
-                            <h3 className="font-semibold">Notification Radius</h3>
-                            <p className="text-sm text-slate-400">Alert range for nearby trucks</p>
+                            <h3 className="font-bold text-slate-800">Notification Radius</h3>
+                            <p className="text-sm text-slate-500">Alert range for nearby trucks</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <span className="text-sm text-slate-400">1 km</span>
-                            <span className="text-2xl font-bold text-primary">{settings.notificationRadius} km</span>
-                            <span className="text-sm text-slate-400">25 km</span>
+                            <span className="text-sm text-slate-500">1 km</span>
+                            <span className="text-2xl font-bold text-orange-600">{settings.notificationRadius} km</span>
+                            <span className="text-sm text-slate-500">25 km</span>
                         </div>
                         <Slider
                             value={[settings.notificationRadius]}
@@ -160,12 +160,12 @@ export default function SettingsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-slate-800/50 rounded-xl border border-slate-700/30"
+                    className="bg-white rounded-3xl border-2 border-orange-100 shadow-md"
                 >
-                    <div className="p-4 border-b border-slate-700/30">
+                    <div className="p-4 border-b border-orange-100">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                <IconBell className="w-5 h-5 text-purple-400" />
+                            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                                <IconBell className="w-5 h-5 text-purple-600" />
                             </div>
                             <div>
                                 <h3 className="font-semibold">Notifications</h3>
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <div className="divide-y divide-slate-700/30">
+                    <div className="divide-y divide-orange-100">
                         {[
                             { key: 'truckNearbyAlerts' as const, label: 'Trucks nearby', desc: 'When a truck is within your radius' },
                             { key: 'favoriteUpdates' as const, label: 'Favorite updates', desc: 'When your favorites go live' },
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                         ].map((item) => (
                             <div key={item.key} className="flex items-center justify-between p-4">
                                 <div>
-                                    <Label className="text-white">{item.label}</Label>
+                                    <Label className="text-slate-700 font-medium">{item.label}</Label>
                                     <p className="text-sm text-slate-500">{item.desc}</p>
                                 </div>
                                 <Switch
