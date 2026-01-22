@@ -38,6 +38,9 @@ const MIN_ZOOM_FOR_ANIMATION = 15;
 const MAX_ANIMATED_MARKERS = 6;
 const IDLE_ENABLE_DELAY_MS = 2000;
 
+// Google Maps libraries - MUST be static to prevent infinite reloads
+const GOOGLE_MAPS_LIBRARIES: ("places")[] = ['places'];
+
 // =============================================================================
 // MAP STYLING
 // =============================================================================
@@ -144,7 +147,7 @@ export default function FoodTruckMap({
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    libraries: ['places'],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   const mapCenter = userLocation || defaultCenter;
