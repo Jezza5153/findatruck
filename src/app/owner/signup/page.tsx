@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChefHat, ArrowLeft, Truck } from 'lucide-react';
+import { IconLoader2, IconChefHat, IconArrowLeft, IconTruck } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 const CUISINE_TYPES = [
@@ -176,9 +176,9 @@ export default function OwnerSignupPage() {
           <CardHeader className="space-y-2 text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
               {step === 1 ? (
-                <ChefHat className="w-8 h-8 text-white" />
+                <IconChefHat className="w-8 h-8 text-white" />
               ) : (
-                <Truck className="w-8 h-8 text-white" />
+                <IconTruck className="w-8 h-8 text-white" />
               )}
             </div>
             <CardTitle className="text-2xl font-bold text-white">
@@ -341,7 +341,7 @@ export default function OwnerSignupPage() {
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
                           Creating...
                         </>
                       ) : (
@@ -366,7 +366,7 @@ export default function OwnerSignupPage() {
               href="/"
               className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <IconArrowLeft className="mr-2 h-4 w-4" />
               Back to home
             </Link>
           </CardContent>

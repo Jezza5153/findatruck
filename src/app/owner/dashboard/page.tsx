@@ -13,10 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Truck, Utensils, ShoppingBag, DollarSign,
-  MapPin, Settings, ChevronRight,
-  TrendingUp, Clock, Users, Navigation, Loader2, Calendar, CheckCircle
-} from 'lucide-react';
+  IconTruck, IconUtensils, IconShoppingBag, IconDollarSign,
+  IconMapPin, IconSettings, IconChevronRight,
+  IconTrendingUp, IconClock, IconUsers, IconNavigation, IconLoader2, IconCalendar, CheckCircle
+} from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface TruckData {
@@ -245,7 +245,7 @@ export default function OwnerDashboardPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-white">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-white" />
+                  <IconMapPin className="w-4 h-4 text-white" />
                 </div>
                 Where are you today?
               </CardTitle>
@@ -281,9 +281,9 @@ export default function OwnerDashboardPage() {
                       className="bg-blue-600 hover:bg-blue-500 text-white"
                     >
                       {updatingLocation ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                       ) : (
-                        <Navigation className="w-4 h-4 mr-2" />
+                        <IconNavigation className="w-4 h-4 mr-2" />
                       )}
                       Use GPS
                     </Button>
@@ -327,7 +327,7 @@ export default function OwnerDashboardPage() {
 
               <div className="flex justify-between items-center pt-2">
                 <Link href="/owner/schedule" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium">
-                  <Calendar className="w-4 h-4" />
+                  <IconCalendar className="w-4 h-4" />
                   Plan future schedule →
                 </Link>
                 <Button
@@ -336,9 +336,9 @@ export default function OwnerDashboardPage() {
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold shadow-lg"
                 >
                   {updatingLocation ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <IconCheckCircle className="w-4 h-4 mr-2" />
                   )}
                   Save Location
                 </Button>
@@ -355,10 +355,10 @@ export default function OwnerDashboardPage() {
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
           {[
-            { icon: ShoppingBag, label: "Today's Orders", value: stats.todayOrders, color: 'bg-blue-600', textColor: 'text-blue-400' },
-            { icon: DollarSign, label: "Today's Revenue", value: `$${stats.todayRevenue}`, color: 'bg-green-600', textColor: 'text-green-400' },
-            { icon: Users, label: 'Active Customers', value: stats.activeCustomers, color: 'bg-purple-600', textColor: 'text-purple-400' },
-            { icon: Clock, label: 'Avg Prep Time', value: stats.avgPrepTime, color: 'bg-orange-600', textColor: 'text-orange-400' },
+            { icon: IconShoppingBag, label: "Today's Orders", value: stats.todayOrders, color: 'bg-blue-600', textColor: 'text-blue-400' },
+            { icon: IconDollarSign, label: "Today's Revenue", value: `$${stats.todayRevenue}`, color: 'bg-green-600', textColor: 'text-green-400' },
+            { icon: IconUsers, label: 'Active Customers', value: stats.activeCustomers, color: 'bg-purple-600', textColor: 'text-purple-400' },
+            { icon: IconClock, label: 'Avg Prep Time', value: stats.avgPrepTime, color: 'bg-orange-600', textColor: 'text-orange-400' },
           ].map((stat) => (
             <Card key={stat.label} className="bg-slate-900 border-slate-800 shadow-lg">
               <CardContent className="p-5">
@@ -384,12 +384,12 @@ export default function OwnerDashboardPage() {
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {[
-            { icon: Utensils, label: 'Manage Menu', href: '/owner/menu', desc: 'Edit items, categories & prices', color: 'bg-orange-600' },
-            { icon: ShoppingBag, label: 'View Orders', href: '/owner/orders', desc: 'Process incoming orders', color: 'bg-blue-600' },
-            { icon: TrendingUp, label: 'Analytics', href: '/owner/analytics', desc: 'View sales & performance', color: 'bg-green-600' },
-            { icon: Calendar, label: 'Schedule', href: '/owner/schedule', desc: 'Plan future locations & dates', color: 'bg-purple-600' },
-            { icon: Settings, label: 'Truck Settings', href: '/owner/profile', desc: 'Edit profile & hours', color: 'bg-slate-600' },
-            { icon: DollarSign, label: 'Billing', href: '/owner/billing', desc: 'Manage payments', color: 'bg-violet-600' },
+            { icon: IconUtensils, label: 'Manage Menu', href: '/owner/menu', desc: 'Edit items, categories & prices', color: 'bg-orange-600' },
+            { icon: IconShoppingBag, label: 'View Orders', href: '/owner/orders', desc: 'Process incoming orders', color: 'bg-blue-600' },
+            { icon: IconTrendingUp, label: 'Analytics', href: '/owner/analytics', desc: 'View sales & performance', color: 'bg-green-600' },
+            { icon: IconCalendar, label: 'Schedule', href: '/owner/schedule', desc: 'Plan future locations & dates', color: 'bg-purple-600' },
+            { icon: IconSettings, label: 'Truck Settings', href: '/owner/profile', desc: 'Edit profile & hours', color: 'bg-slate-600' },
+            { icon: IconDollarSign, label: 'Billing', href: '/owner/billing', desc: 'Manage payments', color: 'bg-violet-600' },
           ].map((action) => (
             <Link key={action.label} href={action.href}>
               <Card className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all cursor-pointer h-full group shadow-lg">
@@ -401,7 +401,7 @@ export default function OwnerDashboardPage() {
                     <h3 className="font-semibold text-white group-hover:text-yellow-400 transition-colors">{action.label}</h3>
                     <p className="text-sm text-slate-400">{action.desc}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                  <IconChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
                 </CardContent>
               </Card>
             </Link>

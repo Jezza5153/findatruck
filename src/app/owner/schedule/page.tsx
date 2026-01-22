@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Calendar, Clock, MapPin, Plus, Trash2, Save, Loader2, CalendarDays, X
-} from 'lucide-react';
+  IconCalendar, IconClock, IconMapPin, IconPlus, IconTrash2, IconSave, IconLoader2, IconCalendarDays, IconX
+} from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface ScheduleEntry {
@@ -180,7 +180,7 @@ export default function OwnerSchedulePage() {
         >
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
-              <CalendarDays className="w-8 h-8 text-purple-400" />
+              <IconCalendarDays className="w-8 h-8 text-purple-400" />
               Schedule Planner
             </h1>
             <p className="text-slate-400 mt-1">
@@ -192,7 +192,7 @@ export default function OwnerSchedulePage() {
               onClick={() => setShowAddForm(true)}
               className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <IconPlus className="w-4 h-4 mr-2" />
               Add Date
             </Button>
             {schedule.length > 0 && (
@@ -201,7 +201,7 @@ export default function OwnerSchedulePage() {
                 disabled={saving}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
               >
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {saving ? <IconLoader2 className="w-4 h-4 mr-2 animate-spin" /> : <IconSave className="w-4 h-4 mr-2" />}
                 Save All
               </Button>
             )}
@@ -218,7 +218,7 @@ export default function OwnerSchedulePage() {
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-lg text-purple-400">Add Scheduled Location</CardTitle>
                 <Button size="icon" variant="ghost" onClick={() => setShowAddForm(false)}>
-                  <X className="w-4 h-4" />
+                  <IconX className="w-4 h-4" />
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -296,7 +296,7 @@ export default function OwnerSchedulePage() {
                     onClick={addEntry}
                     className="bg-purple-500 hover:bg-purple-600"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <IconPlus className="w-4 h-4 mr-2" />
                     Add Entry
                   </Button>
                 </div>
@@ -313,7 +313,7 @@ export default function OwnerSchedulePage() {
           className="mb-8"
         >
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-400" />
+            <IconCalendar className="w-5 h-5 text-green-400" />
             Upcoming ({upcomingSchedule.length})
           </h2>
 
@@ -333,12 +333,12 @@ export default function OwnerSchedulePage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="w-4 h-4 text-red-400" />
+                        <IconMapPin className="w-4 h-4 text-red-400" />
                         <span className="font-medium truncate">{entry.address}</span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-400">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
+                          <IconClock className="w-3 h-3" />
                           {entry.startTime} - {entry.endTime}
                         </span>
                         {entry.endDate && (
@@ -356,7 +356,7 @@ export default function OwnerSchedulePage() {
                       onClick={() => deleteEntry(entry.id)}
                       className="text-slate-400 hover:text-red-400 hover:bg-red-400/10"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <IconTrash2 className="w-4 h-4" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -365,14 +365,14 @@ export default function OwnerSchedulePage() {
           ) : (
             <Card className="bg-slate-900 border-slate-800 shadow-lg">
               <CardContent className="p-8 text-center">
-                <CalendarDays className="w-12 h-12 mx-auto mb-3 text-slate-500" />
+                <IconCalendarDays className="w-12 h-12 mx-auto mb-3 text-slate-500" />
                 <p className="text-slate-400">No upcoming dates scheduled</p>
                 <Button
                   onClick={() => setShowAddForm(true)}
                   variant="outline"
                   className="mt-4 border-slate-600 bg-slate-700/50 text-slate-300"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <IconPlus className="w-4 h-4 mr-2" />
                   Add Your First Date
                 </Button>
               </CardContent>
@@ -388,7 +388,7 @@ export default function OwnerSchedulePage() {
             transition={{ delay: 0.2 }}
           >
             <h2 className="text-lg font-semibold mb-4 text-slate-500 flex items-center gap-2">
-              <Clock className="w-5 h-5" />
+              <IconClock className="w-5 h-5" />
               Past ({pastSchedule.length})
             </h2>
             <div className="space-y-2 opacity-60">
@@ -404,7 +404,7 @@ export default function OwnerSchedulePage() {
                       onClick={() => deleteEntry(entry.id)}
                       className="text-slate-500 hover:text-red-400 h-6 w-6"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <IconTrash2 className="w-3 h-3" />
                     </Button>
                   </CardContent>
                 </Card>

@@ -10,10 +10,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  MapPin, Star, Clock, Phone, Globe, ArrowLeft,
-  Utensils, Heart, Share2, Navigation, Gift, Tag,
-  MessageSquare, Info, CheckCircle, Loader2, X
-} from 'lucide-react';
+  IconMapPin, IconStar, IconClock, IconPhone, IconGlobe, IconArrowLeft,
+  IconUtensils, IconHeart, IconShare2, IconNavigation, IconGift, IconTag,
+  IconMessageSquare, IconInfo, IconCheckCircle, IconLoader2, IconX
+} from '@/components/ui/branded-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -259,7 +259,7 @@ export default function TruckDetailPage() {
         <div className="absolute top-4 left-4">
           <Link href="/map">
             <Button variant="ghost" className="bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/70 text-white">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <IconArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
           </Link>
@@ -298,7 +298,7 @@ export default function TruckDetailPage() {
                       isFavorite ? 'bg-pink-500/20 border-pink-500 text-pink-400' : 'text-slate-400 hover:text-white'
                     )}
                   >
-                    <Heart className={cn("w-5 h-5", isFavorite && 'fill-current')} />
+                    <IconHeart className={cn("w-5 h-5", isFavorite && 'fill-current')} />
                   </Button>
                   <Button
                     variant="outline"
@@ -306,14 +306,14 @@ export default function TruckDetailPage() {
                     onClick={openDirections}
                     className="border-slate-600 text-slate-400 hover:text-white"
                   >
-                    <Navigation className="w-5 h-5" />
+                    <IconNavigation className="w-5 h-5" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     className="border-slate-600 text-slate-400 hover:text-white"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <IconShare2 className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
@@ -322,7 +322,7 @@ export default function TruckDetailPage() {
               {truck.rating && (
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex items-center gap-1 text-yellow-400 bg-yellow-500/10 px-3 py-1 rounded-lg">
-                    <Star className="w-5 h-5 fill-current" />
+                    <IconStar className="w-5 h-5 fill-current" />
                     <span className="font-bold">{truck.rating}</span>
                   </div>
                   {truck.numberOfRatings && (
@@ -345,7 +345,7 @@ export default function TruckDetailPage() {
                           onClick={handleCheckIn}
                           className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
                         >
-                          <CheckCircle className="w-5 h-5 mr-2" />
+                          <IconCheckCircle className="w-5 h-5 mr-2" />
                           Check In & Earn Stamp
                         </Button>
                       </motion.div>
@@ -357,7 +357,7 @@ export default function TruckDetailPage() {
                         exit={{ opacity: 0 }}
                         className="flex items-center gap-2 text-slate-300"
                       >
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <IconLoader2 className="w-5 h-5 animate-spin" />
                         {checkInMessage}
                       </motion.div>
                     )}
@@ -368,7 +368,7 @@ export default function TruckDetailPage() {
                         className="p-4 rounded-xl bg-green-500/10 border border-green-500/30"
                       >
                         <div className="flex items-center gap-2 text-green-400 font-semibold mb-1">
-                          <CheckCircle className="w-5 h-5" />
+                          <IconCheckCircle className="w-5 h-5" />
                           {checkInMessage}
                         </div>
                         {checkInResult && (
@@ -388,7 +388,7 @@ export default function TruckDetailPage() {
                         className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between"
                       >
                         <div className="flex items-center gap-2 text-red-400">
-                          <X className="w-5 h-5" />
+                          <IconX className="w-5 h-5" />
                           {checkInMessage}
                         </div>
                         <Button
@@ -422,11 +422,11 @@ export default function TruckDetailPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="bg-slate-800/80 border border-slate-700/50 p-1 w-full grid grid-cols-4">
               <TabsTrigger value="menu" className="data-[state=active]:bg-slate-700">
-                <Utensils className="w-4 h-4 mr-2" />
+                <IconUtensils className="w-4 h-4 mr-2" />
                 Menu
               </TabsTrigger>
               <TabsTrigger value="specials" className="data-[state=active]:bg-slate-700 relative">
-                <Tag className="w-4 h-4 mr-2" />
+                <IconTag className="w-4 h-4 mr-2" />
                 Specials
                 {activeSpecials.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-[10px] flex items-center justify-center">
@@ -435,11 +435,11 @@ export default function TruckDetailPage() {
                 )}
               </TabsTrigger>
               <TabsTrigger value="reviews" className="data-[state=active]:bg-slate-700">
-                <MessageSquare className="w-4 h-4 mr-2" />
+                <IconMessageSquare className="w-4 h-4 mr-2" />
                 Reviews
               </TabsTrigger>
               <TabsTrigger value="about" className="data-[state=active]:bg-slate-700">
-                <Info className="w-4 h-4 mr-2" />
+                <IconInfo className="w-4 h-4 mr-2" />
                 About
               </TabsTrigger>
             </TabsList>
@@ -484,7 +484,7 @@ export default function TruckDetailPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-400">
-                      <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <IconUtensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>Menu coming soon</p>
                     </div>
                   )}
@@ -517,11 +517,11 @@ export default function TruckDetailPage() {
                                 <p className="text-sm text-slate-400 mt-1">{special.description}</p>
                               )}
                             </div>
-                            <Gift className="w-6 h-6 text-orange-400" />
+                            <IconGift className="w-6 h-6 text-orange-400" />
                           </div>
                           {(special.startTime || special.endTime) && (
                             <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
+                              <IconClock className="w-3 h-3" />
                               {special.endTime && `Ends ${formatDistanceToNow(new Date(special.endTime), { addSuffix: true })}`}
                             </p>
                           )}
@@ -530,7 +530,7 @@ export default function TruckDetailPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-400">
-                      <Tag className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <IconTag className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No active specials right now</p>
                     </div>
                   )}
@@ -581,7 +581,7 @@ export default function TruckDetailPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-400">
-                      <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <IconMessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No reviews yet</p>
                     </div>
                   )}
@@ -606,19 +606,19 @@ export default function TruckDetailPage() {
                         onClick={openDirections}
                         className="flex items-center gap-3 text-slate-300 hover:text-white text-left"
                       >
-                        <MapPin className="w-5 h-5 text-blue-400" />
+                        <IconMapPin className="w-5 h-5 text-blue-400" />
                         <span>{truck.address}</span>
                       </button>
                     )}
                     {truck.phone && (
                       <a href={`tel:${truck.phone}`} className="flex items-center gap-3 text-slate-300 hover:text-white">
-                        <Phone className="w-5 h-5 text-green-400" />
+                        <IconPhone className="w-5 h-5 text-green-400" />
                         <span>{truck.phone}</span>
                       </a>
                     )}
                     {truck.websiteUrl && (
                       <a href={truck.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-slate-300 hover:text-white">
-                        <Globe className="w-5 h-5 text-purple-400" />
+                        <IconGlobe className="w-5 h-5 text-purple-400" />
                         <span>Visit Website</span>
                       </a>
                     )}
@@ -629,7 +629,7 @@ export default function TruckDetailPage() {
                     <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30">
                       <p className="text-sm text-slate-400 mb-1">Call us now</p>
                       <a href={`tel:${truck.ctaPhoneNumber}`} className="flex items-center gap-3 text-xl font-bold text-green-400 hover:text-green-300">
-                        <Phone className="w-6 h-6" />
+                        <IconPhone className="w-6 h-6" />
                         <span>{truck.ctaPhoneNumber}</span>
                       </a>
                     </div>

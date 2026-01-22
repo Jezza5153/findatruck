@@ -5,7 +5,7 @@ import { GoogleMap, useJsApiLoader, MarkerClusterer, Marker, InfoWindow, Overlay
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Star, Navigation, Truck, Crosshair, Loader2 } from 'lucide-react';
+import { IconMapPin, IconStar, IconNavigation, IconTruck, IconCrosshair, IconLoader2 } from '@/components/ui/branded-icons';
 import Link from 'next/link';
 
 interface TruckData {
@@ -92,7 +92,7 @@ function TruckMarker({
                             />
                         ) : (
                             <div className={`w-full h-full flex items-center justify-center ${truck.isOpen ? 'bg-emerald-600' : 'bg-gray-500'}`}>
-                                <Truck className="w-6 h-6 text-white" />
+                                <IconTruck className="w-6 h-6 text-white" />
                             </div>
                         )}
                     </div>
@@ -203,7 +203,7 @@ export function TruckMap({ trucks, center, onTruckSelect, showCenterButton = tru
         return (
             <Card className="h-full bg-slate-800/50 border-slate-700 flex items-center justify-center">
                 <CardContent className="text-center text-red-400">
-                    <MapPin className="w-12 h-12 mx-auto mb-2" />
+                    <IconMapPin className="w-12 h-12 mx-auto mb-2" />
                     <p>Failed to load map</p>
                 </CardContent>
             </Card>
@@ -272,7 +272,7 @@ export function TruckMap({ trucks, center, onTruckSelect, showCenterButton = tru
                                 </span>
                                 {selectedTruck.rating && (
                                     <span className="flex items-center gap-1 text-yellow-400 text-sm">
-                                        <Star className="w-3 h-3 fill-current" />
+                                        <IconStar className="w-3 h-3 fill-current" />
                                         {selectedTruck.rating}
                                     </span>
                                 )}
@@ -297,9 +297,9 @@ export function TruckMap({ trucks, center, onTruckSelect, showCenterButton = tru
                         title="Center on my location"
                     >
                         {locating ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <IconLoader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <Crosshair className="w-5 h-5" />
+                            <IconCrosshair className="w-5 h-5" />
                         )}
                     </Button>
                 </div>

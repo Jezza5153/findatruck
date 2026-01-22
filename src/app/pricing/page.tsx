@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-    Check, X, Star, Zap, Crown, ArrowRight, Sparkles
-} from 'lucide-react';
+    IconCheck, IconX, IconStar, IconZap, IconCrown, IconArrowRight, IconSparkles
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +26,7 @@ const plans = [
         description: 'Get started with the essentials',
         price: 0,
         period: 'forever',
-        icon: Zap,
+        icon: IconZap,
         color: 'from-slate-500 to-slate-600',
         features: [
             { text: 'Basic truck profile', included: true },
@@ -48,7 +48,7 @@ const plans = [
         description: 'Boost your visibility and reach',
         price: 19,
         period: '/month',
-        icon: Star,
+        icon: IconStar,
         color: 'from-yellow-500 to-orange-500',
         features: [
             { text: 'Everything in Free', included: true },
@@ -70,7 +70,7 @@ const plans = [
         description: 'Maximum exposure for serious operators',
         price: 49,
         period: '/month',
-        icon: Crown,
+        icon: IconCrown,
         color: 'from-purple-500 to-violet-600',
         features: [
             { text: 'Everything in Plus', included: true },
@@ -123,7 +123,7 @@ export default function PricingPage() {
                     variants={staggerContainer}
                 >
                     <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-white/10 border border-white/10">
-                        <Sparkles className="h-4 w-4 text-yellow-400" />
+                        <IconSparkles className="h-4 w-4 text-yellow-400" />
                         <span className="text-sm text-slate-300">Customers always free</span>
                     </motion.div>
 
@@ -207,7 +207,7 @@ export default function PricingPage() {
                                             )}
                                         >
                                             {plan.cta}
-                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                            <IconArrowRight className="ml-2 h-4 w-4" />
                                         </Button>
                                     </Link>
 
@@ -216,9 +216,9 @@ export default function PricingPage() {
                                         {plan.features.map((feature) => (
                                             <li key={feature.text} className="flex items-center gap-3 text-sm">
                                                 {feature.included ? (
-                                                    <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                                                    <IconCheck className="h-4 w-4 text-green-400 flex-shrink-0" />
                                                 ) : (
-                                                    <X className="h-4 w-4 text-slate-600 flex-shrink-0" />
+                                                    <IconX className="h-4 w-4 text-slate-600 flex-shrink-0" />
                                                 )}
                                                 <span className={feature.included ? 'text-slate-300' : 'text-slate-500'}>
                                                     {feature.text}
@@ -267,23 +267,23 @@ export default function PricingPage() {
                                         <td className="py-3 px-4 text-slate-300">{feature.name}</td>
                                         <td className="py-3 px-4 text-center">
                                             {feature.free ? (
-                                                <Check className="h-4 w-4 text-green-400 mx-auto" />
+                                                <IconCheck className="h-4 w-4 text-green-400 mx-auto" />
                                             ) : (
-                                                <X className="h-4 w-4 text-slate-600 mx-auto" />
+                                                <IconX className="h-4 w-4 text-slate-600 mx-auto" />
                                             )}
                                         </td>
                                         <td className="py-3 px-4 text-center">
                                             {feature.plus ? (
-                                                <Check className="h-4 w-4 text-green-400 mx-auto" />
+                                                <IconCheck className="h-4 w-4 text-green-400 mx-auto" />
                                             ) : (
-                                                <X className="h-4 w-4 text-slate-600 mx-auto" />
+                                                <IconX className="h-4 w-4 text-slate-600 mx-auto" />
                                             )}
                                         </td>
                                         <td className="py-3 px-4 text-center">
                                             {feature.pro ? (
-                                                <Check className="h-4 w-4 text-green-400 mx-auto" />
+                                                <IconCheck className="h-4 w-4 text-green-400 mx-auto" />
                                             ) : (
-                                                <X className="h-4 w-4 text-slate-600 mx-auto" />
+                                                <IconX className="h-4 w-4 text-slate-600 mx-auto" />
                                             )}
                                         </td>
                                     </tr>
@@ -304,7 +304,7 @@ export default function PricingPage() {
                         viewport={{ once: true }}
                     >
                         <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-green-500/20 border border-green-500/30">
-                            <Check className="h-4 w-4 text-green-400" />
+                            <IconCheck className="h-4 w-4 text-green-400" />
                             <span className="text-sm text-green-300 font-medium">100% Free for Customers</span>
                         </div>
 
@@ -317,7 +317,7 @@ export default function PricingPage() {
                             <Link href="/map">
                                 <Button size="lg" className="px-8 py-6 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400">
                                     Find Trucks Now
-                                    <ArrowRight className="ml-2 h-5 w-5" />
+                                    <IconArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </Link>
                             <Link href="/signup">

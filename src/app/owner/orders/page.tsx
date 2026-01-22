@@ -9,9 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
-  ShoppingBag, Clock, Check, X, ChefHat,
-  DollarSign, User, Loader2
-} from 'lucide-react';
+  IconShoppingBag, IconClock, IconCheck, X, IconChefHat,
+  IconDollarSign, IconUser, IconLoader2
+} from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface Order {
@@ -122,7 +122,7 @@ export default function OwnerOrdersPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <ShoppingBag className="w-8 h-8 text-blue-400" />
+            <IconShoppingBag className="w-8 h-8 text-blue-400" />
             Orders
           </h1>
           <p className="text-slate-400 mt-1">{activeOrders.length} active orders</p>
@@ -144,7 +144,7 @@ export default function OwnerOrdersPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-                        <User className="w-5 h-5 text-slate-400" />
+                        <IconUser className="w-5 h-5 text-slate-400" />
                       </div>
                       <div>
                         <p className="font-semibold">{order.customerName}</p>
@@ -175,7 +175,7 @@ export default function OwnerOrdersPage() {
 
                   <div className="flex items-center justify-between pt-3 border-t border-slate-700">
                     <p className="font-bold text-lg">
-                      <DollarSign className="w-4 h-4 inline" />
+                      <IconDollarSign className="w-4 h-4 inline" />
                       {order.totalAmount.toFixed(2)}
                     </p>
 
@@ -188,9 +188,9 @@ export default function OwnerOrdersPage() {
                           className="bg-yellow-500 hover:bg-yellow-600"
                         >
                           {updatingOrder === order.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <IconLoader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <><ChefHat className="w-4 h-4 mr-1" />Start Preparing</>
+                            <><IconChefHat className="w-4 h-4 mr-1" />Start Preparing</>
                           )}
                         </Button>
                       )}
@@ -202,9 +202,9 @@ export default function OwnerOrdersPage() {
                           className="bg-green-500 hover:bg-green-600"
                         >
                           {updatingOrder === order.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <IconLoader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <><Check className="w-4 h-4 mr-1" />Mark Ready</>
+                            <><IconCheck className="w-4 h-4 mr-1" />Mark Ready</>
                           )}
                         </Button>
                       )}
@@ -216,9 +216,9 @@ export default function OwnerOrdersPage() {
                           className="bg-slate-600 hover:bg-slate-500"
                         >
                           {updatingOrder === order.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <IconLoader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <><Check className="w-4 h-4 mr-1" />Complete</>
+                            <><IconCheck className="w-4 h-4 mr-1" />Complete</>
                           )}
                         </Button>
                       )}
@@ -230,7 +230,7 @@ export default function OwnerOrdersPage() {
           ) : (
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-12 text-center">
-                <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <IconShoppingBag className="w-16 h-16 mx-auto mb-4 text-slate-500" />
                 <h3 className="text-xl font-semibold mb-2">No active orders</h3>
                 <p className="text-slate-400">New orders will appear here</p>
               </CardContent>

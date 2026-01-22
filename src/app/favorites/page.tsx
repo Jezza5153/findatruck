@@ -6,9 +6,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Heart, MapPin, Star, Navigation, Clock, ChevronRight, Loader2,
-    HeartOff, ExternalLink
-} from 'lucide-react';
+    IconHeart, IconMapPin, IconStar, IconNavigation, IconClock, IconChevronRight, IconLoader2,
+    IconHeartOff, IconExternalLink
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -73,7 +73,7 @@ export default function FavoritesPage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -92,7 +92,7 @@ export default function FavoritesPage() {
                 <div className="container mx-auto max-w-2xl">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                            <Heart className="w-5 h-5 text-white" />
+                            <IconHeart className="w-5 h-5 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold">Favorites</h1>
                     </div>
@@ -112,7 +112,7 @@ export default function FavoritesPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <HeartOff className="w-10 h-10 text-slate-600" />
+                            <IconHeartOff className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">No favorites yet</h2>
                         <p className="text-slate-400 mb-6">
@@ -120,7 +120,7 @@ export default function FavoritesPage() {
                         </p>
                         <Link href="/map">
                             <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400">
-                                <MapPin className="mr-2 h-4 w-4" />
+                                <IconMapPin className="mr-2 h-4 w-4" />
                                 Explore Trucks
                             </Button>
                         </Link>
@@ -162,13 +162,13 @@ export default function FavoritesPage() {
                                         <p className="text-sm text-slate-400 truncate">{truck.cuisine}</p>
                                         {truck.address && (
                                             <p className="text-xs text-slate-500 truncate mt-1">
-                                                <MapPin className="inline w-3 h-3 mr-1" />
+                                                <IconMapPin className="inline w-3 h-3 mr-1" />
                                                 {truck.address}
                                             </p>
                                         )}
                                     </div>
 
-                                    <ChevronRight className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                                    <IconChevronRight className="w-5 h-5 text-slate-500 flex-shrink-0" />
                                 </Link>
 
                                 {/* Quick actions */}
@@ -177,7 +177,7 @@ export default function FavoritesPage() {
                                         onClick={() => openDirections(truck)}
                                         className="flex-1 py-2.5 text-sm text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <Navigation className="w-4 h-4" />
+                                        <IconNavigation className="w-4 h-4" />
                                         Directions
                                     </button>
                                     <div className="w-px bg-slate-700/50" />
@@ -185,7 +185,7 @@ export default function FavoritesPage() {
                                         onClick={() => removeFavorite(truck.id)}
                                         className="flex-1 py-2.5 text-sm text-slate-400 hover:text-red-400 hover:bg-slate-700/50 transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <Heart className="w-4 h-4" />
+                                        <IconHeart className="w-4 h-4" />
                                         Remove
                                     </button>
                                 </div>

@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 import type { FoodTruck } from '@/lib/types';
 import Image from 'next/image';
-import { LocateFixed, MapPin, Star } from 'lucide-react';
+import { IconLocateFixed, IconMapPin, IconStar } from '@/components/ui/branded-icons';
 
 // Marker clustering
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
@@ -102,7 +102,7 @@ function TruckCard({ truck, onClose }: { truck: FoodTruck; onClose: () => void }
       {truck.rating && (
         <div className="flex gap-1 text-yellow-500 items-center text-xs">
           {[...Array(Math.round(truck.rating))].map((_, i) => (
-            <Star key={i} className="w-4 h-4" fill="#FFC700" stroke="#FFC700" />
+            <IconStar key={i} className="w-4 h-4" fill="#FFC700" stroke="#FFC700" />
           ))}
           <span className="ml-1 font-semibold text-gray-700">{truck.rating?.toFixed(1)}</span>
         </div>
@@ -407,7 +407,7 @@ export default function FoodTruckMap({
             if (!bounds.isEmpty()) mapRef.current.fitBounds(bounds, 100);
           }}
         >
-          <MapPin className="h-5 w-5 text-white" />
+          <IconMapPin className="h-5 w-5 text-white" />
         </button>
         <button
           className="rounded-full bg-white shadow-lg p-3 border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -419,7 +419,7 @@ export default function FoodTruckMap({
             );
           }}
         >
-          <LocateFixed className="h-5 w-5 text-gray-600" />
+          <IconLocateFixed className="h-5 w-5 text-gray-600" />
         </button>
       </div>
     </div>

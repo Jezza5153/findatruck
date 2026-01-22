@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Filter, Navigation, RotateCcw } from 'lucide-react';
+import { IconFilter, IconNavigation, IconRotateCcw } from '@/components/ui/branded-icons';
 import type { Cuisine } from '@/lib/types';
 
 const availableCuisinesData: Cuisine[] = [
@@ -32,7 +32,7 @@ const availableCuisinesData: Cuisine[] = [
   { id: 'vegetarian', name: 'Vegetarian' },
   { id: 'vietnamese', name: 'Vietnamese' },
   { id: 'other', name: 'Other' },
-].sort((a,b) => a.name.localeCompare(b.name));
+].sort((a, b) => a.name.localeCompare(b.name));
 
 
 interface FilterControlsProps {
@@ -60,7 +60,7 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
     }, 500); // Debounce by 500ms
 
     return () => clearTimeout(handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cuisine, distance, openNow, searchTerm, isClient]); // onFilterChange excluded to prevent infinite loops if parent re-renders
 
   const resetFilters = () => {
@@ -83,17 +83,17 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
     <div className="p-4 space-y-6 bg-card rounded-lg shadow-md border">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold flex items-center">
-            <Filter className="mr-2 h-5 w-5 text-primary" />
-            Filter Trucks
+          <IconFilter className="mr-2 h-5 w-5 text-primary" />
+          Filter Trucks
         </h3>
         <Button variant="ghost" size="sm" onClick={resetFilters} aria-label="Reset filters">
-            <RotateCcw className="h-4 w-4 mr-1"/> Reset
+          <IconRotateCcw className="h-4 w-4 mr-1" /> Reset
         </Button>
       </div>
-      
+
       <div>
         <Label htmlFor="search-term" className="text-sm font-medium">Search by Name or Keyword</Label>
-        <Input 
+        <Input
           id="search-term"
           type="text"
           placeholder="e.g., Tacos, Pizza Place"
@@ -110,7 +110,7 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
             <SelectValue placeholder="Any Cuisine" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Any Cuisine</SelectItem> 
+            <SelectItem value="all">Any Cuisine</SelectItem>
             {availableCuisinesData.map(c => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -120,27 +120,27 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
         </Select>
       </div>
 
-      {isClient && ( 
+      {isClient && (
         <div>
-            <Label htmlFor="distance-slider" className="text-sm font-medium">
-                Distance: {distance[0]} miles
-            </Label>
-            <Slider
-                id="distance-slider"
-                min={1}
-                max={25}
-                step={1}
-                value={distance}
-                onValueChange={setDistance}
-                className="mt-2"
-                aria-label={`Distance filter, current value ${distance[0]} miles`}
-            />
+          <Label htmlFor="distance-slider" className="text-sm font-medium">
+            Distance: {distance[0]} miles
+          </Label>
+          <Slider
+            id="distance-slider"
+            min={1}
+            max={25}
+            step={1}
+            value={distance}
+            onValueChange={setDistance}
+            className="mt-2"
+            aria-label={`Distance filter, current value ${distance[0]} miles`}
+          />
         </div>
       )}
 
       <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="open-now" 
+        <Checkbox
+          id="open-now"
           checked={openNow}
           onCheckedChange={(checked) => setOpenNow(Boolean(checked))}
         />
@@ -150,7 +150,7 @@ export function FilterControls({ onFilterChange, onLocateMe }: FilterControlsPro
       </div>
 
       <Button onClick={onLocateMe} variant="outline" className="w-full">
-        <Navigation className="mr-2 h-4 w-4" /> Locate Me
+        <IconNavigation className="mr-2 h-4 w-4" /> Locate Me
       </Button>
     </div>
   );

@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-    MapPin, Heart, Gift, Star, ArrowRight, Smartphone, Bell, Trophy
-} from 'lucide-react';
+    IconMapPin, IconHeart, IconGift, IconStar, IconArrowRight, IconSmartphone, IconBell, IconTrophy
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -21,28 +21,28 @@ const staggerContainer = {
 
 const steps = [
     {
-        icon: MapPin,
+        icon: IconMapPin,
         title: 'Discover',
         description: 'Find food trucks near you with our live map. See real-time locations, open hours, and what\'s on the menu today.',
         color: 'from-blue-500 to-cyan-500',
         details: ['Real-time GPS tracking', 'Filter by cuisine & distance', 'See what\'s cooking now']
     },
     {
-        icon: Heart,
+        icon: IconHeart,
         title: 'Follow',
         description: 'Save your favorite trucks and never miss when they\'re nearby. Get notified when they go live.',
         color: 'from-pink-500 to-rose-500',
         details: ['Build your favorites list', 'Get proximity alerts', 'Track their schedule']
     },
     {
-        icon: Smartphone,
+        icon: IconSmartphone,
         title: 'Check-in',
         description: 'When you visit a truck, tap to check-in. It\'s quick, easy, and earns you loyalty stamps.',
         color: 'from-orange-500 to-amber-500',
         details: ['One-tap check-in', 'Location verified', 'Instant stamp earned']
     },
     {
-        icon: Gift,
+        icon: IconGift,
         title: 'Earn Rewards',
         description: 'Collect stamps with every visit. Hit the threshold and unlock exclusive rewards and discounts.',
         color: 'from-purple-500 to-violet-500',
@@ -68,7 +68,7 @@ export default function HowItWorksPage() {
                     variants={staggerContainer}
                 >
                     <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-white/10 border border-white/10">
-                        <Trophy className="h-4 w-4 text-yellow-400" />
+                        <IconTrophy className="h-4 w-4 text-yellow-400" />
                         <span className="text-sm text-slate-300">Start earning rewards today</span>
                     </motion.div>
 
@@ -156,9 +156,9 @@ export default function HowItWorksPage() {
 
                     <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
                         {[
-                            { icon: Bell, title: 'Never Miss Out', desc: 'Get alerts when favorites are nearby or posting specials' },
-                            { icon: Star, title: 'Exclusive Deals', desc: 'Members-only discounts and early access to new items' },
-                            { icon: Gift, title: 'Free Rewards', desc: 'Earn stamps and unlock free food just by visiting' }
+                            { icon: IconBell, title: 'Never Miss Out', desc: 'Get alerts when favorites are nearby or posting specials' },
+                            { icon: IconStar, title: 'Exclusive Deals', desc: 'Members-only discounts and early access to new items' },
+                            { icon: IconGift, title: 'Free Rewards', desc: 'Earn stamps and unlock free food just by visiting' }
                         ].map((benefit, i) => (
                             <motion.div
                                 key={benefit.title}
@@ -196,9 +196,9 @@ export default function HowItWorksPage() {
                                     size="lg"
                                     className="px-8 py-6 text-lg rounded-xl bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 shadow-xl transition-all hover:scale-105"
                                 >
-                                    <MapPin className="mr-2 h-5 w-5" />
+                                    <IconMapPin className="mr-2 h-5 w-5" />
                                     Find Trucks Near Me
-                                    <ArrowRight className="ml-2 h-5 w-5" />
+                                    <IconArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </Link>
                             <Link href="/signup">
@@ -216,7 +216,7 @@ export default function HowItWorksPage() {
                             <p className="text-slate-400 mb-4">Own a food truck?</p>
                             <Link href="/signup?role=owner" className="inline-flex items-center text-primary hover:text-primary/80 font-medium">
                                 List your truck and grow your business
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                <IconArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </div>
                     </motion.div>

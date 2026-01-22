@@ -6,9 +6,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Bell, MapPin, Gift, Star, Tag, ShoppingBag, Check,
-    Loader2, BellOff, Trash2
-} from 'lucide-react';
+    IconBell, IconMapPin, IconGift, IconStar, IconTag, IconShoppingBag, IconCheck,
+    IconLoader2, IconBellOff, IconTrash2
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,12 +26,12 @@ interface NotificationData {
     createdAt: string;
 }
 
-const notificationIcons: Record<NotificationType, typeof Bell> = {
-    truck_nearby: MapPin,
-    favorite_live: Star,
-    special: Tag,
-    reward_unlocked: Gift,
-    order_update: ShoppingBag,
+const notificationIcons: Record<NotificationType, typeof IconBell> = {
+    truck_nearby: IconMapPin,
+    favorite_live: IconStar,
+    special: IconTag,
+    reward_unlocked: IconGift,
+    order_update: IconShoppingBag,
 };
 
 const notificationColors: Record<NotificationType, string> = {
@@ -106,7 +106,7 @@ export default function NotificationsPage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                                <Bell className="w-5 h-5 text-white" />
+                                <IconBell className="w-5 h-5 text-white" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold">Notifications</h1>
@@ -137,7 +137,7 @@ export default function NotificationsPage() {
                                 onClick={markAllAsRead}
                                 className="text-slate-400 hover:text-white"
                             >
-                                <Check className="w-4 h-4 mr-1" />
+                                <IconCheck className="w-4 h-4 mr-1" />
                                 Mark all read
                             </Button>
                         )}
@@ -155,7 +155,7 @@ export default function NotificationsPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <BellOff className="w-10 h-10 text-slate-600" />
+                            <IconBellOff className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">No notifications</h2>
                         <p className="text-slate-400 mb-6">
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
                     // Notifications list
                     <div className="space-y-2">
                         {notifications.map((notification, i) => {
-                            const Icon = notificationIcons[notification.type] || Bell;
+                            const Icon = notificationIcons[notification.type] || IconBell;
                             const color = notificationColors[notification.type] || 'from-slate-500 to-slate-600';
 
                             return (
@@ -233,7 +233,7 @@ export default function NotificationsPage() {
                                             }}
                                             className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <IconTrash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </motion.div>

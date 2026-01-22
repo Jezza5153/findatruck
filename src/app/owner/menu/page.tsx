@@ -12,9 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Utensils, Plus, Trash2, Edit2, GripVertical,
-  DollarSign, Image as ImageIcon, Save, Loader2, X, Upload
-} from 'lucide-react';
+  IconUtensils, IconPlus, IconTrash2, IconEdit2, IconGripVertical,
+  IconDollarSign, IconImage as ImageIcon, IconSave, IconLoader2, X, IconUpload
+} from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface MenuItem {
@@ -45,7 +45,7 @@ export default function OwnerMenuPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setIconUploading] = useState(false);
 
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -87,8 +87,8 @@ export default function OwnerMenuPage() {
     }
   }, [status, session]);
 
-  const handleImageUpload = async (file: File, isEdit = false) => {
-    setUploading(true);
+  const handleImageIconUpload = async (file: File, isEdit = false) => {
+    setIconUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -108,16 +108,16 @@ export default function OwnerMenuPage() {
         }
         toast({ title: 'Image uploaded!' });
       } else {
-        throw new Error(data.error || 'Upload failed');
+        throw new Error(data.error || 'IconUpload failed');
       }
     } catch (error) {
       toast({
-        title: 'Upload failed',
+        title: 'IconUpload failed',
         description: 'Could not upload image',
         variant: 'destructive'
       });
     } finally {
-      setUploading(false);
+      setIconUploading(false);
     }
   };
 
@@ -242,7 +242,7 @@ export default function OwnerMenuPage() {
         >
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Utensils className="w-8 h-8 text-orange-400" />
+              <IconUtensils className="w-8 h-8 text-orange-400" />
               Menu Manager
             </h1>
             <p className="text-slate-400 mt-1">{items.length} items in your menu</p>
@@ -251,7 +251,7 @@ export default function OwnerMenuPage() {
             onClick={() => setShowAddForm(true)}
             className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <IconPlus className="w-4 h-4 mr-2" />
             Add Item
           </Button>
         </motion.div>
@@ -262,14 +262,14 @@ export default function OwnerMenuPage() {
           ref={fileInputRef}
           accept="image/*"
           className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+          onChange={(e) => e.target.files?.[0] && handleImageIconUpload(e.target.files[0])}
         />
         <input
           type="file"
           ref={editFileInputRef}
           accept="image/*"
           className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], true)}
+          onChange={(e) => e.target.files?.[0] && handleImageIconUpload(e.target.files[0], true)}
         />
 
         {/* Add Form */}
@@ -294,9 +294,9 @@ export default function OwnerMenuPage() {
                       {newItem.imageUrl ? (
                         <img src={newItem.imageUrl} alt="Preview" className="w-full h-full object-cover rounded-xl" />
                       ) : uploading ? (
-                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                        <IconLoader2 className="w-6 h-6 text-slate-400 animate-spin" />
                       ) : (
-                        <Upload className="w-6 h-6 text-slate-400" />
+                        <IconUpload className="w-6 h-6 text-slate-400" />
                       )}
                     </div>
                     <p className="text-sm text-slate-400">Click to upload an image</p>
@@ -316,7 +316,7 @@ export default function OwnerMenuPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-300">Price *</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <IconDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         type="number"
                         step="0.01"
@@ -353,9 +353,9 @@ export default function OwnerMenuPage() {
                     className="bg-green-500 hover:bg-green-600"
                   >
                     {saving ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                      <><IconLoader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
                     ) : (
-                      <><Save className="w-4 h-4 mr-2" />Save Item</>
+                      <><IconSave className="w-4 h-4 mr-2" />Save Item</>
                     )}
                   </Button>
                 </div>
@@ -374,7 +374,7 @@ export default function OwnerMenuPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg text-orange-400">Editing: {editingItem.name}</CardTitle>
                 <Button size="icon" variant="ghost" onClick={() => setEditingItem(null)}>
-                  <X className="w-4 h-4" />
+                  <IconX className="w-4 h-4" />
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -389,9 +389,9 @@ export default function OwnerMenuPage() {
                       {editingItem.imageUrl ? (
                         <img src={editingItem.imageUrl} alt="Preview" className="w-full h-full object-cover rounded-xl" />
                       ) : uploading ? (
-                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                        <IconLoader2 className="w-6 h-6 text-slate-400 animate-spin" />
                       ) : (
-                        <Upload className="w-6 h-6 text-slate-400" />
+                        <IconUpload className="w-6 h-6 text-slate-400" />
                       )}
                     </div>
                     <p className="text-sm text-slate-400">Click to change image</p>
@@ -410,7 +410,7 @@ export default function OwnerMenuPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-300">Price *</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <IconDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         type="number"
                         step="0.01"
@@ -445,9 +445,9 @@ export default function OwnerMenuPage() {
                     className="bg-orange-500 hover:bg-orange-600"
                   >
                     {saving ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                      <><IconLoader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
                     ) : (
-                      <><Save className="w-4 h-4 mr-2" />Update Item</>
+                      <><IconSave className="w-4 h-4 mr-2" />Update Item</>
                     )}
                   </Button>
                 </div>
@@ -471,14 +471,14 @@ export default function OwnerMenuPage() {
               >
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="text-slate-500 cursor-grab">
-                    <GripVertical className="w-5 h-5" />
+                    <IconGripVertical className="w-5 h-5" />
                   </div>
 
                   <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
-                      <ImageIcon className="w-6 h-6 text-slate-500" />
+                      <IconImage className="w-6 h-6 text-slate-500" />
                     )}
                   </div>
 
@@ -506,7 +506,7 @@ export default function OwnerMenuPage() {
                       onClick={() => setEditingItem(item)}
                       className="text-slate-400 hover:text-blue-400 hover:bg-blue-400/10"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <IconEdit2 className="w-4 h-4" />
                     </Button>
                     <Button
                       size="icon"
@@ -514,7 +514,7 @@ export default function OwnerMenuPage() {
                       onClick={() => handleDeleteItem(item.id)}
                       className="text-slate-400 hover:text-red-400 hover:bg-red-400/10"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <IconTrash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -523,14 +523,14 @@ export default function OwnerMenuPage() {
           ) : (
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-12 text-center">
-                <Utensils className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <IconUtensils className="w-16 h-16 mx-auto mb-4 text-slate-500" />
                 <h3 className="text-xl font-semibold mb-2">No menu items yet</h3>
                 <p className="text-slate-400 mb-4">Start adding items to your menu</p>
                 <Button
                   onClick={() => setShowAddForm(true)}
                   className="bg-gradient-to-r from-orange-500 to-amber-500"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <IconPlus className="w-4 h-4 mr-2" />
                   Add First Item
                 </Button>
               </CardContent>

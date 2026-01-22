@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { IconMoon, IconSun } from '@/components/ui/branded-icons';
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -35,7 +35,7 @@ export function ThemeToggle() {
       className="rounded-full border p-2 shadow hover:scale-110 transition"
       onClick={toggle}
     >
-      {dark ? <Sun className="text-yellow-400 w-5 h-5" /> : <Moon className="text-gray-700 w-5 h-5" />}
+      {dark ? <IconSun className="text-yellow-400 w-5 h-5" /> : <IconMoon className="text-gray-700 w-5 h-5" />}
     </button>
   );
 }

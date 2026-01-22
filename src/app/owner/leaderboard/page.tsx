@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Medal } from 'lucide-react';
+import { IconTrophy, IconMedal } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 export default function OwnerLeaderboardPage() {
@@ -33,7 +33,7 @@ export default function OwnerLeaderboardPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-yellow-400" />
+            <IconTrophy className="w-8 h-8 text-yellow-400" />
             Leaderboard
           </h1>
           <p className="text-slate-400 mb-8">
@@ -48,7 +48,7 @@ export default function OwnerLeaderboardPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-12 text-center">
-              <Medal className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+              <IconMedal className="w-16 h-16 mx-auto mb-4 text-slate-500" />
               <h3 className="text-xl font-semibold mb-2">Leaderboard Coming Soon!</h3>
               <p className="text-slate-400">
                 Compete with other food truck owners for the top spots.

@@ -16,18 +16,23 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
+  title: 'FindATruck - Find Your Next Favorite Food Truck!',
   description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   keywords: [
     'food trucks', 'mobile food', 'local food', 'street food', 'find food',
-    'food near me', 'truck tracker'
+    'food near me', 'FindATruck', 'truck tracker'
   ],
-  authors: [{ name: 'Firebase Studio Project' }],
+  authors: [{ name: 'FindATruck' }],
   openGraph: {
-    title: 'Truck Tracker - Find Your Next Favorite Food Truck!',
+    title: 'FindATruck - Find Your Next Favorite Food Truck!',
     description: 'Discover and connect with local food trucks.',
     type: 'website',
+    images: ['/logo.png'],
   },
 };
 

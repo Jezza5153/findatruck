@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { MapPin, CheckCircle, Clock, XCircle, Loader2 } from 'lucide-react';
+import { IconMapPin, IconCheckCircle, IconClock, IconXCircle, IconLoader2 } from '@/components/ui/branded-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -168,7 +168,7 @@ export function CheckInButton({
             case 'checking':
                 return (
                     <Button disabled className="w-full">
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                         Checking eligibility...
                     </Button>
                 );
@@ -181,9 +181,9 @@ export function CheckInButton({
                         className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500"
                     >
                         {loading ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
-                            <CheckCircle className="w-4 h-4 mr-2" />
+                            <IconCheckCircle className="w-4 h-4 mr-2" />
                         )}
                         Check In & Earn Stamp
                     </Button>
@@ -193,7 +193,7 @@ export function CheckInButton({
                 return (
                     <div className="space-y-2">
                         <Button disabled className="w-full bg-slate-700">
-                            <MapPin className="w-4 h-4 mr-2" />
+                            <IconMapPin className="w-4 h-4 mr-2" />
                             Too Far Away
                         </Button>
                         <p className="text-xs text-center text-slate-400">
@@ -206,7 +206,7 @@ export function CheckInButton({
                 return (
                     <div className="space-y-2">
                         <Button disabled className="w-full bg-slate-700">
-                            <XCircle className="w-4 h-4 mr-2" />
+                            <IconXCircle className="w-4 h-4 mr-2" />
                             Truck is Closed
                         </Button>
                         <p className="text-xs text-center text-slate-400">
@@ -219,7 +219,7 @@ export function CheckInButton({
                 return (
                     <div className="space-y-2">
                         <Button disabled className="w-full bg-slate-700">
-                            <Clock className="w-4 h-4 mr-2" />
+                            <IconClock className="w-4 h-4 mr-2" />
                             Location Outdated
                         </Button>
                         <p className="text-xs text-center text-slate-400">
@@ -232,7 +232,7 @@ export function CheckInButton({
                 return (
                     <div className="space-y-2">
                         <Button disabled className="w-full bg-slate-700">
-                            <Clock className="w-4 h-4 mr-2" />
+                            <IconClock className="w-4 h-4 mr-2" />
                             Come Back Soon
                         </Button>
                         <p className="text-xs text-center text-amber-400">
@@ -245,7 +245,7 @@ export function CheckInButton({
                 return (
                     <div className="space-y-2">
                         <Button onClick={checkEligibility} variant="outline" className="w-full">
-                            <MapPin className="w-4 h-4 mr-2" />
+                            <IconMapPin className="w-4 h-4 mr-2" />
                             Enable Location
                         </Button>
                         <p className="text-xs text-center text-slate-400">
@@ -275,7 +275,7 @@ export function CheckInButton({
                                 animate={{ scale: [0, 1.2, 1] }}
                                 transition={{ duration: 0.5 }}
                             >
-                                <CheckCircle className="w-8 h-8 mx-auto mb-1" />
+                                <IconCheckCircle className="w-8 h-8 mx-auto mb-1" />
                             </motion.div>
                             <span className="font-semibold">Stamp Earned! 🎉</span>
                         </div>

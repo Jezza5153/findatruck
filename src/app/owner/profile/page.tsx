@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Save, Loader2, Truck, MapPin, Phone, Globe, Camera, Image as ImageIcon, Upload } from 'lucide-react';
+import { IconSettings, IconSave, IconLoader2, IconTruck, IconMapPin, IconPhone, IconGlobe, IconCamera, IconImage as IconImageIcon, IconUpload } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface TruckProfile {
@@ -155,7 +155,7 @@ export default function OwnerProfilePage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Settings className="w-8 h-8 text-slate-400" />
+            <IconSettings className="w-8 h-8 text-slate-400" />
             Truck Profile
           </h1>
           <p className="text-slate-400 mt-1">Edit your truck's information and images</p>
@@ -182,16 +182,16 @@ export default function OwnerProfilePage() {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
-                  <ImageIcon className="w-12 h-12 mb-2" />
+                  <IconImageIcon className="w-12 h-12 mb-2" />
                   <span>Add cover image</span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                 {uploadingCover ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-white" />
+                  <IconLoader2 className="w-8 h-8 animate-spin text-white" />
                 ) : (
                   <div className="text-white text-center">
-                    <Camera className="w-8 h-8 mx-auto mb-1" />
+                    <IconCamera className="w-8 h-8 mx-auto mb-1" />
                     <span className="text-sm">Change cover</span>
                   </div>
                 )}
@@ -222,14 +222,14 @@ export default function OwnerProfilePage() {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
-                    <Truck className="w-8 h-8" />
+                    <IconTruck className="w-8 h-8" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                   {uploadingLogo ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                    <IconLoader2 className="w-6 h-6 animate-spin text-white" />
                   ) : (
-                    <Camera className="w-6 h-6 text-white" />
+                    <IconCamera className="w-6 h-6 text-white" />
                   )}
                 </div>
                 <input
@@ -245,7 +245,7 @@ export default function OwnerProfilePage() {
               </div>
               <div className="pt-16">
                 <p className="text-sm text-slate-400">
-                  <Camera className="w-4 h-4 inline mr-1" />
+                  <IconCamera className="w-4 h-4 inline mr-1" />
                   Click images above to upload logo and cover photo
                 </p>
               </div>
@@ -263,7 +263,7 @@ export default function OwnerProfilePage() {
             <CardContent className="p-6 space-y-6">
               <div className="space-y-2">
                 <Label className="text-slate-300 flex items-center gap-2">
-                  <Truck className="w-4 h-4" />
+                  <IconTruck className="w-4 h-4" />
                   Truck Name
                 </Label>
                 <Input
@@ -295,7 +295,7 @@ export default function OwnerProfilePage() {
 
               <div className="space-y-2">
                 <Label className="text-slate-300 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
+                  <IconMapPin className="w-4 h-4" />
                   Default Address
                 </Label>
                 <Input
@@ -309,7 +309,7 @@ export default function OwnerProfilePage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
+                    <IconPhone className="w-4 h-4" />
                     Phone
                   </Label>
                   <Input
@@ -322,7 +322,7 @@ export default function OwnerProfilePage() {
 
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-green-400" />
+                    <IconPhone className="w-4 h-4 text-green-400" />
                     CTA Phone (Prominent)
                   </Label>
                   <Input
@@ -336,7 +336,7 @@ export default function OwnerProfilePage() {
 
               <div className="space-y-2">
                 <Label className="text-slate-300 flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
+                  <IconGlobe className="w-4 h-4" />
                   Website
                 </Label>
                 <Input
@@ -398,9 +398,9 @@ export default function OwnerProfilePage() {
                 className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-white font-semibold"
               >
                 {saving ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  <><IconLoader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
                 ) : (
-                  <><Save className="w-4 h-4 mr-2" />Save Changes</>
+                  <><IconSave className="w-4 h-4 mr-2" />Save Changes</>
                 )}
               </Button>
             </CardContent>

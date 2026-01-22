@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { LifeBuoy, Mail, MessageSquare } from 'lucide-react';
+import { IconLifeBuoy, IconMail, IconMessageSquare } from '@/components/ui/branded-icons';
 
 const faqItems = [
   {
@@ -44,7 +44,7 @@ export default function HelpPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <LifeBuoy className="mx-auto h-16 w-16 text-primary mb-4" />
+        <IconLifeBuoy className="mx-auto h-16 w-16 text-primary mb-4" />
         <h1 className="text-4xl md:text-5xl font-bold text-primary">Help & FAQ</h1>
         <p className="text-lg text-muted-foreground mt-2">
           Find answers to common questions and learn how to contact us.
@@ -78,7 +78,7 @@ export default function HelpPage() {
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center">
-                <Mail className="mr-2 h-6 w-6 text-primary" /> Contact Support
+                <IconMail className="mr-2 h-6 w-6 text-primary" /> Contact Support
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -105,11 +105,11 @@ export default function HelpPage() {
               </form>
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="text-xl flex items-center">
-                <MessageSquare className="mr-2 h-5 w-5 text-primary" /> Live Chat
+                <IconMessageSquare className="mr-2 h-5 w-5 text-primary" /> Live Chat
               </CardTitle>
             </CardHeader>
             <CardContent>

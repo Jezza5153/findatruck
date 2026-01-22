@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu, X, MapPin, Star, User, LogIn, LogOut,
-  ChefHat, LayoutDashboard, Utensils, Settings, Bell
-} from 'lucide-react';
+  IconMenu, IconX, IconMapPin, IconStar, IconUser, IconLogIn, IconLogOut,
+  IconChefHat, IconLayoutDashboard, IconUtensils, IconSettings, IconBell
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,8 +22,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '/map', label: 'Find Trucks', icon: MapPin },
-  { href: '/featured', label: 'Featured', icon: Star },
+  { href: '/map', label: 'Find Trucks', icon: IconMapPin },
+  { href: '/featured', label: 'Featured', icon: IconStar },
 ];
 
 export function SiteHeader() {
@@ -56,12 +56,11 @@ export function SiteHeader() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <Utensils className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl text-white hidden sm:block">
-              Findatruck
-            </span>
+            <img
+              src="/logo.png"
+              alt="FindATruck Logo"
+              className="h-10 w-auto group-hover:scale-105 transition-transform"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -98,7 +97,7 @@ export function SiteHeader() {
                   size="icon"
                   className="text-slate-400 hover:text-white hover:bg-white/10 hidden sm:flex"
                 >
-                  <Bell className="w-5 h-5" />
+                  <IconBell className="w-5 h-5" />
                 </Button>
 
                 {/* User Menu */}
@@ -129,19 +128,19 @@ export function SiteHeader() {
                       <>
                         <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
                           <Link href="/owner/dashboard" className="flex items-center">
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            <IconLayoutDashboard className="mr-2 h-4 w-4" />
                             Dashboard
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
                           <Link href="/owner/menu" className="flex items-center">
-                            <Utensils className="mr-2 h-4 w-4" />
+                            <IconUtensils className="mr-2 h-4 w-4" />
                             Manage Menu
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
                           <Link href="/owner/profile" className="flex items-center">
-                            <Settings className="mr-2 h-4 w-4" />
+                            <IconSettings className="mr-2 h-4 w-4" />
                             Settings
                           </Link>
                         </DropdownMenuItem>
@@ -150,13 +149,13 @@ export function SiteHeader() {
                       <>
                         <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
                           <Link href="/customer/dashboard" className="flex items-center">
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            <IconLayoutDashboard className="mr-2 h-4 w-4" />
                             My Dashboard
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
                           <Link href="/customer/notifications" className="flex items-center">
-                            <Bell className="mr-2 h-4 w-4" />
+                            <IconBell className="mr-2 h-4 w-4" />
                             Notifications
                           </Link>
                         </DropdownMenuItem>
@@ -168,7 +167,7 @@ export function SiteHeader() {
                       onClick={handleSignOut}
                       className="hover:bg-slate-700 cursor-pointer text-red-400 focus:text-red-400"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <IconLogOut className="mr-2 h-4 w-4" />
                       Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -181,7 +180,7 @@ export function SiteHeader() {
                     variant="ghost"
                     className="text-slate-300 hover:text-white hover:bg-white/10"
                   >
-                    <LogIn className="w-4 h-4 mr-2" />
+                    <IconLogIn className="w-4 h-4 mr-2" />
                     Sign in
                   </Button>
                 </Link>
@@ -200,7 +199,7 @@ export function SiteHeader() {
               className="md:hidden text-slate-400 hover:text-white"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <IconX className="w-5 h-5" /> : <IconMenu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -246,7 +245,7 @@ export function SiteHeader() {
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
                     >
-                      <LayoutDashboard className="w-5 h-5" />
+                      <IconLayoutDashboard className="w-5 h-5" />
                       Dashboard
                     </Link>
                   ) : (
@@ -255,7 +254,7 @@ export function SiteHeader() {
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
                     >
-                      <User className="w-5 h-5" />
+                      <IconUser className="w-5 h-5" />
                       My Account
                     </Link>
                   )}

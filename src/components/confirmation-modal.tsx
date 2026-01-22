@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { IconAlertTriangle, IconLoader2 } from '@/components/ui/branded-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmationModalProps {
@@ -80,7 +80,7 @@ export function ConfirmationModal({
                         <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6">
                             {/* Icon */}
                             <div className={`w-12 h-12 rounded-full ${styles.bg} flex items-center justify-center mx-auto mb-4`}>
-                                <AlertTriangle className={`w-6 h-6 ${styles.icon}`} />
+                                <IconAlertTriangle className={`w-6 h-6 ${styles.icon}`} />
                             </div>
 
                             {/* Content */}
@@ -107,7 +107,7 @@ export function ConfirmationModal({
                                     disabled={loading}
                                 >
                                     {loading ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <IconLoader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         confirmLabel
                                     )}

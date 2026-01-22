@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus, ArrowLeft, User } from 'lucide-react';
+import { IconLoader2, IconUserPlus, IconArrowLeft, IconUser } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 export default function SignupPage() {
@@ -132,7 +132,7 @@ export default function SignupPage() {
         <Card className="border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="space-y-2 text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-              <User className="w-8 h-8 text-white" />
+              <IconUser className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
             <CardDescription className="text-slate-400">
@@ -205,12 +205,12 @@ export default function SignupPage() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
                     Creating account...
                   </>
                 ) : (
                   <>
-                    <UserPlus className="mr-2 h-5 w-5" />
+                    <IconUserPlus className="mr-2 h-5 w-5" />
                     Create Account
                   </>
                 )}
@@ -230,7 +230,7 @@ export default function SignupPage() {
               href="/"
               className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <IconArrowLeft className="mr-2 h-4 w-4" />
               Back to home
             </Link>
           </CardContent>

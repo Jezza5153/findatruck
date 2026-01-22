@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Gift, Star, Trophy, ChevronRight, Loader2, Sparkles
-} from 'lucide-react';
+    IconGift, IconStar, IconTrophy, IconChevronRight, IconLoader2, IconSparkles
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -57,7 +57,7 @@ export default function LoyaltyPage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -71,7 +71,7 @@ export default function LoyaltyPage() {
                 <div className="container mx-auto max-w-2xl">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center">
-                            <Gift className="w-5 h-5 text-white" />
+                            <IconGift className="w-5 h-5 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold">Loyalty</h1>
                     </div>
@@ -86,9 +86,9 @@ export default function LoyaltyPage() {
                 <div className="container mx-auto max-w-2xl px-4 mb-6">
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { label: 'Total Cards', value: cards.length, icon: Star },
-                            { label: 'Total Stamps', value: cards.reduce((s, c) => s + c.stamps, 0), icon: Sparkles },
-                            { label: 'Rewards Ready', value: totalRewards, icon: Trophy },
+                            { label: 'Total Cards', value: cards.length, icon: IconStar },
+                            { label: 'Total Stamps', value: cards.reduce((s, c) => s + c.stamps, 0), icon: IconSparkles },
+                            { label: 'Rewards Ready', value: totalRewards, icon: IconTrophy },
                         ].map((stat) => (
                             <div key={stat.label} className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/30">
                                 <stat.icon className="w-5 h-5 text-primary mx-auto mb-2" />
@@ -110,7 +110,7 @@ export default function LoyaltyPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <Gift className="w-10 h-10 text-slate-600" />
+                            <IconGift className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">No loyalty cards yet</h2>
                         <p className="text-slate-400 mb-6">
@@ -155,11 +155,11 @@ export default function LoyaltyPage() {
                                                 </div>
                                                 {availableRewards > 0 && (
                                                     <div className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                                                        <Gift className="w-3.5 h-3.5" />
+                                                        <IconGift className="w-3.5 h-3.5" />
                                                         {availableRewards}
                                                     </div>
                                                 )}
-                                                <ChevronRight className="w-5 h-5 text-slate-500" />
+                                                <IconChevronRight className="w-5 h-5 text-slate-500" />
                                             </div>
 
                                             {/* Stamp Progress */}
@@ -190,7 +190,7 @@ export default function LoyaltyPage() {
                 {/* How it works */}
                 <div className="mt-8 p-6 bg-slate-800/30 rounded-xl border border-slate-700/30">
                     <h3 className="font-semibold mb-4 flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-yellow-400" />
+                        <IconTrophy className="w-5 h-5 text-yellow-400" />
                         How to earn rewards
                     </h3>
                     <ol className="space-y-3 text-sm text-slate-400">

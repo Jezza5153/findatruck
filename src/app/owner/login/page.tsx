@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn, ChefHat, ArrowLeft } from 'lucide-react';
+import { IconLoader2, IconLogIn, IconChefHat, IconArrowLeft } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 export default function OwnerLoginPage() {
@@ -93,7 +93,7 @@ function OwnerLoginForm() {
         <Card className="border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="space-y-2 text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-              <ChefHat className="w-8 h-8 text-white" />
+              <IconChefHat className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold text-white">Owner Portal</CardTitle>
             <CardDescription className="text-slate-400">
@@ -136,12 +136,12 @@ function OwnerLoginForm() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
                     Signing in...
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-5 w-5" />
+                    <IconLogIn className="mr-2 h-5 w-5" />
                     Sign In
                   </>
                 )}
@@ -161,7 +161,7 @@ function OwnerLoginForm() {
               href="/"
               className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <IconArrowLeft className="mr-2 h-4 w-4" />
               Back to home
             </Link>
           </CardContent>

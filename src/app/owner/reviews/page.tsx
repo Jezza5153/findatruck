@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    MessageSquare, Star, Reply, Loader2, ChevronDown, ChevronUp,
-    Send, AlertCircle
-} from 'lucide-react';
+    IconMessageSquare, IconStar, IconReply, IconLoader2, IconChevronDown, IconChevronUp,
+    IconSend, AlertCircle
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -86,7 +86,7 @@ export default function OwnerReviewsPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -110,7 +110,7 @@ export default function OwnerReviewsPage() {
                 <div className="container mx-auto max-w-2xl">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                            <MessageSquare className="w-5 h-5 text-white" />
+                            <IconMessageSquare className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Reviews</h1>
@@ -152,7 +152,7 @@ export default function OwnerReviewsPage() {
                             {ratingCounts.map(({ rating, count, percent }) => (
                                 <div key={rating} className="flex items-center gap-2 text-sm">
                                     <span className="w-3 text-slate-400">{rating}</span>
-                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                    <IconStar className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                     <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-yellow-400 rounded-full transition-all"
@@ -167,7 +167,7 @@ export default function OwnerReviewsPage() {
 
                     {unreplied > 0 && (
                         <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center gap-2 text-sm text-yellow-400">
-                            <AlertCircle className="w-4 h-4" />
+                            <IconAlertCircle className="w-4 h-4" />
                             {unreplied} review{unreplied !== 1 ? 's' : ''} awaiting your reply
                         </div>
                     )}
@@ -181,7 +181,7 @@ export default function OwnerReviewsPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <MessageSquare className="w-10 h-10 text-slate-600" />
+                            <IconMessageSquare className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">No reviews yet</h2>
                         <p className="text-slate-400">
@@ -239,7 +239,7 @@ export default function OwnerReviewsPage() {
                                 {review.ownerReply ? (
                                     <div className="mt-3 ml-4 pl-4 border-l-2 border-primary/50">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Reply className="w-4 h-4 text-primary" />
+                                            <IconReply className="w-4 h-4 text-primary" />
                                             <span className="text-sm font-medium text-primary">Your Reply</span>
                                             {review.ownerRepliedAt && (
                                                 <span className="text-xs text-slate-500">
@@ -266,10 +266,10 @@ export default function OwnerReviewsPage() {
                                                         className="bg-primary hover:bg-primary/90"
                                                     >
                                                         {submitting ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <IconLoader2 className="w-4 h-4 animate-spin" />
                                                         ) : (
                                                             <>
-                                                                <Send className="w-4 h-4 mr-1" />
+                                                                <IconSend className="w-4 h-4 mr-1" />
                                                                 Send Reply
                                                             </>
                                                         )}
@@ -289,7 +289,7 @@ export default function OwnerReviewsPage() {
                                                 onClick={() => setReplyingTo(review.id)}
                                                 className="mt-2 text-primary hover:text-primary/80"
                                             >
-                                                <Reply className="w-4 h-4 mr-1" />
+                                                <IconReply className="w-4 h-4 mr-1" />
                                                 Reply to this review
                                             </Button>
                                         )}

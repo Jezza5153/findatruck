@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    LayoutDashboard, Truck, MessageSquare, Users, CreditCard,
-    TrendingUp, ChevronRight, Loader2
-} from 'lucide-react';
+    IconLayoutDashboard, IconTruck, IconMessageSquare, IconUsers, IconCreditCard,
+    IconTrendingUp, IconChevronRight, IconLoader2
+} from '@/components/ui/branded-icons';
 import Link from 'next/link';
 
 interface AdminStats {
@@ -64,16 +64,16 @@ export default function AdminDashboardPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
 
     const quickLinks = [
-        { href: '/admin/trucks', label: 'Manage Trucks', icon: Truck, count: stats.totalTrucks },
-        { href: '/admin/reviews', label: 'Review Queue', icon: MessageSquare, count: stats.pendingReviews, highlight: stats.pendingReviews > 0 },
-        { href: '/admin/users', label: 'Users', icon: Users, count: stats.totalUsers },
-        { href: '/admin/billing', label: 'Billing', icon: CreditCard, count: stats.activeSubscriptions },
+        { href: '/admin/trucks', label: 'Manage Trucks', icon: IconTruck, count: stats.totalTrucks },
+        { href: '/admin/reviews', label: 'Review Queue', icon: IconMessageSquare, count: stats.pendingReviews, highlight: stats.pendingReviews > 0 },
+        { href: '/admin/users', label: 'Users', icon: IconUsers, count: stats.totalUsers },
+        { href: '/admin/billing', label: 'Billing', icon: IconCreditCard, count: stats.activeSubscriptions },
     ];
 
     return (
@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                            <LayoutDashboard className="w-5 h-5 text-white" />
+                            <IconLayoutDashboard className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
@@ -97,10 +97,10 @@ export default function AdminDashboardPage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Trucks Live Now', value: stats.trucksLive, icon: Truck, color: 'text-green-400' },
-                        { label: 'Total Trucks', value: stats.totalTrucks, icon: Truck, color: 'text-blue-400' },
-                        { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-purple-400' },
-                        { label: 'Signups Today', value: stats.signupsToday, icon: TrendingUp, color: 'text-yellow-400' },
+                        { label: 'Trucks Live Now', value: stats.trucksLive, icon: IconTruck, color: 'text-green-400' },
+                        { label: 'Total Trucks', value: stats.totalTrucks, icon: IconTruck, color: 'text-blue-400' },
+                        { label: 'Total Users', value: stats.totalUsers, icon: IconUsers, color: 'text-purple-400' },
+                        { label: 'Signups Today', value: stats.signupsToday, icon: IconTrendingUp, color: 'text-yellow-400' },
                     ].map((stat, i) => (
                         <motion.div
                             key={stat.label}
@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <span className="text-slate-400">{link.count}</span>
-                                        <ChevronRight className="w-5 h-5 text-slate-500" />
+                                        <IconChevronRight className="w-5 h-5 text-slate-500" />
                                     </div>
                                 </div>
                             </Link>
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
                 <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700/30">
                     <h2 className="text-sm font-semibold text-slate-400 mb-4">Platform Activity</h2>
                     <div className="text-center py-8 text-slate-500">
-                        <LayoutDashboard className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                        <IconLayoutDashboard className="w-10 h-10 mx-auto mb-3 opacity-50" />
                         <p className="text-sm">Activity feed coming soon</p>
                     </div>
                 </div>

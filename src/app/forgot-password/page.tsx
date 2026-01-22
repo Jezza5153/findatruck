@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, Check, Loader2 } from 'lucide-react';
+import { IconMail, IconArrowLeft, IconCheck, IconLoader2 } from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
                 {/* Back link */}
                 <motion.div variants={fadeInUp} className="mb-8">
                     <Link href="/login" className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        <IconArrowLeft className="mr-2 h-4 w-4" />
                         Back to sign in
                     </Link>
                 </motion.div>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                         // Success State
                         <div className="text-center">
                             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <Check className="w-8 h-8 text-green-400" />
+                                <IconCheck className="w-8 h-8 text-green-400" />
                             </div>
                             <h1 className="text-2xl font-bold mb-2">Check Your Email</h1>
                             <p className="text-slate-400 mb-6">
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
                         <>
                             <div className="text-center mb-6">
                                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                                    <Mail className="w-7 h-7 text-white" />
+                                    <IconMail className="w-7 h-7 text-white" />
                                 </div>
                                 <h1 className="text-2xl font-bold mb-2">Forgot Password?</h1>
                                 <p className="text-slate-400">
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
                                 >
                                     {isLoading ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
                                             Sending...
                                         </>
                                     ) : (

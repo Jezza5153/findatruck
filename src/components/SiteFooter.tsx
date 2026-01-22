@@ -1,18 +1,19 @@
 
 import Link from 'next/link';
 import {
-  Utensils,
-  ChefHat,
-  User,
-  MapPin,
-  HelpCircle,
-  ShieldCheck,
-  FileText,
-  Star,
-  CreditCard,
-  Newspaper,
-  Info,
-} from 'lucide-react';
+  IconUtensils,
+  IconChefHat,
+  IconUser,
+  IconMapPin,
+  IconHelpCircle,
+  IconShieldCheck,
+  IconFileText,
+  IconStar,
+  IconCreditCard,
+  IconNewspaper,
+  IconInfo,
+} from '@/components/ui/branded-icons';
+
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear();
@@ -29,7 +30,7 @@ export function SiteFooter() {
                 aria-label="Home - Truck Tracker"
               >
                 <span className="inline-flex items-center">
-                  <Utensils className="h-7 w-7 mr-2 transition-transform hover:-rotate-6" />
+                  <IconUtensils className="h-7 w-7 mr-2 transition-transform hover:-rotate-6" />
                   Truck Tracker
                 </span>
               </Link>
@@ -50,7 +51,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <MapPin className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconMapPin className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Find Trucks
                     </span>
                   </Link>
@@ -61,7 +62,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconUser className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Customer Signup
                     </span>
                   </Link>
@@ -72,7 +73,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconUser className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Login
                     </span>
                   </Link>
@@ -83,7 +84,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <Star className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconStar className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Featured Trucks
                     </span>
                   </Link>
@@ -103,7 +104,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Owner Portal
                     </span>
                   </Link>
@@ -114,7 +115,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <ChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Register Truck
                     </span>
                   </Link>
@@ -147,7 +148,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <HelpCircle className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconHelpCircle className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Help & FAQ
                     </span>
                   </Link>
@@ -159,7 +160,7 @@ export function SiteFooter() {
                     tabIndex={-1}
                     title="Coming soon"
                   >
-                    <Newspaper className="w-4 h-4 mr-1.5 inline-block" />
+                    <IconNewspaper className="w-4 h-4 mr-1.5 inline-block" />
                     Blog (Soon)
                   </span>
                 </li>
@@ -170,7 +171,7 @@ export function SiteFooter() {
                     tabIndex={-1}
                     title="Coming soon"
                   >
-                    <Info className="w-4 h-4 mr-1.5 inline-block" />
+                    <IconInfo className="w-4 h-4 mr-1.5 inline-block" />
                     About Us (Soon)
                   </span>
                 </li>
@@ -189,7 +190,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <FileText className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconFileText className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Terms of Service
                     </span>
                   </Link>
@@ -200,7 +201,7 @@ export function SiteFooter() {
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
                     <span>
-                      <ShieldCheck className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
+                      <IconShieldCheck className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Privacy Policy
                     </span>
                   </Link>

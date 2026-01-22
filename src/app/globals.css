@@ -4,17 +4,12 @@
 
 @layer base {
   :root {
-    /* FindATruck Brand System */
-    /* Primary: Truck Orange #FF6A00 → HSL 25 100% 50% */
-    /* Accent: Signal Yellow #FFC700 → HSL 47 100% 50% */
-    /* Background: Warm White #FAFAF7 → HSL 60 20% 97% */
-    /* Dark: Asphalt #1F1F1F → HSL 0 0% 12% */
-    /* Muted: Concrete Gray #9CA3AF → HSL 218 11% 65% */
+    /* ATruck Brand System - Light Mode */
+    /* Primary: Truck Orange #FF6A00 */
+    /* Accent: Signal Yellow #FFC700 */
 
     --background: 60 20% 97%;
-    /* Warm White */
     --foreground: 0 0% 12%;
-    /* Asphalt */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 12%;
@@ -23,21 +18,15 @@
     --popover-foreground: 0 0% 12%;
 
     --primary: 25 100% 50%;
-    /* Truck Orange */
     --primary-foreground: 0 0% 100%;
-    /* White */
 
     --secondary: 47 100% 50%;
-    /* Signal Yellow */
     --secondary-foreground: 0 0% 12%;
-    /* Asphalt */
 
     --muted: 60 10% 92%;
     --muted-foreground: 218 11% 45%;
-    /* Concrete Gray - darker for text */
 
     --accent: 47 100% 50%;
-    /* Signal Yellow */
     --accent-foreground: 0 0% 12%;
 
     --destructive: 0 84% 60%;
@@ -46,26 +35,17 @@
     --border: 218 11% 80%;
     --input: 218 11% 80%;
     --ring: 25 100% 50%;
-    /* Truck Orange */
 
     --chart-1: 25 100% 50%;
-    /* Orange */
     --chart-2: 47 100% 50%;
-    /* Yellow */
     --chart-3: 142 71% 45%;
-    /* Green for success */
     --chart-4: 0 84% 60%;
-    /* Red */
     --chart-5: 262 83% 58%;
-    /* Purple */
     --radius: 0.5rem;
 
-    /* Sidebar variables - brand aligned */
     --sidebar-background: 0 0% 12%;
-    /* Asphalt */
     --sidebar-foreground: 60 20% 95%;
     --sidebar-primary: 25 100% 50%;
-    /* Truck Orange */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 60 20% 95%;
@@ -74,60 +54,108 @@
   }
 
   .dark {
-    /* Asphalt Night + Warm Light Theme */
-    /* #0F1115 → HSL 220 18% 7% (asphalt base) */
-    /* #171A20 → HSL 220 16% 11% (card surface) */
-    /* #1E232B → HSL 218 17% 14% (hover surface) */
+    /* ═══════════════════════════════════════════════════════════════════════
+       ATruck FINAL COLOR SYSTEM
+       Vibe: Asphalt street • warm lights • food glow • not corporate
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       1️⃣ Core Neutrals (the foundation)
+       Asphalt (page bg)        #0F1115  → 220 18% 7%
+       Charcoal (card bg)       #171A20  → 220 16% 11%
+       Elevated surface         #1E232B  → 218 17% 14%
+       ───────────────────────────────────────────────────────────────────────── */
 
     --background: 220 18% 7%;
-    /* Asphalt base #0F1115 */
-    --foreground: 55 30% 96%;
-    /* Warm white #FAFAF7 */
+    /* Asphalt #0F1115 */
 
     --card: 220 16% 11%;
-    /* Surface #171A20 */
-    --card-foreground: 55 30% 96%;
+    /* Charcoal #171A20 */
 
-    --popover: 220 16% 11%;
-    --popover-foreground: 55 30% 96%;
+    --popover: 218 17% 14%;
+    /* Elevated #1E232B */
 
-    --primary: 25 100% 50%;
-    /* Truck Orange #FF6A00 */
-    --primary-foreground: 0 0% 100%;
+    /* ─────────────────────────────────────────────────────────────────────────
+       2️⃣ Text Colors (warm, readable, not icy)
+       Primary text             #FAFAF7  → 55 30% 97%
+       Secondary text           rgba(250,250,247,0.72)
+       Muted text               rgba(250,250,247,0.48)
+       ───────────────────────────────────────────────────────────────────────── */
 
-    --secondary: 47 100% 50%;
-    /* Signal Yellow #FFC700 */
-    --secondary-foreground: 220 18% 7%;
+    --foreground: 55 30% 97%;
+    /* Warm white #FAFAF7 */
+
+    --card-foreground: 55 30% 97%;
+    --popover-foreground: 55 30% 97%;
 
     --muted: 218 17% 14%;
-    /* Hover surface #1E232B */
-    --muted-foreground: 55 10% 70%;
-    /* Warm muted text */
+    /* Elevated surface #1E232B */
+    --muted-foreground: 55 15% 60%;
+    /* Warm muted #FAFAF7 @ 48% */
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       3️⃣ Brand Accents (THIS is your identity)
+       Brand Orange (primary)   #FF6A00  → 25 100% 50%
+       Brand Orange (hover)     #FF8126  → 28 100% 57%
+       Brand Yellow (highlight) #FFC700  → 47 100% 50%
+       Brand Yellow (soft)      #FFD84D  → 50 100% 65%
+       ───────────────────────────────────────────────────────────────────────── */
+
+    --primary: 25 100% 50%;
+    /* Brand Orange #FF6A00 */
+    --primary-foreground: 220 18% 7%;
+    /* Asphalt #0F1115 for contrast */
+
+    --secondary: 218 17% 14%;
+    /* Elevated surface for secondary buttons */
+    --secondary-foreground: 55 30% 97%;
+    /* Warm white */
 
     --accent: 47 100% 50%;
-    /* Signal Yellow */
+    /* Brand Yellow #FFC700 */
     --accent-foreground: 220 18% 7%;
+
+    /* ─────────────────────────────────────────────────────────────────────────
+       4️⃣ Status Colors (in warm palette)
+       Open / Available          #FFC700   (yellow)
+       Closed / Inactive         rgba(250,250,247,0.38)
+       Busy / Popular            #FF6A00
+       Featured / Premium        #FFD84D
+       ───────────────────────────────────────────────────────────────────────── */
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 100% / 0.08;
-    /* rgba(255,255,255,0.08) */
-    --input: 220 16% 14%;
-    --ring: 25 100% 50%;
-    /* Truck Orange */
+    /* ─────────────────────────────────────────────────────────────────────────
+       7️⃣ Inputs / Search
+       Input BG             #1E232B
+       Input Border         rgba(255,255,255,0.10)
+       Input Focus Border   #FF6A00
+       ───────────────────────────────────────────────────────────────────────── */
 
+    --border: 0 0% 100% / 0.08;
+    /* Subtle divider rgba(255,255,255,0.08) */
+    --input: 218 17% 14%;
+    /* Elevated surface #1E232B */
+    --ring: 25 100% 50%;
+    /* Brand Orange focus */
+
+    /* Chart colors - warm palette */
     --chart-1: 25 100% 50%;
+    /* Orange */
     --chart-2: 47 100% 50%;
-    --chart-3: 142 71% 50%;
-    --chart-4: 0 72% 55%;
-    --chart-5: 262 83% 62%;
+    /* Yellow */
+    --chart-3: 50 100% 65%;
+    /* Soft Yellow */
+    --chart-4: 28 100% 57%;
+    /* Orange Hover */
+    --chart-5: 0 72% 55%;
 
     /* Sidebar variables - asphalt theme */
     --sidebar-background: 220 20% 5%;
     --sidebar-foreground: 55 30% 90%;
     --sidebar-primary: 25 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 220 18% 7%;
     --sidebar-accent: 220 16% 11%;
     --sidebar-accent-foreground: 55 30% 90%;
     --sidebar-border: 0 0% 100% / 0.08;
@@ -155,7 +183,130 @@
   }
 }
 
-/* --- Sidebar Styles for Owner Dashboard/Menu --- */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ATruck Brand Utility Classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+
+  /* Brand Orange Variants */
+  .bg-brand-orange {
+    background-color: #FF6A00;
+  }
+
+  .bg-brand-orange-hover {
+    background-color: #FF8126;
+  }
+
+  .text-brand-orange {
+    color: #FF6A00;
+  }
+
+  .border-brand-orange {
+    border-color: #FF6A00;
+  }
+
+  /* Brand Yellow Variants */
+  .bg-brand-yellow {
+    background-color: #FFC700;
+  }
+
+  .bg-brand-yellow-soft {
+    background-color: #FFD84D;
+  }
+
+  .text-brand-yellow {
+    color: #FFC700;
+  }
+
+  .border-brand-yellow {
+    border-color: #FFC700;
+  }
+
+  /* Core Neutrals */
+  .bg-asphalt {
+    background-color: #0F1115;
+  }
+
+  .bg-charcoal {
+    background-color: #171A20;
+  }
+
+  .bg-elevated {
+    background-color: #1E232B;
+  }
+
+  /* Text Colors (warm white) */
+  .text-warm-white {
+    color: #FAFAF7;
+  }
+
+  .text-warm-secondary {
+    color: rgba(250, 250, 247, 0.72);
+  }
+
+  .text-warm-muted {
+    color: rgba(250, 250, 247, 0.48);
+  }
+
+  .text-warm-disabled {
+    color: rgba(250, 250, 247, 0.32);
+  }
+
+  /* Subtle borders/dividers */
+  .border-subtle {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .border-strong {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  /* Status colors */
+  .text-status-open {
+    color: #FFC700;
+  }
+
+  .bg-status-open {
+    background-color: #FFC700;
+  }
+
+  .text-status-closed {
+    color: rgba(250, 250, 247, 0.38);
+  }
+
+  .text-status-busy {
+    color: #FF6A00;
+  }
+
+  .text-status-featured {
+    color: #FFD84D;
+  }
+
+  /* Featured card glow */
+  .card-featured-glow {
+    box-shadow: 0 0 0 1px rgba(255, 199, 0, 0.25);
+  }
+
+  /* Warm header glow gradient */
+  .bg-header-glow {
+    background:
+      radial-gradient(800px 400px at 20% -10%,
+        rgba(255, 106, 0, 0.10),
+        transparent 60%),
+      #0F1115;
+  }
+
+  /* Ghost button hover */
+  .bg-ghost-hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sidebar Styles for Owner Dashboard/Menu
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .sidebar-nav {
   width: 240px;
   min-height: calc(100vh - 48px);

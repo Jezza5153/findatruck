@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Bell, MapPin, Trash2, Shield, Mail, Smartphone,
-    Loader2, ChevronRight, AlertTriangle
-} from 'lucide-react';
+    IconBell, IconMapPin, IconTrash2, IconShield, IconMail, IconSmartphone,
+    IconLoader2, IconChevronRight, IconAlertTriangle
+} from '@/components/ui/branded-icons';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -106,7 +106,7 @@ export default function SettingsPage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                            <MapPin className="w-5 h-5 text-blue-400" />
+                            <IconMapPin className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
                             <h3 className="font-semibold">Notification Radius</h3>
@@ -165,7 +165,7 @@ export default function SettingsPage() {
                     <div className="p-4 border-b border-slate-700/30">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                <Bell className="w-5 h-5 text-purple-400" />
+                                <IconBell className="w-5 h-5 text-purple-400" />
                             </div>
                             <div>
                                 <h3 className="font-semibold">Notifications</h3>
@@ -209,7 +209,7 @@ export default function SettingsPage() {
                     <div className="divide-y divide-slate-700/30">
                         <div className="flex items-center justify-between p-4">
                             <div className="flex items-center gap-3">
-                                <Mail className="w-5 h-5 text-slate-400" />
+                                <IconMail className="w-5 h-5 text-slate-400" />
                                 <Label className="text-white">Email notifications</Label>
                             </div>
                             <Switch
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex items-center justify-between p-4">
                             <div className="flex items-center gap-3">
-                                <Smartphone className="w-5 h-5 text-slate-400" />
+                                <IconSmartphone className="w-5 h-5 text-slate-400" />
                                 <Label className="text-white">Push notifications</Label>
                             </div>
                             <Switch
@@ -240,7 +240,7 @@ export default function SettingsPage() {
                     <div className="p-4 border-b border-slate-700/30">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                                <Shield className="w-5 h-5 text-green-400" />
+                                <IconShield className="w-5 h-5 text-green-400" />
                             </div>
                             <div>
                                 <h3 className="font-semibold">Privacy & Security</h3>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                             className="w-full flex items-center justify-between p-4 hover:bg-slate-700/30 transition-colors"
                         >
                             <span>Change password</span>
-                            <ChevronRight className="w-5 h-5 text-slate-500" />
+                            <IconChevronRight className="w-5 h-5 text-slate-500" />
                         </button>
                     </div>
                 </motion.div>
@@ -267,7 +267,7 @@ export default function SettingsPage() {
                     className="bg-red-500/10 rounded-xl border border-red-500/20 p-6"
                 >
                     <div className="flex items-center gap-3 mb-4">
-                        <AlertTriangle className="w-5 h-5 text-red-400" />
+                        <IconAlertTriangle className="w-5 h-5 text-red-400" />
                         <h3 className="font-semibold text-red-400">Danger Zone</h3>
                     </div>
                     <p className="text-sm text-slate-400 mb-4">
@@ -277,7 +277,7 @@ export default function SettingsPage() {
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10">
-                                <Trash2 className="w-4 h-4 mr-2" />
+                                <IconTrash2 className="w-4 h-4 mr-2" />
                                 Delete Account
                             </Button>
                         </AlertDialogTrigger>

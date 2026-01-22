@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ChefHat, MapPin, ArrowRight, ArrowLeft, Check, Loader2,
-    Utensils, Leaf, Pizza, Coffee, Soup, Fish, Beef, IceCream,
-    Bell, Navigation, Camera, Calendar
-} from 'lucide-react';
+    IconChefHat, IconMapPin, IconArrowRight, IconArrowLeft, IconCheck, IconLoader2,
+    IconUtensils, IconLeaf, IconPizza, IconCoffee, IconSoup, IconFish, IconBeef, IconIceCream,
+    IconBell, IconNavigation, IconCamera, IconCalendar
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,7 +81,7 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="cuisines" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                    <Utensils className="w-7 h-7 text-white" />
+                    <IconUtensils className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">What do you crave?</h2>
                 <p className="text-slate-400">Select your favorite cuisines - we'll help you find them</p>
@@ -109,7 +109,7 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="dietary" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <Leaf className="w-7 h-7 text-white" />
+                    <IconLeaf className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Any dietary needs?</h2>
                 <p className="text-slate-400">We'll highlight trucks that match your requirements</p>
@@ -139,7 +139,7 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="radius" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <Bell className="w-7 h-7 text-white" />
+                    <IconBell className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Alert radius</h2>
                 <p className="text-slate-400">How far should we look for nearby trucks?</p>
@@ -186,7 +186,7 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
                     onClick={() => step > 0 ? setStep(step - 1) : onComplete()}
                     className="text-slate-400 hover:text-white"
                 >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <IconArrowLeft className="mr-2 h-4 w-4" />
                     {step === 0 ? 'Skip' : 'Back'}
                 </Button>
 
@@ -208,7 +208,7 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
                         className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400"
                     >
                         Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <IconArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 ) : (
                     <Button
@@ -216,10 +216,10 @@ function CustomerOnboarding({ onComplete }: { onComplete: () => void }) {
                         disabled={isLoading}
                         className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400"
                     >
-                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                        {isLoading ? <IconLoader2 className="h-4 w-4 animate-spin" /> : (
                             <>
                                 Get Started
-                                <Check className="ml-2 h-4 w-4" />
+                                <IconCheck className="ml-2 h-4 w-4" />
                             </>
                         )}
                     </Button>
@@ -264,7 +264,7 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="basics" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                    <ChefHat className="w-7 h-7 text-white" />
+                    <IconChefHat className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Tell us about your truck</h2>
                 <p className="text-slate-400">Basic information to get you started</p>
@@ -304,7 +304,7 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="description" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center">
-                    <Camera className="w-7 h-7 text-white" />
+                    <IconCamera className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Describe your truck</h2>
                 <p className="text-slate-400">What makes your food special?</p>
@@ -324,17 +324,17 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
         <div key="next" className="space-y-6">
             <div className="text-center mb-8">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <Check className="w-7 h-7 text-white" />
+                    <IconCheck className="w-7 h-7 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">You're almost ready!</h2>
                 <p className="text-slate-400">Here's what you can do next</p>
             </div>
             <div className="space-y-3 max-w-sm mx-auto">
                 {[
-                    { icon: Camera, text: 'Add photos of your truck and food' },
-                    { icon: Utensils, text: 'Build your menu with prices' },
-                    { icon: Calendar, text: 'Set your schedule and locations' },
-                    { icon: Navigation, text: 'Go live and start serving!' },
+                    { icon: IconCamera, text: 'Add photos of your truck and food' },
+                    { icon: IconUtensils, text: 'Build your menu with prices' },
+                    { icon: IconCalendar, text: 'Set your schedule and locations' },
+                    { icon: IconNavigation, text: 'Go live and start serving!' },
                 ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                         <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
@@ -371,7 +371,7 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
                     disabled={step === 0}
                     className="text-slate-400 hover:text-white disabled:opacity-50"
                 >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <IconArrowLeft className="mr-2 h-4 w-4" />
                     Back
                 </Button>
 
@@ -394,7 +394,7 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
                         className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:opacity-50"
                     >
                         Next
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <IconArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 ) : (
                     <Button
@@ -402,10 +402,10 @@ function OwnerOnboarding({ onComplete }: { onComplete: () => void }) {
                         disabled={isLoading}
                         className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400"
                     >
-                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                        {isLoading ? <IconLoader2 className="h-4 w-4 animate-spin" /> : (
                             <>
                                 Go to Dashboard
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                <IconArrowRight className="ml-2 h-4 w-4" />
                             </>
                         )}
                     </Button>

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, BarChart3 } from 'lucide-react';
+import { IconTrendingUp, IconBarChart3 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 export default function OwnerAnalyticsPage() {
@@ -33,7 +33,7 @@ export default function OwnerAnalyticsPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-green-400" />
+            <IconTrendingUp className="w-8 h-8 text-green-400" />
             Analytics
           </h1>
           <p className="text-slate-400 mb-8">
@@ -48,7 +48,7 @@ export default function OwnerAnalyticsPage() {
         >
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-12 text-center">
-              <BarChart3 className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+              <IconBarChart3 className="w-16 h-16 mx-auto mb-4 text-slate-500" />
               <h3 className="text-xl font-semibold mb-2">Analytics Coming Soon!</h3>
               <p className="text-slate-400">
                 Detailed analytics and insights are under development.

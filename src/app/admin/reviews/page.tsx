@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    MessageSquare, Search, Filter, Star, CheckCircle, XCircle,
-    MoreVertical, Eye, Trash2, Flag, Loader2, AlertTriangle
-} from 'lucide-react';
+    IconMessageSquare, IconSearch, IconFilter, IconStar, IconCheckCircle, IconXCircle,
+    IconMoreVertical, IconEye, IconTrash2, IconFlag, IconLoader2, IconAlertTriangle
+} from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -115,7 +115,7 @@ export default function AdminReviewsPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -130,7 +130,7 @@ export default function AdminReviewsPage() {
                             "w-10 h-10 rounded-xl flex items-center justify-center",
                             counts.pending > 0 ? "bg-red-500" : "bg-gradient-to-br from-green-500 to-emerald-500"
                         )}>
-                            <MessageSquare className="w-5 h-5 text-white" />
+                            <IconMessageSquare className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Review Moderation</h1>
@@ -147,7 +147,7 @@ export default function AdminReviewsPage() {
                     {/* Search & Filter */}
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 placeholder="Search reviews..."
                                 value={search}
@@ -223,7 +223,7 @@ export default function AdminReviewsPage() {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                <MoreVertical className="w-4 h-4" />
+                                                <IconMoreVertical className="w-4 h-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
@@ -231,28 +231,28 @@ export default function AdminReviewsPage() {
                                                 onClick={() => updateReview(review.id, 'approved')}
                                                 className="flex items-center gap-2 text-green-400"
                                             >
-                                                <CheckCircle className="w-4 h-4" />
+                                                <IconCheckCircle className="w-4 h-4" />
                                                 Approve
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => updateReview(review.id, 'rejected')}
                                                 className="flex items-center gap-2 text-red-400"
                                             >
-                                                <XCircle className="w-4 h-4" />
+                                                <IconXCircle className="w-4 h-4" />
                                                 Reject
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => updateReview(review.id, 'flagged')}
                                                 className="flex items-center gap-2 text-orange-400"
                                             >
-                                                <Flag className="w-4 h-4" />
+                                                <IconFlag className="w-4 h-4" />
                                                 Flag for Review
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => deleteReview(review.id)}
                                                 className="flex items-center gap-2 text-red-400"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <IconTrash2 className="w-4 h-4" />
                                                 Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -263,7 +263,7 @@ export default function AdminReviewsPage() {
                             {/* Rating */}
                             <div className="flex items-center gap-1 mb-2">
                                 {Array.from({ length: 5 }).map((_, idx) => (
-                                    <Star
+                                    <IconStar
                                         key={idx}
                                         className={cn(
                                             "w-4 h-4",
@@ -289,7 +289,7 @@ export default function AdminReviewsPage() {
                                         onClick={() => updateReview(review.id, 'approved')}
                                         className="flex-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 border-0"
                                     >
-                                        <CheckCircle className="w-4 h-4 mr-1" />
+                                        <IconCheckCircle className="w-4 h-4 mr-1" />
                                         Approve
                                     </Button>
                                     <Button
@@ -298,7 +298,7 @@ export default function AdminReviewsPage() {
                                         variant="outline"
                                         className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
                                     >
-                                        <XCircle className="w-4 h-4 mr-1" />
+                                        <IconXCircle className="w-4 h-4 mr-1" />
                                         Reject
                                     </Button>
                                 </div>
@@ -310,12 +310,12 @@ export default function AdminReviewsPage() {
                         <div className="text-center py-12 text-slate-500">
                             {filter === 'pending' ? (
                                 <>
-                                    <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500 opacity-50" />
+                                    <IconCheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500 opacity-50" />
                                     <p>All reviews have been moderated!</p>
                                 </>
                             ) : (
                                 <>
-                                    <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                                    <IconMessageSquare className="w-10 h-10 mx-auto mb-3 opacity-50" />
                                     <p>No reviews found</p>
                                 </>
                             )}

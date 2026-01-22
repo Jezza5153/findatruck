@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    MapPin, Radio, Power, Loader2, Navigation,
-    AlertCircle, CheckCircle2
-} from 'lucide-react';
+    IconMapPin, IconRadio, IconPower, IconLoader2, IconNavigation,
+    IconAlertCircle, IconCheckCircle2
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -128,7 +128,7 @@ export default function OwnerLivePage() {
     if (authStatus === 'loading') {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -143,7 +143,7 @@ export default function OwnerLivePage() {
                             "w-10 h-10 rounded-xl flex items-center justify-center",
                             truckStatus === 'open' ? "bg-green-500" : "bg-slate-700"
                         )}>
-                            <Radio className="w-5 h-5 text-white" />
+                            <IconRadio className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Go Live</h1>
@@ -161,7 +161,7 @@ export default function OwnerLivePage() {
                     className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/50"
                 >
                     <h2 className="font-semibold mb-4 flex items-center gap-2">
-                        <Power className="w-5 h-5" />
+                        <IconPower className="w-5 h-5" />
                         Current Status
                     </h2>
 
@@ -198,7 +198,7 @@ export default function OwnerLivePage() {
                     className="p-6 rounded-2xl bg-slate-800/80 border border-slate-700/50"
                 >
                     <h2 className="font-semibold mb-4 flex items-center gap-2">
-                        <MapPin className="w-5 h-5" />
+                        <IconMapPin className="w-5 h-5" />
                         Your Location
                     </h2>
 
@@ -213,7 +213,7 @@ export default function OwnerLivePage() {
                         </div>
                     ) : (
                         <div className="p-4 rounded-xl bg-slate-700/50 mb-4 text-center">
-                            <MapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                            <IconMapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                             <p className="text-sm text-slate-400">No location set</p>
                         </div>
                     )}
@@ -225,9 +225,9 @@ export default function OwnerLivePage() {
                         className="w-full border-slate-600 hover:bg-slate-700"
                     >
                         {isLoadingLocation ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
-                            <Navigation className="w-4 h-4 mr-2" />
+                            <IconNavigation className="w-4 h-4 mr-2" />
                         )}
                         Use My Current Location
                     </Button>
@@ -240,7 +240,7 @@ export default function OwnerLivePage() {
                         animate={{ opacity: 1 }}
                         className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
                     >
-                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                        <IconAlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                         <p className="text-sm text-red-300">{error}</p>
                     </motion.div>
                 )}
@@ -251,7 +251,7 @@ export default function OwnerLivePage() {
                         animate={{ opacity: 1 }}
                         className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
                     >
-                        <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <IconCheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <p className="text-sm text-green-300">{success}</p>
                     </motion.div>
                 )}

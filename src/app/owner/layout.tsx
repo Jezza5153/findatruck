@@ -5,18 +5,18 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Utensils, ShoppingBag, Calendar,
-  TrendingUp, Settings, DollarSign, ChefHat
-} from "lucide-react";
+  IconLayoutDashboard, IconUtensils, IconShoppingCart, IconCalendarClock,
+  IconTrendingUp, IconSettings, IconChefHat
+} from "@/components/ui/branded-icons";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/owner/menu", label: "Menu", icon: Utensils },
-  { href: "/owner/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/owner/schedule", label: "Schedule", icon: Calendar },
-  { href: "/owner/analytics", label: "Analytics", icon: TrendingUp },
-  { href: "/owner/profile", label: "Settings", icon: Settings },
+  { href: "/owner/dashboard", label: "Dashboard", icon: IconLayoutDashboard },
+  { href: "/owner/menu", label: "Menu", icon: IconUtensils },
+  { href: "/owner/orders", label: "Orders", icon: IconShoppingCart },
+  { href: "/owner/schedule", label: "Schedule", icon: IconCalendarClock },
+  { href: "/owner/analytics", label: "Analytics", icon: IconTrendingUp },
+  { href: "/owner/profile", label: "Settings", icon: IconSettings },
 ];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
@@ -37,7 +37,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         <div className="p-6 border-b border-slate-800">
           <Link href="/owner/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-              <ChefHat className="w-6 h-6 text-white" />
+              <IconChefHat className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl text-white">Findatruck</span>
           </Link>
@@ -81,7 +81,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center justify-between">
           <Link href="/owner/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-              <ChefHat className="w-4 h-4 text-white" />
+              <IconChefHat className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-white">Owner Portal</span>
           </Link>

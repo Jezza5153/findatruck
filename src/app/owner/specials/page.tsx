@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Tag, Plus, Calendar, Clock, Trash2, Edit2, Loader2,
-    Sparkles, Eye, EyeOff
-} from 'lucide-react';
+    IconTag, IconPlus, IconCalendar, IconClock, IconTrash2, IconEdit2, IconLoader2,
+    IconSparkles, IconEye, IconEyeOff
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -150,7 +150,7 @@ export default function OwnerSpecialsPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -166,7 +166,7 @@ export default function OwnerSpecialsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                                <Tag className="w-5 h-5 text-white" />
+                                <IconTag className="w-5 h-5 text-white" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold">Specials</h1>
@@ -177,7 +177,7 @@ export default function OwnerSpecialsPage() {
                         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
                             <DialogTrigger asChild>
                                 <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400">
-                                    <Plus className="w-4 h-4 mr-2" />
+                                    <IconPlus className="w-4 h-4 mr-2" />
                                     New Special
                                 </Button>
                             </DialogTrigger>
@@ -255,7 +255,7 @@ export default function OwnerSpecialsPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <Sparkles className="w-10 h-10 text-slate-600" />
+                            <IconSparkles className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">No specials yet</h2>
                         <p className="text-slate-400 mb-6">
@@ -268,7 +268,7 @@ export default function OwnerSpecialsPage() {
                         {activeSpecials.length > 0 && (
                             <div>
                                 <h2 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2">
-                                    <Eye className="w-4 h-4" />
+                                    <IconEye className="w-4 h-4" />
                                     Active ({activeSpecials.length})
                                 </h2>
                                 <div className="space-y-3">
@@ -290,7 +290,7 @@ export default function OwnerSpecialsPage() {
                         {inactiveSpecials.length > 0 && (
                             <div>
                                 <h2 className="text-sm font-semibold text-slate-400 mb-3 flex items-center gap-2">
-                                    <EyeOff className="w-4 h-4" />
+                                    <IconEyeOff className="w-4 h-4" />
                                     Inactive ({inactiveSpecials.length})
                                 </h2>
                                 <div className="space-y-3">
@@ -354,7 +354,7 @@ function SpecialCard({
                     )}
                     {(special.startTime || special.endTime) && (
                         <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
+                            <IconClock className="w-3 h-3" />
                             {special.startTime && format(new Date(special.startTime), 'MMM d, h:mm a')}
                             {special.startTime && special.endTime && ' - '}
                             {special.endTime && format(new Date(special.endTime), 'MMM d, h:mm a')}
@@ -371,7 +371,7 @@ function SpecialCard({
                     onClick={onEdit}
                     className="flex-1 text-slate-400 hover:text-white"
                 >
-                    <Edit2 className="w-4 h-4 mr-1" />
+                    <IconEdit2 className="w-4 h-4 mr-1" />
                     Edit
                 </Button>
                 <Button
@@ -380,7 +380,7 @@ function SpecialCard({
                     onClick={onDelete}
                     className="flex-1 text-slate-400 hover:text-red-400"
                 >
-                    <Trash2 className="w-4 h-4 mr-1" />
+                    <IconTrash2 className="w-4 h-4 mr-1" />
                     Delete
                 </Button>
             </div>

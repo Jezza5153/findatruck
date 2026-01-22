@@ -6,9 +6,9 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    User, Mail, MapPin, Star, Heart, Gift, Settings, LogOut,
-    ChevronRight, Loader2, Camera, Edit2
-} from 'lucide-react';
+    IconUser, IconMail, IconMapPin, IconStar, IconHeart, IconGift, IconSettings, IconLogOut,
+    IconChevronRight, IconLoader2, IconCamera, Edit2
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -52,7 +52,7 @@ export default function ProfilePage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -75,11 +75,11 @@ export default function ProfilePage() {
                                 {user?.image ? (
                                     <img src={user.image} alt={user.name || 'Profile'} className="w-full h-full object-cover" />
                                 ) : (
-                                    <User className="w-10 h-10 text-white" />
+                                    <IconUser className="w-10 h-10 text-white" />
                                 )}
                             </div>
                             <button className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center hover:bg-slate-600 transition-colors">
-                                <Camera className="w-4 h-4 text-slate-300" />
+                                <IconCamera className="w-4 h-4 text-slate-300" />
                             </button>
                         </div>
 
@@ -87,7 +87,7 @@ export default function ProfilePage() {
                         <div className="flex-1">
                             <h1 className="text-xl font-bold">{user?.name || 'Food Lover'}</h1>
                             <p className="text-slate-400 text-sm flex items-center gap-1">
-                                <Mail className="w-3.5 h-3.5" />
+                                <IconMail className="w-3.5 h-3.5" />
                                 {user?.email}
                             </p>
                             <span className="inline-block mt-2 px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/20 text-green-400">
@@ -103,21 +103,21 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-3 gap-3">
                     <Link href="/favorites">
                         <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                            <Heart className="w-5 h-5 text-pink-400 mx-auto mb-2" />
+                            <IconHeart className="w-5 h-5 text-pink-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold">{stats.favorites}</div>
                             <div className="text-xs text-slate-400">Favorites</div>
                         </div>
                     </Link>
                     <Link href="/loyalty">
                         <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                            <Star className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
+                            <IconStar className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold">{stats.checkIns}</div>
                             <div className="text-xs text-slate-400">Check-ins</div>
                         </div>
                     </Link>
                     <Link href="/loyalty">
                         <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                            <Gift className="w-5 h-5 text-purple-400 mx-auto mb-2" />
+                            <IconGift className="w-5 h-5 text-purple-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold">{stats.rewards}</div>
                             <div className="text-xs text-slate-400">Rewards</div>
                         </div>
@@ -129,9 +129,9 @@ export default function ProfilePage() {
             <div className="container mx-auto max-w-2xl px-4">
                 <div className="bg-slate-800/50 rounded-xl border border-slate-700/30 divide-y divide-slate-700/30">
                     {[
-                        { icon: Edit2, label: 'Edit Profile', href: '/profile/edit' },
-                        { icon: Heart, label: 'Preferences', href: '/onboarding' },
-                        { icon: Settings, label: 'Settings', href: '/settings' },
+                        { icon: IconEdit2, label: 'Edit Profile', href: '/profile/edit' },
+                        { icon: IconHeart, label: 'Preferences', href: '/onboarding' },
+                        { icon: IconSettings, label: 'Settings', href: '/settings' },
                     ].map((item) => (
                         <Link key={item.label} href={item.href}>
                             <div className="flex items-center justify-between p-4 hover:bg-slate-700/30 transition-colors">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                                     <item.icon className="w-5 h-5 text-slate-400" />
                                     <span>{item.label}</span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-slate-500" />
+                                <IconChevronRight className="w-5 h-5 text-slate-500" />
                             </div>
                         </Link>
                     ))}
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                         onClick={handleSignOut}
                         className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
                     >
-                        <LogOut className="w-4 h-4 mr-2" />
+                        <IconLogOut className="w-4 h-4 mr-2" />
                         Sign Out
                     </Button>
                 </div>

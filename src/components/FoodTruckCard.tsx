@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { buttonVariants } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Star, Clock, Utensils, Globe, Instagram, Facebook } from 'lucide-react';
+import { IconMapPin, IconStar, IconClock, IconUtensils, IconGlobe, IconInstagram, IconFacebook } from '@/components/ui/branded-icons';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
 
@@ -63,7 +63,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
             {isFeatured && (
               <span className="inline-flex items-center bg-accent text-accent-foreground px-2 py-0.5 text-xs font-semibold rounded-full shadow-sm">
-                <Star className="w-4 h-4 mr-1 -ml-1" /> Featured
+                <IconStar className="w-4 h-4 mr-1 -ml-1" /> Featured
               </span>
             )}
             {isFavorite && (
@@ -104,7 +104,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           )}
         </div>
         <CardDescription className="text-sm text-primary flex items-center pt-1">
-          <Utensils className="w-4 h-4 mr-1.5 inline-block" /> {truck.cuisine || "Various"}
+          <IconUtensils className="w-4 h-4 mr-1.5 inline-block" /> {truck.cuisine || "Various"}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow px-5 pb-0 pt-1 space-y-1.5 text-sm">
@@ -112,7 +112,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
           {(typeof truck.rating === 'number' && truck.rating > 0) && (
             <span className="flex items-center text-muted-foreground">
-              <Star className="w-4 h-4 mr-1.5 text-yellow-400 fill-yellow-400" />
+              <IconStar className="w-4 h-4 mr-1.5 text-yellow-400 fill-yellow-400" />
               {truck.rating.toFixed(1)}
               <span className="ml-1 text-xs">
                 {truck.numberOfRatings ? `(${truck.numberOfRatings} review${truck.numberOfRatings > 1 ? 's' : ''})` : ''}
@@ -121,13 +121,13 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           )}
           {truck.address && (
             <span className="flex items-center text-muted-foreground">
-              <MapPin className="w-4 h-4 mr-1.5 text-secondary" />
+              <IconMapPin className="w-4 h-4 mr-1.5 text-secondary" />
               {truck.distance ? `${truck.distance} away` : truck.address}
             </span>
           )}
           {truck.operatingHoursSummary && (
             <span className="flex items-center text-muted-foreground">
-              <Clock className="w-4 h-4 mr-1.5 text-secondary" />
+              <IconClock className="w-4 h-4 mr-1.5 text-secondary" />
               {truck.operatingHoursSummary}
             </span>
           )}
@@ -148,17 +148,17 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           <div className="flex gap-2 mt-3">
             {truck.websiteUrl && (
               <a href={truck.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label="Website">
-                <Globe className="w-5 h-5 text-blue-500 hover:text-blue-700 transition-colors" />
+                <IconGlobe className="w-5 h-5 text-blue-500 hover:text-blue-700 transition-colors" />
               </a>
             )}
             {truck.socialMediaLinks?.instagram && (
               <a href={truck.socialMediaLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                <Instagram className="w-5 h-5 text-pink-500 hover:text-pink-700 transition-colors" />
+                <IconInstagram className="w-5 h-5 text-pink-500 hover:text-pink-700 transition-colors" />
               </a>
             )}
             {truck.socialMediaLinks?.facebook && (
               <a href={truck.socialMediaLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                <Facebook className="w-5 h-5 text-blue-700 hover:text-blue-900 transition-colors" />
+                <IconFacebook className="w-5 h-5 text-blue-700 hover:text-blue-900 transition-colors" />
               </a>
             )}
           </div>

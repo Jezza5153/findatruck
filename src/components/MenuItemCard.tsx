@@ -2,7 +2,7 @@ import type { MenuItem } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { PlusCircle, MinusCircle, ShoppingCart } from 'lucide-react';
+import { IconPlusCircle, IconMinusCircle, IconShoppingBag } from '@/components/ui/branded-icons';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import clsx from 'clsx';
@@ -184,7 +184,7 @@ export function MenuItemCard({
                 disabled={quantity <= 1 || !!item.outOfStock}
                 tabIndex={item.outOfStock ? -1 : 0}
               >
-                <MinusCircle className="h-5 w-5" />
+                <IconMinusCircle className="h-5 w-5" />
               </Button>
               <Input
                 ref={inputRef}
@@ -207,7 +207,7 @@ export function MenuItemCard({
                 disabled={!!item.outOfStock}
                 tabIndex={item.outOfStock ? -1 : 0}
               >
-                <PlusCircle className="h-5 w-5" />
+                <IconPlusCircle className="h-5 w-5" />
               </Button>
             </div>
           )}
@@ -225,7 +225,7 @@ export function MenuItemCard({
               tabIndex={item.outOfStock ? -1 : 0}
               aria-label={`Add ${item.name} to cart`}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" />
+              <IconShoppingBag className="mr-2 h-4 w-4" />
               {item.outOfStock ? "Not Available" : "Add to Cart"}
             </Button>
           )}
@@ -240,7 +240,7 @@ export function MenuItemCard({
           aria-label={`Quick add ${item.name} to cart`}
           onClick={handleAddToCart}
         >
-          <PlusCircle className="h-6 w-6 mr-1" />
+          <IconPlusCircle className="h-6 w-6 mr-1" />
           Add
         </button>
       )}

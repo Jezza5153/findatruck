@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TruckMap } from '@/components/truck-map';
 import {
-  MapPin, Star, Search, Truck, List, Map as MapIcon,
-  Heart, Navigation, CheckCircle, LogIn, ChefHat, ArrowRight, User
-} from 'lucide-react';
+  IconMapPin, IconStar, IconSearch, IconTruck, IconMap, IconList,
+  IconHeart, IconNavigation, IconCheckCircle, IconLogIn, IconChefHat, IconArrowRight, IconUser
+} from '@/components/ui/branded-icons';
 import { cn } from '@/lib/utils';
 
 interface TruckData {
@@ -159,13 +159,13 @@ export default function HomePage() {
               <div className="flex items-center gap-3">
                 <Link href="/login">
                   <Button variant="outline" size="sm" className="border-slate-600 bg-slate-700/50 text-slate-300 hover:bg-slate-600">
-                    <LogIn className="w-4 h-4 mr-2" />
+                    <IconLogIn className="w-4 h-4 mr-2" />
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/signup">
                   <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400">
-                    <User className="w-4 h-4 mr-2" />
+                    <IconUser className="w-4 h-4 mr-2" />
                     Join Free
                   </Button>
                 </Link>
@@ -183,7 +183,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-3"
           >
-            <Navigation className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <IconNavigation className="w-5 h-5 text-amber-400 flex-shrink-0" />
             <p className="text-sm text-amber-200">
               Enable location for better results.
               <button
@@ -205,7 +205,7 @@ export default function HomePage() {
         >
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 placeholder="Search trucks by name or cuisine..."
                 value={searchTerm}
@@ -220,7 +220,7 @@ export default function HomePage() {
                 onClick={() => setViewMode('list')}
                 className={viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400'}
               >
-                <List className="w-4 h-4" />
+                <IconList className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -228,7 +228,7 @@ export default function HomePage() {
                 onClick={() => setViewMode('map')}
                 className={viewMode === 'map' ? 'bg-slate-700 text-white' : 'text-slate-400'}
               >
-                <MapIcon className="w-4 h-4" />
+                <IconMap className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -236,8 +236,8 @@ export default function HomePage() {
           {/* Filter pills */}
           <div className="flex gap-2 overflow-x-auto pb-2 items-center">
             {[
-              { value: 'all', label: 'All Trucks', icon: Truck },
-              { value: 'open', label: 'Open Now', icon: CheckCircle },
+              { value: 'all', label: 'All Trucks', icon: IconTruck },
+              { value: 'open', label: 'Open Now', icon: IconCheckCircle },
             ].map((f) => (
               <button
                 key={f.value}
@@ -311,7 +311,7 @@ export default function HomePage() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <Truck className="w-12 h-12 text-slate-500" />
+                        <IconTruck className="w-12 h-12 text-slate-500" />
                       )}
 
                       {/* Status badge */}
@@ -335,7 +335,7 @@ export default function HomePage() {
                         </div>
                         {truck.rating && (
                           <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="w-4 h-4 fill-current" />
+                            <IconStar className="w-4 h-4 fill-current" />
                             <span className="text-sm font-medium">{truck.rating}</span>
                           </div>
                         )}
@@ -343,7 +343,7 @@ export default function HomePage() {
 
                       {truck.address && (
                         <p className="text-xs text-slate-500 flex items-center gap-1 mb-2">
-                          <MapPin className="w-3 h-3" />
+                          <IconMapPin className="w-3 h-3" />
                           <span className="truncate">{truck.address}</span>
                         </p>
                       )}
@@ -357,7 +357,7 @@ export default function HomePage() {
                       <div className="pt-2 border-t border-slate-700/30">
                         <span className="text-xs text-primary hover:text-primary/80 flex items-center justify-center gap-1">
                           View Menu & Check In
-                          <ArrowRight className="w-3 h-3" />
+                          <IconArrowRight className="w-3 h-3" />
                         </span>
                       </div>
                     </CardContent>
@@ -369,7 +369,7 @@ export default function HomePage() {
         ) : (
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-16 text-center">
-              <Truck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+              <IconTruck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
               <h3 className="text-2xl font-semibold mb-2">
                 {filter === 'open' ? 'No trucks open right now' : 'No trucks found'}
               </h3>
@@ -396,7 +396,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                  <ChefHat className="w-6 h-6 text-white" />
+                  <IconChefHat className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">Own a food truck?</h3>
@@ -406,7 +406,7 @@ export default function HomePage() {
               <Link href="/owner/signup">
                 <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400">
                   Register Your Truck
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  <IconArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
             </div>

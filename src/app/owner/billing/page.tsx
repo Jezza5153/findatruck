@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { IconLoader2 } from '@/components/ui/branded-icons';
 
 /**
  * Billing page - Hidden for free launch
@@ -22,7 +22,7 @@ export default function OwnerBillingPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
       <div className="text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-400 mx-auto mb-4" />
+        <IconLoader2 className="w-8 h-8 animate-spin text-violet-400 mx-auto mb-4" />
         <p className="text-slate-400">Redirecting to dashboard...</p>
       </div>
     </div>

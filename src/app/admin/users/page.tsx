@@ -5,8 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Users, Search, MoreVertical, Shield, Ban, Loader2, Mail, Truck
-} from 'lucide-react';
+    IconUsers, IconSearch, IconMoreVertical, IconShield, IconBan, IconLoader2, IconMail, IconTruck
+} from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -106,7 +106,7 @@ export default function AdminUsersPage() {
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
+                            <IconUsers className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Users</h1>
@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
                     {/* Search & Filter */}
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 placeholder="Search by email or name..."
                                 value={search}
@@ -170,12 +170,12 @@ export default function AdminUsersPage() {
                                         </span>
                                     </div>
                                     <p className="text-sm text-slate-400 truncate flex items-center gap-1">
-                                        <Mail className="w-3 h-3" />
+                                        <IconMail className="w-3 h-3" />
                                         {user.email}
                                     </p>
                                     {user.truckName && (
                                         <p className="text-xs text-slate-500 flex items-center gap-1">
-                                            <Truck className="w-3 h-3" />
+                                            <IconTruck className="w-3 h-3" />
                                             {user.truckName}
                                         </p>
                                     )}
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                            <MoreVertical className="w-4 h-4" />
+                                            <IconMoreVertical className="w-4 h-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
@@ -199,7 +199,7 @@ export default function AdminUsersPage() {
                                                 onClick={() => updateUser(user.id, { role: 'admin' })}
                                                 className="flex items-center gap-2"
                                             >
-                                                <Shield className="w-4 h-4" />
+                                                <IconShield className="w-4 h-4" />
                                                 Make Admin
                                             </DropdownMenuItem>
                                         )}
@@ -207,7 +207,7 @@ export default function AdminUsersPage() {
                                             onClick={() => updateUser(user.id, { banned: true })}
                                             className="text-red-400 flex items-center gap-2"
                                         >
-                                            <Ban className="w-4 h-4" />
+                                            <IconBan className="w-4 h-4" />
                                             Ban User
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
 
                     {filteredUsers.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
-                            <Users className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                            <IconUsers className="w-10 h-10 mx-auto mb-3 opacity-50" />
                             <p>No users found</p>
                         </div>
                     )}

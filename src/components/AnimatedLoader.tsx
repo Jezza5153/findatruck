@@ -1,7 +1,7 @@
 
 'use client';
 import { motion } from 'framer-motion';
-import { Utensils } from 'lucide-react';
+import { IconUtensils } from '@/components/ui/branded-icons';
 
 export default function AnimatedLoader({ message = "Finding tasty trucks nearbyâ€¦" }: { message?: string }) {
   return (
@@ -19,7 +19,7 @@ export default function AnimatedLoader({ message = "Finding tasty trucks nearbyâ
         }}
         className="p-2"
       >
-        <Utensils className="h-20 w-20 text-primary" />
+        <IconUtensils className="h-20 w-20 text-primary" />
       </motion.div>
       <p className="mt-6 text-lg text-muted-foreground tracking-wide animate-pulse">
         {message}

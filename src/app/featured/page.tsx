@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star, MapPin, Truck } from 'lucide-react';
+import { IconStar, IconMapPin, IconTruck } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface TruckData {
@@ -49,7 +49,7 @@ export default function FeaturedPage() {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 mb-4 shadow-lg">
-            <Star className="w-8 h-8 text-white" />
+            <IconStar className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold mb-3">Featured Trucks</h1>
           <p className="text-slate-400 max-w-lg mx-auto">
@@ -90,11 +90,11 @@ export default function FeaturedPage() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <Truck className="w-16 h-16 text-slate-500" />
+                        <IconTruck className="w-16 h-16 text-slate-500" />
                       )}
                       {truck.isFeatured && (
                         <div className="absolute top-3 right-3 px-2 py-1 bg-yellow-500/90 rounded-full text-xs font-bold text-white flex items-center gap-1">
-                          <Star className="w-3 h-3" />
+                          <IconStar className="w-3 h-3" />
                           Featured
                         </div>
                       )}
@@ -112,7 +112,7 @@ export default function FeaturedPage() {
                         </div>
                         {truck.rating && (
                           <div className="flex items-center gap-1 text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded-lg">
-                            <Star className="w-4 h-4 fill-current" />
+                            <IconStar className="w-4 h-4 fill-current" />
                             <span className="text-sm font-semibold">{truck.rating}</span>
                           </div>
                         )}
@@ -122,7 +122,7 @@ export default function FeaturedPage() {
                       )}
                       {truck.address && (
                         <p className="text-xs text-slate-500 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
+                          <IconMapPin className="w-3 h-3" />
                           {truck.address}
                         </p>
                       )}
@@ -135,7 +135,7 @@ export default function FeaturedPage() {
         ) : (
           <Card className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-16 text-center">
-              <Truck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+              <IconTruck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
               <h3 className="text-2xl font-semibold mb-2">No featured trucks yet</h3>
               <p className="text-slate-400 mb-6">
                 Check back soon for our curated selection of amazing food trucks!

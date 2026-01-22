@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Star, Heart, Bell, ChevronRight, Truck } from 'lucide-react';
+import { IconMapPin, IconStar, IconHeart, IconBell, IconChevronRight, IconTruck } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
 interface TruckData {
@@ -88,10 +88,10 @@ export default function CustomerDashboardPage() {
         {/* Quick Actions */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {[
-            { icon: MapPin, label: 'Find Trucks', href: '/map', color: 'from-blue-500 to-cyan-500' },
-            { icon: Star, label: 'Featured', href: '/featured', color: 'from-yellow-500 to-orange-500' },
-            { icon: Heart, label: 'Favorites', href: '/customer/dashboard', color: 'from-pink-500 to-rose-500' },
-            { icon: Bell, label: 'Notifications', href: '/customer/notifications', color: 'from-purple-500 to-violet-500' },
+            { icon: IconMapPin, label: 'Find Trucks', href: '/map', color: 'from-blue-500 to-cyan-500' },
+            { icon: IconStar, label: 'Featured', href: '/featured', color: 'from-yellow-500 to-orange-500' },
+            { icon: IconHeart, label: 'Favorites', href: '/customer/dashboard', color: 'from-pink-500 to-rose-500' },
+            { icon: IconBell, label: 'Notifications', href: '/customer/notifications', color: 'from-purple-500 to-violet-500' },
           ].map((action, i) => (
             <motion.div
               key={action.label}
@@ -108,7 +108,7 @@ export default function CustomerDashboardPage() {
                     <div className="flex-1">
                       <p className="font-semibold text-white">{action.label}</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+                    <IconChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
                   </CardContent>
                 </Card>
               </Link>
@@ -124,12 +124,12 @@ export default function CustomerDashboardPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Star className="w-6 h-6 text-yellow-400" />
+              <IconStar className="w-6 h-6 text-yellow-400" />
               Featured Trucks
             </h2>
             <Link href="/featured">
               <Button variant="ghost" className="text-slate-400 hover:text-white">
-                View all <ChevronRight className="w-4 h-4 ml-1" />
+                View all <IconChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </div>
@@ -146,7 +146,7 @@ export default function CustomerDashboardPage() {
                 <Link key={truck.id} href={`/trucks/${truck.id}`}>
                   <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 transition-all hover:scale-[1.02] overflow-hidden cursor-pointer h-full">
                     <div className="h-32 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                      <Truck className="w-12 h-12 text-slate-500" />
+                      <IconTruck className="w-12 h-12 text-slate-500" />
                     </div>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
@@ -156,14 +156,14 @@ export default function CustomerDashboardPage() {
                         </div>
                         {truck.rating && (
                           <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="w-4 h-4 fill-current" />
+                            <IconStar className="w-4 h-4 fill-current" />
                             <span className="text-sm font-medium">{truck.rating}</span>
                           </div>
                         )}
                       </div>
                       {truck.address && (
                         <p className="text-xs text-slate-500 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
+                          <IconMapPin className="w-3 h-3" />
                           {truck.address}
                         </p>
                       )}
@@ -175,7 +175,7 @@ export default function CustomerDashboardPage() {
           ) : (
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-12 text-center">
-                <Truck className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <IconTruck className="w-16 h-16 mx-auto mb-4 text-slate-500" />
                 <h3 className="text-xl font-semibold mb-2">No trucks yet</h3>
                 <p className="text-slate-400 mb-4">Check back soon for featured food trucks!</p>
                 <Link href="/map">

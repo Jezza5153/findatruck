@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Calendar, Clock, MapPin, User, CheckCircle, XCircle,
-    Loader2, MessageSquare, MoreVertical, CalendarDays
-} from 'lucide-react';
+    IconCalendar, IconClock, IconMapPin, IconUser, IconCheckCircle, IconXCircle,
+    IconLoader2, IconMessageSquare, IconMoreVertical, IconCalendarDays
+} from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -102,7 +102,7 @@ export default function OwnerBookingsPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -119,7 +119,7 @@ export default function OwnerBookingsPage() {
                             "w-10 h-10 rounded-xl flex items-center justify-center",
                             pendingCount > 0 ? "bg-yellow-500" : "bg-gradient-to-br from-blue-500 to-cyan-500"
                         )}>
-                            <Calendar className="w-5 h-5 text-white" />
+                            <IconCalendar className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Bookings</h1>
@@ -161,7 +161,7 @@ export default function OwnerBookingsPage() {
                         className="text-center py-16"
                     >
                         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-800 flex items-center justify-center">
-                            <CalendarDays className="w-10 h-10 text-slate-600" />
+                            <IconCalendarDays className="w-10 h-10 text-slate-600" />
                         </div>
                         <h2 className="text-xl font-semibold mb-2">
                             {filter === 'pending' ? 'No pending requests' : 'No bookings yet'}
@@ -194,7 +194,7 @@ export default function OwnerBookingsPage() {
                                     <div>
                                         <h3 className="font-semibold">{booking.eventName}</h3>
                                         <p className="text-sm text-slate-400 flex items-center gap-1">
-                                            <User className="w-3 h-3" />
+                                            <IconUser className="w-3 h-3" />
                                             {booking.userName || booking.userEmail}
                                         </p>
                                     </div>
@@ -214,7 +214,7 @@ export default function OwnerBookingsPage() {
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                        <MoreVertical className="w-4 h-4" />
+                                                        <IconMoreVertical className="w-4 h-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
@@ -222,14 +222,14 @@ export default function OwnerBookingsPage() {
                                                         onClick={() => updateBookingStatus(booking.id, 'confirmed')}
                                                         className="text-green-400"
                                                     >
-                                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                                        <IconCheckCircle className="w-4 h-4 mr-2" />
                                                         Confirm
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => updateBookingStatus(booking.id, 'declined')}
                                                         className="text-red-400"
                                                     >
-                                                        <XCircle className="w-4 h-4 mr-2" />
+                                                        <IconXCircle className="w-4 h-4 mr-2" />
                                                         Decline
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -241,15 +241,15 @@ export default function OwnerBookingsPage() {
                                 {/* Details */}
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div className="flex items-center gap-2 text-slate-300">
-                                        <Calendar className="w-4 h-4 text-blue-400" />
+                                        <IconCalendar className="w-4 h-4 text-blue-400" />
                                         <span>{formatBookingDate(booking.date)}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-300">
-                                        <Clock className="w-4 h-4 text-purple-400" />
+                                        <IconClock className="w-4 h-4 text-purple-400" />
                                         <span>{booking.startTime} - {booking.endTime}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-300 col-span-2">
-                                        <MapPin className="w-4 h-4 text-green-400" />
+                                        <IconMapPin className="w-4 h-4 text-green-400" />
                                         <span>{booking.location}</span>
                                     </div>
                                 </div>
@@ -257,7 +257,7 @@ export default function OwnerBookingsPage() {
                                 {booking.notes && (
                                     <div className="mt-3 pt-3 border-t border-slate-700/30">
                                         <p className="text-sm text-slate-400 flex items-start gap-2">
-                                            <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <IconMessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                             {booking.notes}
                                         </p>
                                     </div>
@@ -271,7 +271,7 @@ export default function OwnerBookingsPage() {
                                             onClick={() => updateBookingStatus(booking.id, 'confirmed')}
                                             className="flex-1 bg-green-500/20 text-green-400 hover:bg-green-500/30 border-0"
                                         >
-                                            <CheckCircle className="w-4 h-4 mr-1" />
+                                            <IconCheckCircle className="w-4 h-4 mr-1" />
                                             Confirm
                                         </Button>
                                         <Button
@@ -280,7 +280,7 @@ export default function OwnerBookingsPage() {
                                             variant="outline"
                                             className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
                                         >
-                                            <XCircle className="w-4 h-4 mr-1" />
+                                            <IconXCircle className="w-4 h-4 mr-1" />
                                             Decline
                                         </Button>
                                     </div>

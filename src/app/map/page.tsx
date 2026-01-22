@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TruckMap } from '@/components/truck-map';
 import {
-  MapPin, Star, Search, Truck, List, Map as MapIcon,
-  Heart, Navigation, CheckCircle, Filter
-} from 'lucide-react';
+  IconMapPin, IconStar, IconSearch, IconTruck, IconList, IconMap as IconMapIcon,
+  IconHeart, IconNavigation, IconCheckCircle, IconFilter
+} from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -184,7 +184,7 @@ export default function MapPage() {
           className="mb-6"
         >
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <MapPin className="w-8 h-8 text-blue-400" />
+            <IconMapPin className="w-8 h-8 text-blue-400" />
             Find Food Trucks
           </h1>
           <p className="text-slate-400">
@@ -199,7 +199,7 @@ export default function MapPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-3"
           >
-            <Navigation className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <IconNavigation className="w-5 h-5 text-amber-400 flex-shrink-0" />
             <p className="text-sm text-amber-200">
               Location access denied. Showing trucks near Amsterdam.
               <button
@@ -221,7 +221,7 @@ export default function MapPage() {
         >
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 placeholder="Search by name or cuisine..."
                 value={searchTerm}
@@ -236,7 +236,7 @@ export default function MapPage() {
                 onClick={() => setViewMode('list')}
                 className={viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400'}
               >
-                <List className="w-4 h-4" />
+                <IconList className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -244,7 +244,7 @@ export default function MapPage() {
                 onClick={() => setViewMode('map')}
                 className={viewMode === 'map' ? 'bg-slate-700 text-white' : 'text-slate-400'}
               >
-                <MapIcon className="w-4 h-4" />
+                <IconMapIcon className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -252,9 +252,9 @@ export default function MapPage() {
           {/* Filter pills */}
           <div className="flex gap-2 overflow-x-auto pb-2 items-center">
             {[
-              { value: 'all', label: 'All Trucks', icon: Truck },
-              { value: 'open', label: 'Open Now', icon: CheckCircle },
-              { value: 'favorites', label: 'Favorites', icon: Heart },
+              { value: 'all', label: 'All Trucks', icon: IconTruck },
+              { value: 'open', label: 'Open Now', icon: IconCheckCircle },
+              { value: 'favorites', label: 'Favorites', icon: IconHeart },
             ].map((f) => (
               <button
                 key={f.value}
@@ -329,7 +329,7 @@ export default function MapPage() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <Truck className="w-12 h-12 text-slate-500" />
+                        <IconTruck className="w-12 h-12 text-slate-500" />
                       )}
 
                       {/* Status badge */}
@@ -353,7 +353,7 @@ export default function MapPage() {
                               : "bg-slate-900/70 text-slate-300 hover:bg-slate-900/90"
                           )}
                         >
-                          <Heart className={cn(
+                          <IconHeart className={cn(
                             "w-4 h-4",
                             favorites.has(truck.id) && "fill-current"
                           )} />
@@ -371,7 +371,7 @@ export default function MapPage() {
                         </div>
                         {truck.rating && (
                           <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="w-4 h-4 fill-current" />
+                            <IconStar className="w-4 h-4 fill-current" />
                             <span className="text-sm font-medium">{truck.rating}</span>
                           </div>
                         )}
@@ -379,7 +379,7 @@ export default function MapPage() {
 
                       {truck.address && (
                         <p className="text-xs text-slate-500 flex items-center gap-1 mb-2">
-                          <MapPin className="w-3 h-3" />
+                          <IconMapPin className="w-3 h-3" />
                           <span className="truncate">{truck.address}</span>
                         </p>
                       )}
@@ -397,7 +397,7 @@ export default function MapPage() {
                           onClick={(e) => openDirections(truck, e)}
                           className="flex-1 py-2 text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors flex items-center justify-center gap-1"
                         >
-                          <Navigation className="w-3 h-3" />
+                          <IconNavigation className="w-3 h-3" />
                           Directions
                         </button>
                         <Link
@@ -405,7 +405,7 @@ export default function MapPage() {
                           className="flex-1 py-2 text-xs text-primary hover:text-primary/80 bg-primary/10 rounded-lg transition-colors flex items-center justify-center gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <CheckCircle className="w-3 h-3" />
+                          <IconCheckCircle className="w-3 h-3" />
                           Check In
                         </Link>
                       </div>
@@ -420,7 +420,7 @@ export default function MapPage() {
             <CardContent className="p-16 text-center">
               {filter === 'favorites' ? (
                 <>
-                  <Heart className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+                  <IconHeart className="w-20 h-20 mx-auto mb-4 text-slate-500" />
                   <h3 className="text-2xl font-semibold mb-2">No favorites yet</h3>
                   <p className="text-slate-400 mb-4">
                     Tap the heart icon on trucks you love
@@ -431,7 +431,7 @@ export default function MapPage() {
                 </>
               ) : filter === 'open' ? (
                 <>
-                  <Truck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+                  <IconTruck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
                   <h3 className="text-2xl font-semibold mb-2">No trucks open</h3>
                   <p className="text-slate-400 mb-4">
                     Check back later or view all trucks
@@ -442,7 +442,7 @@ export default function MapPage() {
                 </>
               ) : (
                 <>
-                  <Search className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+                  <IconSearch className="w-20 h-20 mx-auto mb-4 text-slate-500" />
                   <h3 className="text-2xl font-semibold mb-2">No trucks found</h3>
                   <p className="text-slate-400">
                     {searchTerm ? 'Try a different search term' : 'No food trucks available yet'}

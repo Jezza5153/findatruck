@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, X } from 'lucide-react';
+import { IconSearch, IconX } from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 
 interface MenuItem {
@@ -41,7 +41,7 @@ export function MenuSearch({ items, onFilteredItems }: MenuSearchProps) {
 
     return (
         <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
                 placeholder="Search menu items..."
                 value={searchTerm}
@@ -53,7 +53,7 @@ export function MenuSearch({ items, onFilteredItems }: MenuSearchProps) {
                     onClick={() => setSearchTerm('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
-                    <X className="w-4 h-4" />
+                    <IconX className="w-4 h-4" />
                 </button>
             )}
             {searchTerm && (

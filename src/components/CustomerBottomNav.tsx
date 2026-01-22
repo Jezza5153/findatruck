@@ -4,21 +4,21 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Map, Heart, Gift, Bell, User } from 'lucide-react';
+import { IconMap, IconHeart, IconGift, IconBell, IconUser } from '@/components/ui/branded-icons';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
     href: string;
     label: string;
-    icon: typeof Map;
+    icon: typeof IconMap;
 }
 
 const navItems: NavItem[] = [
-    { href: '/map', label: 'Map', icon: Map },
-    { href: '/favorites', label: 'Favorites', icon: Heart },
-    { href: '/loyalty', label: 'Loyalty', icon: Gift },
-    { href: '/notifications', label: 'Alerts', icon: Bell },
-    { href: '/profile', label: 'Profile', icon: User },
+    { href: '/map', label: 'Map', icon: IconMap },
+    { href: '/favorites', label: 'Favorites', icon: IconHeart },
+    { href: '/loyalty', label: 'Loyalty', icon: IconGift },
+    { href: '/notifications', label: 'Alerts', icon: IconBell },
+    { href: '/profile', label: 'Profile', icon: IconUser },
 ];
 
 export default function CustomerBottomNav() {

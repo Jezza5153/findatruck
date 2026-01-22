@@ -5,9 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Truck, Search, Filter, CheckCircle, XCircle, AlertTriangle,
-    MoreVertical, Eye, Ban, Loader2, ExternalLink
-} from 'lucide-react';
+    IconTruck, IconSearch, IconFilter, IconCheckCircle, IconXCircle, IconAlertTriangle,
+    IconMoreVertical, IconEye, IconBan, IconLoader2, IconExternalLink
+} from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,7 +97,7 @@ export default function AdminTrucksPage() {
     if (authStatus === 'loading' || isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         );
     }
@@ -109,7 +109,7 @@ export default function AdminTrucksPage() {
                 <div className="container mx-auto max-w-4xl">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                            <Truck className="w-5 h-5 text-white" />
+                            <IconTruck className="w-5 h-5 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">Trucks</h1>
@@ -120,7 +120,7 @@ export default function AdminTrucksPage() {
                     {/* Search & Filter */}
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 placeholder="Search trucks..."
                                 value={search}
@@ -164,9 +164,9 @@ export default function AdminTrucksPage() {
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium truncate">{truck.name}</span>
                                         {truck.isVerified ? (
-                                            <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                            <IconCheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
                                         ) : (
-                                            <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                                            <IconAlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
                                         )}
                                         {truck.isFeatured && (
                                             <span className="px-1.5 py-0.5 text-[10px] rounded bg-yellow-500/20 text-yellow-400">
@@ -189,13 +189,13 @@ export default function AdminTrucksPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                            <MoreVertical className="w-4 h-4" />
+                                            <IconMoreVertical className="w-4 h-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
                                         <DropdownMenuItem asChild>
                                             <Link href={`/trucks/${truck.id}`} className="flex items-center gap-2">
-                                                <Eye className="w-4 h-4" />
+                                                <IconEye className="w-4 h-4" />
                                                 View Profile
                                             </Link>
                                         </DropdownMenuItem>
@@ -203,7 +203,7 @@ export default function AdminTrucksPage() {
                                             onClick={() => updateTruck(truck.id, { isVerified: !truck.isVerified })}
                                             className="flex items-center gap-2"
                                         >
-                                            <CheckCircle className="w-4 h-4" />
+                                            <IconCheckCircle className="w-4 h-4" />
                                             {truck.isVerified ? 'Unverify' : 'Verify'}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
@@ -214,7 +214,7 @@ export default function AdminTrucksPage() {
                                             {truck.isFeatured ? 'Remove Featured' : 'Make Featured'}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem className="text-red-400 flex items-center gap-2">
-                                            <Ban className="w-4 h-4" />
+                                            <IconBan className="w-4 h-4" />
                                             Suspend Truck
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -225,7 +225,7 @@ export default function AdminTrucksPage() {
 
                     {filteredTrucks.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
-                            <Truck className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                            <IconTruck className="w-10 h-10 mx-auto mb-3 opacity-50" />
                             <p>No trucks found</p>
                         </div>
                     )}
