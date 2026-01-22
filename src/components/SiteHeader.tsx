@@ -51,16 +51,18 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50">
+    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-lg border-b border-orange-100 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <img
-              src="/logo.png"
-              alt="FindATruck Logo"
-              className="h-10 w-auto group-hover:scale-105 transition-transform"
-            />
+            <div className="bg-white rounded-xl p-1 shadow-sm">
+              <img
+                src="/logo.png"
+                alt="FindATruck Logo"
+                className="h-10 w-auto group-hover:scale-105 transition-transform"
+              />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -72,10 +74,10 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors",
                     isActive
-                      ? "bg-white/10 text-white"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? "bg-orange-500 text-white"
+                      : "text-slate-600 hover:text-orange-600 hover:bg-orange-50"
                   )}
                 >
                   <link.icon className="w-4 h-4" />
@@ -88,14 +90,14 @@ export function SiteHeader() {
           {/* Right side actions */}
           <div className="flex items-center gap-3">
             {isLoading ? (
-              <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+              <div className="w-8 h-8 rounded-full bg-orange-200 animate-pulse" />
             ) : isAuthenticated ? (
               <>
                 {/* Notifications (placeholder) */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-slate-400 hover:text-white hover:bg-white/10 hidden sm:flex"
+                  className="text-slate-500 hover:text-orange-600 hover:bg-orange-50 hidden sm:flex"
                 >
                   <IconBell className="w-5 h-5" />
                 </Button>
@@ -105,7 +107,7 @@ export function SiteHeader() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative h-9 w-9 rounded-full ring-2 ring-slate-600/50 hover:ring-primary/50 transition-all"
+                      className="relative h-9 w-9 rounded-full ring-2 ring-orange-200 hover:ring-orange-400 transition-all"
                     >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || 'User'} />
@@ -115,30 +117,30 @@ export function SiteHeader() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-white">
+                  <DropdownMenuContent align="end" className="w-56 bg-white border-orange-100 text-slate-800 shadow-xl">
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium">{session.user?.name}</p>
-                        <p className="text-xs text-slate-400">{session.user?.email}</p>
+                        <p className="text-xs text-slate-500">{session.user?.email}</p>
                       </div>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuSeparator className="bg-orange-100" />
 
                     {isOwner ? (
                       <>
-                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                        <DropdownMenuItem asChild className="hover:bg-orange-50 cursor-pointer">
                           <Link href="/owner/dashboard" className="flex items-center">
                             <IconLayoutDashboard className="mr-2 h-4 w-4" />
                             Dashboard
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                        <DropdownMenuItem asChild className="hover:bg-orange-50 cursor-pointer">
                           <Link href="/owner/menu" className="flex items-center">
                             <IconUtensils className="mr-2 h-4 w-4" />
                             Manage Menu
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                        <DropdownMenuItem asChild className="hover:bg-orange-50 cursor-pointer">
                           <Link href="/owner/profile" className="flex items-center">
                             <IconSettings className="mr-2 h-4 w-4" />
                             Settings
@@ -147,13 +149,13 @@ export function SiteHeader() {
                       </>
                     ) : (
                       <>
-                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                        <DropdownMenuItem asChild className="hover:bg-orange-50 cursor-pointer">
                           <Link href="/customer/dashboard" className="flex items-center">
                             <IconLayoutDashboard className="mr-2 h-4 w-4" />
                             My Dashboard
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                        <DropdownMenuItem asChild className="hover:bg-orange-50 cursor-pointer">
                           <Link href="/customer/notifications" className="flex items-center">
                             <IconBell className="mr-2 h-4 w-4" />
                             Notifications
@@ -162,10 +164,10 @@ export function SiteHeader() {
                       </>
                     )}
 
-                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuSeparator className="bg-orange-100" />
                     <DropdownMenuItem
                       onClick={handleSignOut}
-                      className="hover:bg-slate-700 cursor-pointer text-red-400 focus:text-red-400"
+                      className="hover:bg-red-50 cursor-pointer text-red-500 focus:text-red-500"
                     >
                       <IconLogOut className="mr-2 h-4 w-4" />
                       Sign out
@@ -178,7 +180,7 @@ export function SiteHeader() {
                 <Link href="/login">
                   <Button
                     variant="ghost"
-                    className="text-slate-300 hover:text-white hover:bg-white/10"
+                    className="text-slate-600 hover:text-orange-600 hover:bg-orange-50"
                   >
                     <IconLogIn className="w-4 h-4 mr-2" />
                     Sign in
