@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  IconUtensils,
   IconChefHat,
   IconUser,
   IconMapPin,
@@ -9,16 +9,13 @@ import {
   IconShieldCheck,
   IconFileText,
   IconStar,
-  IconCreditCard,
-  IconNewspaper,
-  IconInfo,
 } from '@/components/ui/branded-icons';
 
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear();
   return (
-    <footer className="border-t bg-background/95 shadow-inner">
+    <footer className="border-t border-orange-200 bg-gradient-to-b from-amber-50 to-orange-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-10 md:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
@@ -26,67 +23,62 @@ export function SiteFooter() {
             <div className="col-span-2 lg:col-span-1 text-center md:text-left mb-6 md:mb-0">
               <Link
                 href="/"
-                className="inline-flex items-center text-xl font-bold text-primary mb-2"
-                aria-label="Home - Truck Tracker"
+                className="inline-flex items-center mb-3"
+                aria-label="Home - FindATruck"
               >
-                <span className="inline-flex items-center">
-                  <IconUtensils className="h-7 w-7 mr-2 transition-transform hover:-rotate-6" />
-                  Truck Tracker
-                </span>
+                <Image
+                  src="/logo.png"
+                  alt="FindATruck"
+                  width={120}
+                  height={80}
+                  className="h-16 w-auto"
+                />
               </Link>
-              <p className="text-sm text-muted-foreground">
-                Your guide to the best food on wheels.
+              <p className="text-sm text-slate-600">
+                Your guide to the best food on wheels! 🚚🍕
               </p>
             </div>
 
             {/* For Customers */}
             <div className="text-sm">
-              <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                <span>For Customers</span>
+              <h6 className="font-bold text-slate-800 uppercase tracking-wider mb-3">
+                For Customers
               </h6>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/map"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconMapPin className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Find Trucks
-                    </span>
+                    <IconMapPin className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Find Trucks
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/signup"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconUser className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Customer Signup
-                    </span>
+                    <IconUser className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Customer Signup
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/login"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconUser className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Login
-                    </span>
+                    <IconUser className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Login
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/featured"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconStar className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Featured Trucks
-                    </span>
+                    <IconStar className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Featured Trucks
                   </Link>
                 </li>
               </ul>
@@ -94,116 +86,80 @@ export function SiteFooter() {
 
             {/* For Owners */}
             <div className="text-sm">
-              <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                <span>For Owners</span>
+              <h6 className="font-bold text-slate-800 uppercase tracking-wider mb-3">
+                For Owners
               </h6>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/owner/portal"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Owner Portal
-                    </span>
+                    <IconChefHat className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Owner Portal
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/owner/signup"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconChefHat className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Register Truck
-                    </span>
+                    <IconChefHat className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Register Truck
                   </Link>
                 </li>
-                {/* Hidden for free launch
-                <li>
-                  <Link
-                    href="/owner/billing"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
-                  >
-                    <span>
-                      <CreditCard className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Pricing
-                    </span>
-                  </Link>
-                </li>
-                */}
               </ul>
             </div>
 
             {/* Resources */}
             <div className="text-sm">
-              <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                <span>Resources</span>
+              <h6 className="font-bold text-slate-800 uppercase tracking-wider mb-3">
+                Resources
               </h6>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/help"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconHelpCircle className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Help & FAQ
-                    </span>
+                    <IconHelpCircle className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Help & FAQ
                   </Link>
                 </li>
                 <li>
-                  <span
-                    className="text-muted-foreground/70 cursor-not-allowed flex items-center"
-                    aria-disabled="true"
-                    tabIndex={-1}
-                    title="Coming soon"
+                  <Link
+                    href="/how-it-works"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <IconNewspaper className="w-4 h-4 mr-1.5 inline-block" />
-                    Blog (Soon)
-                  </span>
-                </li>
-                <li>
-                  <span
-                    className="text-muted-foreground/70 cursor-not-allowed flex items-center"
-                    aria-disabled="true"
-                    tabIndex={-1}
-                    title="Coming soon"
-                  >
-                    <IconInfo className="w-4 h-4 mr-1.5 inline-block" />
-                    About Us (Soon)
-                  </span>
+                    <IconHelpCircle className="w-4 h-4 mr-1.5 text-orange-500" />
+                    How It Works
+                  </Link>
                 </li>
               </ul>
             </div>
 
             {/* Legal */}
             <div className="text-sm">
-              <h6 className="font-semibold text-foreground uppercase tracking-wider mb-3">
-                <span>Legal</span>
+              <h6 className="font-bold text-slate-800 uppercase tracking-wider mb-3">
+                Legal
               </h6>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/terms"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconFileText className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Terms of Service
-                    </span>
+                    <IconFileText className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Terms of Service
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/privacy"
-                    className="text-muted-foreground hover:text-primary transition-colors flex items-center"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
                   >
-                    <span>
-                      <IconShieldCheck className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
-                      Privacy Policy
-                    </span>
+                    <IconShieldCheck className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Privacy Policy
                   </Link>
                 </li>
               </ul>
@@ -211,9 +167,9 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="border-t py-6">
-          <p className="text-center text-xs text-muted-foreground">
-            &copy; {currentYear} Truck Tracker. All rights reserved. Operated by Firebase Studio.
+        <div className="border-t border-orange-200 py-6">
+          <p className="text-center text-xs text-slate-500">
+            © {currentYear} FindATruck. All rights reserved. Made with 🧡 for food truck lovers everywhere!
           </p>
         </div>
       </div>

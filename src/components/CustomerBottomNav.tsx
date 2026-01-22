@@ -31,7 +31,7 @@ export default function CustomerBottomNav() {
     if (!shouldShow) return null;
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 pb-safe md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-orange-200 pb-safe md:hidden shadow-lg">
             <div className="flex items-center justify-around h-16 max-w-md mx-auto px-2">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href ||
@@ -44,13 +44,13 @@ export default function CustomerBottomNav() {
                             className={cn(
                                 "relative flex flex-col items-center justify-center w-16 h-full",
                                 "text-slate-400 transition-colors",
-                                isActive && "text-primary"
+                                isActive && "text-orange-500"
                             )}
                         >
                             {isActive && (
                                 <motion.div
                                     layoutId="customer-nav-indicator"
-                                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full"
+                                    className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-b-full"
                                     transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
                                 />
                             )}
@@ -58,7 +58,10 @@ export default function CustomerBottomNav() {
                                 "w-5 h-5 mb-1 transition-transform",
                                 isActive && "scale-110"
                             )} />
-                            <span className="text-[10px] font-medium">{item.label}</span>
+                            <span className={cn(
+                                "text-[10px] font-medium",
+                                isActive ? "text-orange-600" : "text-slate-500"
+                            )}>{item.label}</span>
                         </Link>
                     );
                 })}
