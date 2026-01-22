@@ -51,7 +51,7 @@ export default function CustomerBottomNav() {
                                 <motion.div
                                     layoutId="customer-nav-indicator"
                                     className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-orange-500 rounded-b-full"
-                                    transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
+                                    transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
                                 />
                             )}
                             <item.icon className={cn(

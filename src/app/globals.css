@@ -359,3 +359,65 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Accessibility & Animation Polish
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Reduced motion: disable non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus-visible states for accessibility */
+:focus-visible {
+  outline: 2px solid hsl(25 100% 50%);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(25 100% 50%);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Animation timing tokens */
+@layer utilities {
+  .duration-micro {
+    transition-duration: 150ms;
+  }
+
+  .duration-fast {
+    transition-duration: 200ms;
+  }
+
+  .duration-normal {
+    transition-duration: 300ms;
+  }
+
+  .duration-modal {
+    transition-duration: 280ms;
+  }
+
+  /* Snappy easing - fast in, smooth out */
+  .ease-snappy {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Soft bounce for playful elements */
+  .ease-bounce {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
