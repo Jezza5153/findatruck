@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   IconTruck, IconUtensils, IconShoppingBag, IconDollarSign,
   IconMapPin, IconSettings, IconChevronRight,
-  IconTrendingUp, IconClock, IconUsers, IconNavigation, IconLoader2, IconCalendar, CheckCircle
+  IconTrendingUp, IconClock, IconUsers, IconNavigation, IconLoader2, IconCalendar, IconCheckCircle
 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 
@@ -253,8 +253,8 @@ export default function OwnerDashboardPage() {
             <CardContent className="space-y-4">
               {/* Open/Closed Toggle - Prominent */}
               <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isOpen
-                  ? 'bg-green-500/10 border-green-500/50'
-                  : 'bg-slate-800 border-slate-700'
+                ? 'bg-green-500/10 border-green-500/50'
+                : 'bg-slate-800 border-slate-700'
                 }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-4 h-4 rounded-full ${isOpen ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50' : 'bg-slate-500'}`} />
