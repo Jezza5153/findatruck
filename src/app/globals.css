@@ -11,8 +11,10 @@
     /* Dark: Asphalt #1F1F1F → HSL 0 0% 12% */
     /* Muted: Concrete Gray #9CA3AF → HSL 218 11% 65% */
 
-    --background: 60 20% 97%; /* Warm White */
-    --foreground: 0 0% 12%; /* Asphalt */
+    --background: 60 20% 97%;
+    /* Warm White */
+    --foreground: 0 0% 12%;
+    /* Asphalt */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 12%;
@@ -20,16 +22,22 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 12%;
 
-    --primary: 25 100% 50%; /* Truck Orange */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 25 100% 50%;
+    /* Truck Orange */
+    --primary-foreground: 0 0% 100%;
+    /* White */
 
-    --secondary: 47 100% 50%; /* Signal Yellow */
-    --secondary-foreground: 0 0% 12%; /* Asphalt */
+    --secondary: 47 100% 50%;
+    /* Signal Yellow */
+    --secondary-foreground: 0 0% 12%;
+    /* Asphalt */
 
     --muted: 60 10% 92%;
-    --muted-foreground: 218 11% 45%; /* Concrete Gray - darker for text */
+    --muted-foreground: 218 11% 45%;
+    /* Concrete Gray - darker for text */
 
-    --accent: 47 100% 50%; /* Signal Yellow */
+    --accent: 47 100% 50%;
+    /* Signal Yellow */
     --accent-foreground: 0 0% 12%;
 
     --destructive: 0 84% 60%;
@@ -37,19 +45,27 @@
 
     --border: 218 11% 80%;
     --input: 218 11% 80%;
-    --ring: 25 100% 50%; /* Truck Orange */
+    --ring: 25 100% 50%;
+    /* Truck Orange */
 
-    --chart-1: 25 100% 50%; /* Orange */
-    --chart-2: 47 100% 50%; /* Yellow */
-    --chart-3: 142 71% 45%; /* Green for success */
-    --chart-4: 0 84% 60%; /* Red */
-    --chart-5: 262 83% 58%; /* Purple */
+    --chart-1: 25 100% 50%;
+    /* Orange */
+    --chart-2: 47 100% 50%;
+    /* Yellow */
+    --chart-3: 142 71% 45%;
+    /* Green for success */
+    --chart-4: 0 84% 60%;
+    /* Red */
+    --chart-5: 262 83% 58%;
+    /* Purple */
     --radius: 0.5rem;
 
     /* Sidebar variables - brand aligned */
-    --sidebar-background: 0 0% 12%; /* Asphalt */
+    --sidebar-background: 0 0% 12%;
+    /* Asphalt */
     --sidebar-foreground: 60 20% 95%;
-    --sidebar-primary: 25 100% 50%; /* Truck Orange */
+    --sidebar-primary: 25 100% 50%;
+    /* Truck Orange */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 60 20% 95%;
@@ -58,49 +74,64 @@
   }
 
   .dark {
-    --background: 0 0% 8%; /* Dark Asphalt */
-    --foreground: 60 10% 95%; /* Off-white */
+    /* Asphalt Night + Warm Light Theme */
+    /* #0F1115 → HSL 220 18% 7% (asphalt base) */
+    /* #171A20 → HSL 220 16% 11% (card surface) */
+    /* #1E232B → HSL 218 17% 14% (hover surface) */
 
-    --card: 0 0% 10%;
-    --card-foreground: 60 10% 95%;
+    --background: 220 18% 7%;
+    /* Asphalt base #0F1115 */
+    --foreground: 55 30% 96%;
+    /* Warm white #FAFAF7 */
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 60 10% 95%;
+    --card: 220 16% 11%;
+    /* Surface #171A20 */
+    --card-foreground: 55 30% 96%;
 
-    --primary: 25 100% 55%; /* Slightly lighter Orange for dark mode */
+    --popover: 220 16% 11%;
+    --popover-foreground: 55 30% 96%;
+
+    --primary: 25 100% 50%;
+    /* Truck Orange #FF6A00 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 47 100% 55%; /* Slightly lighter Yellow */
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 47 100% 50%;
+    /* Signal Yellow #FFC700 */
+    --secondary-foreground: 220 18% 7%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 218 11% 65%; /* Concrete Gray */
+    --muted: 218 17% 14%;
+    /* Hover surface #1E232B */
+    --muted-foreground: 55 10% 70%;
+    /* Warm muted text */
 
-    --accent: 47 100% 55%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 47 100% 50%;
+    /* Signal Yellow */
+    --accent-foreground: 220 18% 7%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 25 100% 55%;
+    --border: 0 0% 100% / 0.08;
+    /* rgba(255,255,255,0.08) */
+    --input: 220 16% 14%;
+    --ring: 25 100% 50%;
+    /* Truck Orange */
 
-    --chart-1: 25 100% 55%;
-    --chart-2: 47 100% 55%;
+    --chart-1: 25 100% 50%;
+    --chart-2: 47 100% 50%;
     --chart-3: 142 71% 50%;
     --chart-4: 0 72% 55%;
     --chart-5: 262 83% 62%;
 
-    /* Sidebar variables - dark theme */
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 60 10% 90%;
-    --sidebar-primary: 25 100% 55%;
+    /* Sidebar variables - asphalt theme */
+    --sidebar-background: 220 20% 5%;
+    --sidebar-foreground: 55 30% 90%;
+    --sidebar-primary: 25 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 60 10% 90%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 25 100% 55%;
+    --sidebar-accent: 220 16% 11%;
+    --sidebar-accent-foreground: 55 30% 90%;
+    --sidebar-border: 0 0% 100% / 0.08;
+    --sidebar-ring: 25 100% 50%;
   }
 }
 
@@ -108,11 +139,18 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-inter), system-ui, sans-serif;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold;
   }
 }
