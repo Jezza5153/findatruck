@@ -935,3 +935,4 @@ export const IconSend = (props: IconProps) => (
         <path d="M22 2 11 13" />
     </BaseIcon>
 );
+// Force rebuild Thu Jan 22 12:35:45 CET 2026
