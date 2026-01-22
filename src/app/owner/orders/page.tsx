@@ -1,257 +1,243 @@
-
 'use client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShoppingBag, CheckCircle, Truck, Loader2, AlertTriangle, PackageX, PackageCheck, CookingPot } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, type Timestamp } from 'firebase/firestore';
+
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import type { UserDocument } from '@/lib/types';
-import { formatDistanceToNow } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import {
+  ShoppingBag, Clock, Check, X, ChefHat,
+  DollarSign, User, Loader2
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
-
-interface OrderItemDetail {
-  itemId: string;
-  name: string;
-  quantity: number;
-  price: number; // Price per item at time of order
-  // Add customizations if needed
-}
 interface Order {
-    id: string; // Firestore document ID
-    customerId: string;
-    customerName?: string; // Denormalized for display
-    items: OrderItemDetail[];
-    totalAmount: number;
-    status: "New" | "Preparing" | "Ready for Pickup" | "Completed" | "Cancelled";
-    createdAt: Timestamp; 
-    updatedAt?: Timestamp;
-    notes?: string; // Customer notes for the order
+  id: string;
+  customerName: string;
+  items: { name: string; quantity: number; price: number }[];
+  totalAmount: number;
+  status: 'New' | 'Preparing' | 'Ready for Pickup' | 'Completed' | 'Cancelled';
+  notes?: string;
+  createdAt: string;
 }
+
+const STATUS_COLORS: Record<string, string> = {
+  'New': 'bg-blue-500',
+  'Preparing': 'bg-yellow-500',
+  'Ready for Pickup': 'bg-green-500',
+  'Completed': 'bg-slate-500',
+  'Cancelled': 'bg-red-500'
+};
 
 export default function OwnerOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [truckId, setTruckId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingOrder, setUpdatingOrder] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as UserDocument;
-          if (userData.role === 'owner') {
-            const resolvedTruckId = userData.truckId || user.uid;
-            setTruckId(resolvedTruckId);
-          } else {
-            setError("Access Denied: You are not an authorized owner.");
-            router.push('/login');
-          }
-        } else {
-          setError("User profile not found.");
-          router.push('/login');
+    if (status === 'unauthenticated') {
+      router.push('/owner/login');
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const data = await res.json();
+        if (data.success) {
+          setOrders(data.data || []);
         }
-      } else {
-        router.push('/login?redirect=/owner/orders');
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
       }
-    });
-    return () => unsubscribeAuth();
-  }, [router]);
-
-  useEffect(() => {
-    if (!truckId) {
-      if(currentUser) setIsLoading(false); // Only set loading false if auth is loaded but truckId is still missing
-      return;
     }
 
-    setIsLoading(true);
-    const ordersRef = collection(db, "trucks", truckId, "orders");
-    const q = query(ordersRef, orderBy("createdAt", "desc"));
-
-    const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
-      const fetchedOrders: Order[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedOrders.push({ id: doc.id, ...doc.data() } as Order);
-      });
-      setOrders(fetchedOrders);
-      setError(null);
-      setIsLoading(false);
-    }, (err: any) => {
-      console.error("Error fetching orders:", err);
-      setError(err.message || "Failed to fetch orders.");
-      setIsLoading(false);
-    });
-
-    return () => unsubscribeOrders();
-  }, [truckId, currentUser]);
-
-  const getStatusBadge = (status: Order['status']) => {
-    switch (status) {
-      case "New": return <Badge variant="destructive" className="bg-red-500 text-white"><AlertTriangle className="mr-1 h-3 w-3"/>New</Badge>;
-      case "Preparing": return <Badge variant="default" className="bg-yellow-500 text-black"><CookingPot className="mr-1 h-3 w-3"/>Preparing</Badge>;
-      case "Ready for Pickup": return <Badge variant="default" className="bg-blue-500 text-white"><PackageCheck className="mr-1 h-3 w-3"/>Ready</Badge>;
-      case "Completed": return <Badge variant="secondary" className="bg-green-500 text-white"><CheckCircle className="mr-1 h-3 w-3"/>Completed</Badge>;
-      case "Cancelled": return <Badge variant="outline" className="bg-gray-500 text-white"><PackageX className="mr-1 h-3 w-3"/>Cancelled</Badge>;
-      default: return <Badge>{status}</Badge>;
+    if (status === 'authenticated') {
+      fetchOrders();
     }
-  };
-  
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    if (!truckId) return;
+  }, [status]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingOrder(orderId);
     try {
-      const orderRef = doc(db, "trucks", truckId, "orders", orderId);
-      await updateDoc(orderRef, { status: newStatus, updatedAt: new Date() });
-      // Optimistic update handled by onSnapshot, or you can manually update state here if preferred
-    } catch (e: any) {
-      console.error("Error updating order status:", e);
-      setError(e.message || "Failed to update order status.");
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status: newStatus })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setOrders(orders.map(o =>
+          o.id === orderId ? { ...o, status: newStatus as Order['status'] } : o
+        ));
+        toast({ title: `Order marked as ${newStatus}` });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update order',
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdatingOrder(null);
     }
   };
 
-  const activeOrders = orders.filter(o => o.status === "New" || o.status === "Preparing" || o.status === "Ready for Pickup");
-  const pastOrders = orders.filter(o => o.status === "Completed" || o.status === "Cancelled");
-
-  if (isLoading && !error) { // Show loader only if actively loading and no prior error
+  if (status === 'loading' || loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-lg mt-4">Loading orders...</p>
+      <div className="min-h-screen bg-slate-900 p-6">
+        <div className="container mx-auto max-w-4xl space-y-6">
+          <Skeleton className="h-12 w-64 bg-slate-700" />
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-32 bg-slate-700 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
-  
+
+  const activeOrders = orders.filter(o => !['Completed', 'Cancelled'].includes(o.status));
+  const completedOrders = orders.filter(o => ['Completed', 'Cancelled'].includes(o.status));
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary flex items-center mb-4 sm:mb-0">
-          <ShoppingBag className="mr-3 h-8 w-8" /> Live & Past Orders
-        </h1>
-        <Button asChild variant="outline">
-          <Link href="/owner/dashboard">Back to Dashboard</Link>
-        </Button>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <div className="container mx-auto max-w-4xl px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <ShoppingBag className="w-8 h-8 text-blue-400" />
+            Orders
+          </h1>
+          <p className="text-slate-400 mt-1">{activeOrders.length} active orders</p>
+        </motion.div>
+
+        {/* Active Orders */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4 mb-10"
+        >
+          <h2 className="font-semibold text-lg text-slate-300">Active Orders</h2>
+
+          {activeOrders.length > 0 ? (
+            activeOrders.map((order) => (
+              <Card key={order.id} className="bg-slate-800/50 border-slate-700/50">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                        <User className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{order.customerName}</p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(order.createdAt).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className={STATUS_COLORS[order.status]}>
+                      {order.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    {order.items.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-slate-300">{item.quantity}x {item.name}</span>
+                        <span className="text-slate-400">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {order.notes && (
+                    <p className="text-sm text-yellow-400 bg-yellow-500/10 px-3 py-2 rounded-lg mb-4">
+                      Note: {order.notes}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+                    <p className="font-bold text-lg">
+                      <DollarSign className="w-4 h-4 inline" />
+                      {order.totalAmount.toFixed(2)}
+                    </p>
+
+                    <div className="flex gap-2">
+                      {order.status === 'New' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, 'Preparing')}
+                          disabled={updatingOrder === order.id}
+                          className="bg-yellow-500 hover:bg-yellow-600"
+                        >
+                          {updatingOrder === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <><ChefHat className="w-4 h-4 mr-1" />Start Preparing</>
+                          )}
+                        </Button>
+                      )}
+                      {order.status === 'Preparing' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, 'Ready for Pickup')}
+                          disabled={updatingOrder === order.id}
+                          className="bg-green-500 hover:bg-green-600"
+                        >
+                          {updatingOrder === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <><Check className="w-4 h-4 mr-1" />Mark Ready</>
+                          )}
+                        </Button>
+                      )}
+                      {order.status === 'Ready for Pickup' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateOrderStatus(order.id, 'Completed')}
+                          disabled={updatingOrder === order.id}
+                          className="bg-slate-600 hover:bg-slate-500"
+                        >
+                          {updatingOrder === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <><Check className="w-4 h-4 mr-1" />Complete</>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card className="bg-slate-800/50 border-slate-700/50">
+              <CardContent className="p-12 text-center">
+                <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <h3 className="text-xl font-semibold mb-2">No active orders</h3>
+                <p className="text-slate-400">New orders will appear here</p>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
       </div>
-      
-      {error && (
-        <Alert variant="destructive" className="max-w-lg mx-auto mb-6">
-          <AlertTriangle className="h-4 w-4"/>
-          <AlertTitle>Error Loading Orders</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Tabs defaultValue="active">
-        <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex mb-6">
-            <TabsTrigger value="active">Active Orders ({activeOrders.length})</TabsTrigger>
-            <TabsTrigger value="past">Past Orders ({pastOrders.length})</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="active">
-            <Card className="shadow-lg">
-                <CardHeader>
-                <CardTitle className="text-2xl">Active Orders</CardTitle>
-                <CardDescription>View incoming orders and update their status.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                {activeOrders.length > 0 ? (
-                    <div className="space-y-4">
-                    {activeOrders.map(order => (
-                        <Card key={order.id} className="bg-muted/30">
-                        <CardHeader className="pb-3">
-                            <div className="flex flex-wrap justify-between items-start gap-2">
-                            <CardTitle className="text-lg">Order #{order.id.substring(0,7)}</CardTitle>
-                            {getStatusBadge(order.status)}
-                            </div>
-                            <CardDescription className="text-xs">
-                                For: {order.customerName || `Customer ID: ${order.customerId.substring(0,6)}...`} | Received: {formatDistanceToNow(order.createdAt.toDate(), { addSuffix: true })}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2 pt-2">
-                            <p className="font-medium text-sm">Items ({order.items.reduce((sum, item) => sum + item.quantity, 0)}):</p>
-                            <ul className="list-disc list-inside pl-4 text-xs space-y-1 text-muted-foreground">
-                                {order.items.map(item => (
-                                    <li key={item.itemId}>{item.quantity} x {item.name} (@ ${item.price.toFixed(2)})</li>
-                                ))}
-                            </ul>
-                            {order.notes && <p className="text-xs italic border-l-2 border-primary pl-2 py-1">Notes: {order.notes}</p>}
-                            <p className="font-semibold text-right text-md">Total: ${order.totalAmount.toFixed(2)}</p>
-                            <div className="flex flex-wrap justify-end gap-2 pt-2">
-                                {order.status === "New" && 
-                                <Button size="sm" variant="outline" onClick={() => handleUpdateOrderStatus(order.id, "Preparing")}>
-                                    <CookingPot className="mr-1 h-4 w-4"/> Mark Preparing
-                                </Button>}
-                                {order.status === "Preparing" &&
-                                <Button size="sm" variant="outline" onClick={() => handleUpdateOrderStatus(order.id, "Ready for Pickup")}>
-                                    <Truck className="mr-1 h-4 w-4"/> Mark Ready
-                                </Button>}
-                                {order.status === "Ready for Pickup" &&
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateOrderStatus(order.id, "Completed")}>
-                                    <CheckCircle className="mr-1 h-4 w-4"/> Mark Completed
-                                </Button>}
-                                {(order.status === "New" || order.status === "Preparing") &&
-                                <Button size="sm" variant="destructive" onClick={() => handleUpdateOrderStatus(order.id, "Cancelled")}>
-                                    <PackageX className="mr-1 h-4 w-4"/> Cancel Order
-                                </Button>}
-                            </div>
-                        </CardContent>
-                        </Card>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground py-10 text-center">No active orders at the moment.</p>
-                )}
-                </CardContent>
-            </Card>
-        </TabsContent>
-
-        <TabsContent value="past">
-            <Card className="shadow-lg">
-                <CardHeader>
-                <CardTitle className="text-2xl">Past Orders</CardTitle>
-                <CardDescription>A history of your fulfilled or cancelled orders.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                {pastOrders.length > 0 ? (
-                     <div className="space-y-4">
-                    {pastOrders.map(order => (
-                        <Card key={order.id} className="bg-muted/20 opacity-90">
-                        <CardHeader className="pb-3">
-                            <div className="flex flex-wrap justify-between items-start gap-2">
-                                <CardTitle className="text-lg">Order #{order.id.substring(0,7)}</CardTitle>
-                                {getStatusBadge(order.status)}
-                            </div>
-                             <CardDescription className="text-xs">
-                                For: {order.customerName || `Customer ID: ${order.customerId.substring(0,6)}...`} | {order.updatedAt ? `Updated: ${formatDistanceToNow(order.updatedAt.toDate(), { addSuffix: true })}` : `Placed: ${formatDistanceToNow(order.createdAt.toDate(), { addSuffix: true })}`}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-2 space-y-1">
-                            <ul className="list-disc list-inside pl-4 text-xs space-y-1 text-muted-foreground">
-                                {order.items.map(item => (
-                                    <li key={item.itemId}>{item.quantity} x {item.name}</li>
-                                ))}
-                            </ul>
-                            <p className="font-semibold text-right text-md">Total: ${order.totalAmount.toFixed(2)}</p>
-                        </CardContent>
-                        </Card>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground py-10 text-center">No completed or cancelled orders to show yet.</p>
-                )}
-                </CardContent>
-            </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-const RealTimeAlert = ({ alerts }: { alerts: Array<{ id: string; type: string; title: string; message: string }> }) => {
+type AlertType = 'default' | 'destructive';
+
+const RealTimeAlert = ({ alerts }: { alerts: Array<{ id: string; type: AlertType; title: string; message: string }> }) => {
   if (!alerts?.length) return null;
   return (
     <div className="mb-4">
@@ -16,3 +18,4 @@ const RealTimeAlert = ({ alerts }: { alerts: Array<{ id: string; type: string; t
 };
 
 export default RealTimeAlert;
+

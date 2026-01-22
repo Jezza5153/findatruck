@@ -1,546 +1,241 @@
 'use client';
-import { useState, useRef } from 'react';
+
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged,
-  User
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '@/lib/firebase';
+import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Loader2,
-  Upload,
-  Image as ImageIcon,
-  Utensils,
-  CheckCircle
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import NextImage from 'next/image';
+import { Loader2, UserPlus, ArrowLeft, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const CUISINE_TYPES = [
-  'American',
-  'Mexican',
-  'BBQ',
-  'Asian',
-  'Italian',
-  'Burgers',
-  'Vegan',
-  'Desserts',
-  'Seafood',
-  'Other'
-];
-
-export default function OwnerSignupPage() {
-  const { toast } = useToast();
+export default function SignupPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'form' | 'loading' | 'done'>('form');
-  const [form, setForm] = useState({
+  const { toast } = useToast();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    truckName: '',
-    cuisine: '',
-    about: '',
-    terms: false
   });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string>('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [uploading, setUploading] = useState(false);
-  const logoInput = useRef<HTMLInputElement>(null);
 
-  function handleFieldChange(
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | { target: { name: string; value: any; type?: string; checked?: boolean } }
-  ) {
-    const { name, value, type, checked } = (e as any).target;
-    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? !!checked : value }));
-    setErrors((err) => ({ ...err, [name]: '' }));
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
-  function handleCuisineChange(cuisine: string) {
-    setForm((f) => ({ ...f, cuisine }));
-    setErrors((err) => ({ ...err, cuisine: '' }));
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setErrors((e) => ({ ...e, logo: 'Only image files allowed' }));
+    const { name, email, password, confirmPassword } = formData;
+
+    // Validation
+    if (!name || !email || !password) {
+      toast({
+        title: 'Missing fields',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
       return;
     }
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
-    setErrors((e) => ({ ...e, logo: '' }));
-  }
 
-  function validateForm() {
-    const err: Record<string, string> = {};
-    if (!form.name.trim()) err.name = 'Name required';
-    if (!form.email.includes('@')) err.email = 'Email required';
-    if (form.password.length < 6) err.password = 'Password 6+ chars';
-    if (!form.confirmPassword) err.confirmPassword = 'Confirm your password';
-    if (form.password !== form.confirmPassword) err.confirmPassword = 'Passwords do not match';
-    if (!form.phone.match(/^[0-9+() -]{8,}$/)) err.phone = 'Valid phone required';
-    if (!form.truckName.trim()) err.truckName = 'Truck name required';
-    if (!form.cuisine) err.cuisine = 'Cuisine required';
-    if (!form.about.trim() || form.about.length < 20) err.about = 'Tell us about your truck (20+ chars)';
-    if (!form.terms) err.terms = 'You must agree to the Terms & Privacy Policy';
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  }
+    if (password.length < 6) {
+      toast({
+        title: 'Password too short',
+        description: 'Password must be at least 6 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  // --- MAIN SUBMIT HANDLER ---
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setUploading(true);
-    setStep('loading');
-    let logoUrl = '';
-    let newUser: User | null = null;
+    if (password !== confirmPassword) {
+      toast({
+        title: 'Passwords do not match',
+        description: 'Please make sure your passwords match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      // 1. Create Auth User
-      const userCred = await createUserWithEmailAndPassword(
-        auth,
-        form.email,
-        form.password
-      );
-      newUser = userCred.user;
-
-      // 1.a Wait until the Auth state is fully updated on the client
-      await new Promise<void>((resolve) => {
-        const unsub = onAuthStateChanged(auth, (u) => {
-          if (u && u.uid === newUser?.uid) {
-            unsub();
-            resolve();
-          }
-        });
+      // Register the user
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email: email.toLowerCase(),
+          password,
+          role: 'customer',
+        }),
       });
 
-      // 1.b Force-refresh the ID token to ensure Firestore rules see it immediately
-      await newUser.getIdToken(true);
+      const data = await response.json();
 
-      // 2. Upload Logo to Storage (optional)
-      if (logoFile && newUser) {
-        const logoExt = logoFile.name.split('.').pop();
-        const logoPath = `trucks/${newUser.uid}/logo.${logoExt}`;
-        const logoRef = ref(storage, logoPath);
-        await uploadBytes(logoRef, logoFile);
-        logoUrl = await getDownloadURL(logoRef);
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
 
-      // 3. Update Auth profile displayName
-      if (newUser) {
-        await updateProfile(newUser, { displayName: form.truckName });
+      // Auto sign in after registration
+      const result = await signIn('credentials', {
+        email: email.toLowerCase(),
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error('Failed to sign in after registration');
       }
 
-      // 4. Write Firestore User Profile FIRST (role: 'owner')
-      if (newUser) {
-        const ownerData = {
-          uid: newUser.uid,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          role: 'owner',
-          truckId: newUser.uid,
-          truckName: form.truckName,
-          cuisine: form.cuisine,
-          about: form.about,
-          logoUrl: logoUrl || '',
-          createdAt: serverTimestamp(),
-          status: 'active'
-        };
-        const userDocRef = doc(db, 'users', newUser.uid);
-        await setDoc(userDocRef, ownerData);
-      }
-
-      // 5. Wait for user doc to propagate and have correct role
-      if (newUser) {
-        const userDocRef = doc(db, 'users', newUser.uid);
-        let confirmUserDoc = null;
-        let attempts = 0;
-        const maxAttempts = 30; // ~9 seconds max
-        let roleSeen = false;
-        while (attempts < maxAttempts) {
-          confirmUserDoc = await getDoc(userDocRef);
-          if (confirmUserDoc.exists()) {
-            const userData = confirmUserDoc.data();
-            if (userData && userData.role === 'owner') {
-              roleSeen = true;
-              break;
-            }
-          }
-          if (attempts % 5 === 0) {
-            console.log(
-              `[signup] Waiting for Firestore user doc propagation, attempt ${
-                attempts + 1
-              }/${maxAttempts}`
-            );
-          }
-          await new Promise((res) => setTimeout(res, 300));
-          attempts++;
-        }
-        if (!roleSeen) {
-          setErrors({
-            ...errors,
-            general:
-              'Account created, but still setting up. Please wait and log in again soon.'
-          });
-          toast({
-            title: 'Just a moment...',
-            description:
-              'Your account is being finalized. Try logging in again in a few seconds.',
-            variant: 'default'
-          });
-          setStep('form');
-          setUploading(false);
-          return;
-        }
-      }
-
-      // 6. NOW create truck doc (synchronously, not in background!)
-      if (newUser) {
-        // 6.a Wait for Auth state once more to be extra sure
-        await new Promise<void>((resolve) => {
-          const unsub = onAuthStateChanged(auth, (u) => {
-            if (u && u.uid === newUser?.uid) {
-              unsub();
-              resolve();
-            }
-          });
-        });
-
-        // 6.b Force-refresh token again before truck write
-        await newUser.getIdToken(true);
-
-        const truckDocRef = doc(db, 'trucks', newUser.uid);
-        await setDoc(truckDocRef, {
-          id: newUser.uid,
-          name: form.truckName,
-          cuisine: form.cuisine,
-          description: form.about,
-          imageUrl: logoUrl || '',
-          ownerUid: newUser.uid,
-          isOpen: false,
-          isFeatured: false,
-          menu: [],
-          testimonials: [],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      }
-
-      // 7. Success, let user through!
-      setStep('done');
       toast({
-        title: 'Account Created!',
-        description: 'Welcome to FoodieTruck! Your truck profile is ready.'
+        title: 'Account created!',
+        description: 'Welcome to Findatruck. Redirecting...',
       });
-      setTimeout(() => router.replace('/owner/dashboard'), 2000);
-    } catch (err: any) {
-      setUploading(false);
-      setStep('form');
-      let msg = 'Signup failed';
-      if (err?.code === 'permission-denied') {
-        msg =
-          'Permission denied. Please check your Firestore security rules for /users and /trucks collections. Make sure newly registered owners can write both their own user profile and create a matching truck with their uid.';
-      } else if (err?.message) {
-        msg = err.message;
-      }
-      toast({ title: 'Signup failed', description: msg, variant: 'destructive' });
-      setErrors((errs) => ({ ...errs, general: msg }));
+
+      router.push('/customer/dashboard');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      toast({
+        title: 'Registration failed',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-100">
-      <div className="max-w-xl w-full mx-auto bg-white rounded-2xl shadow-2xl border px-6 py-10 animate-in fade-in">
-        <div className="flex items-center gap-3 mb-6">
-          <Utensils className="h-8 w-8 text-green-600" />
-          <h2 className="text-3xl font-bold text-primary">Owner Sign Up</h2>
-        </div>
-        <p className="text-muted-foreground mb-6">
-          Join the platform. Grow your business.
-          <br />
-          Show us why your food truck is special.
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      </div>
 
-        {step === 'form' && (
-          <form className="space-y-5" autoComplete="off" onSubmit={handleSubmit}>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Label htmlFor="name">Full Name</Label>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl">
+          <CardHeader className="space-y-2 text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
+            <CardDescription className="text-slate-400">
+              Join Findatruck as a customer
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-slate-300">Full Name</Label>
                 <Input
                   id="name"
                   name="name"
-                  autoComplete="name"
-                  value={form.name}
-                  onChange={handleFieldChange}
+                  type="text"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-green-500"
                 />
-                {errors.name && (
-                  <p className="text-xs text-destructive mt-1">{errors.name}</p>
-                )}
               </div>
-              <div className="flex-1">
-                <Label htmlFor="phone">Phone</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
                 <Input
-                  id="phone"
-                  name="phone"
-                  autoComplete="tel"
-                  value={form.phone}
-                  onChange={handleFieldChange}
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-green-500"
                 />
-                {errors.phone && (
-                  <p className="text-xs text-destructive mt-1">{errors.phone}</p>
-                )}
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={handleFieldChange}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive mt-1">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Label htmlFor="password">Password</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-300">Password</Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={handleFieldChange}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-green-500"
                 />
-                {errors.password && (
-                  <p className="text-xs text-destructive mt-1">{errors.password}</p>
-                )}
               </div>
-              <div className="flex-1">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  autoComplete="new-password"
-                  value={form.confirmPassword}
-                  onChange={handleFieldChange}
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-green-500"
                 />
-                {errors.confirmPassword && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors.confirmPassword}
-                  </p>
-                )}
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="truckName">Food Truck Name</Label>
-              <Input
-                id="truckName"
-                name="truckName"
-                value={form.truckName}
-                onChange={handleFieldChange}
-              />
-              {errors.truckName && (
-                <p className="text-xs text-destructive mt-1">{errors.truckName}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="cuisine">Cuisine Type</Label>
-              <Select value={form.cuisine} onValueChange={handleCuisineChange}>
-                <SelectTrigger id="cuisine" name="cuisine">
-                  <SelectValue placeholder="Select cuisine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUISINE_TYPES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.cuisine && (
-                <p className="text-xs text-destructive mt-1">{errors.cuisine}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="about">About Your Truck</Label>
-              <Textarea
-                id="about"
-                name="about"
-                value={form.about}
-                rows={3}
-                onChange={handleFieldChange}
-                placeholder="Tell us what makes your food truck amazing..."
-              />
-              {errors.about && (
-                <p className="text-xs text-destructive mt-1">{errors.about}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-6">
-              <div className="flex-1">
-                <Label htmlFor="logo">
-                  Truck Logo <span className="text-xs text-muted-foreground">(optional)</span>
-                </Label>
-                <div className="flex items-center gap-3 mt-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => logoInput.current?.click()}
-                    aria-label="Upload truck logo"
-                  >
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    {logoFile ? 'Change Logo' : 'Upload Logo'}
-                  </Button>
-                  <input
-                    id="logo"
-                    ref={logoInput}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                    aria-label="Truck logo file input"
-                  />
-                  {logoPreview && (
-                    <div className="relative w-12 h-12">
-                      <NextImage
-                        src={logoPreview}
-                        alt="Logo"
-                        fill
-                        className="rounded shadow border"
-                      />
-                    </div>
-                  )}
-                </div>
-                {errors.logo && (
-                  <p className="text-xs text-destructive mt-1">{errors.logo}</p>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-6 text-lg shadow-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Create Account
+                  </>
                 )}
-              </div>
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-slate-400 text-sm">
+                Already have an account?{' '}
+                <Link href="/login" className="text-green-400 hover:text-green-300 font-medium">
+                  Sign in
+                </Link>
+              </p>
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="flex items-start gap-2 mt-2">
-              <Checkbox
-                id="terms"
-                name="terms"
-                checked={!!form.terms}
-                onCheckedChange={(checked: boolean | 'indeterminate') => {
-                  handleFieldChange({
-                    target: {
-                      name: 'terms',
-                      value: checked === true,
-                      checked: checked === true,
-                      type: 'checkbox'
-                    }
-                  });
-                }}
-              />
-              <Label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
-                I agree to the&nbsp;
-                <a
-                  href="/terms"
-                  target="_blank"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Terms of Service
-                </a>
-                &nbsp;and&nbsp;
-                <a
-                  href="/privacy"
-                  target="_blank"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </Label>
-            </div>
-            {errors.terms && (
-              <p className="text-xs text-destructive mt-1">{errors.terms}</p>
-            )}
-            {errors.general && (
-              <p className="text-xs text-destructive mt-3">{errors.general}</p>
-            )}
-
-            <Button
-              className="w-full mt-2 py-5 text-lg"
-              size="lg"
-              type="submit"
-              disabled={uploading}
+            <Link
+              href="/"
+              className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
             >
-              {uploading ? (
-                <Loader2 className="animate-spin h-5 w-5 mr-2" />
-              ) : (
-                <Upload className="mr-2 h-5 w-5" />
-              )}
-              Create Owner Account
-            </Button>
-          </form>
-        )}
-
-        {step === 'loading' && (
-          <div className="flex flex-col items-center justify-center min-h-[340px] animate-in fade-in">
-            <Loader2 className="h-16 w-16 text-primary animate-spin mb-6" />
-            <p className="text-xl mb-2">Setting up your account...</p>
-            <p className="text-muted-foreground">
-              This may take a few seconds if your uploads are large.
-            </p>
-          </div>
-        )}
-
-        {step === 'done' && (
-          <div className="flex flex-col items-center justify-center min-h-[340px] animate-in fade-in">
-            <CheckCircle className="h-20 w-20 text-green-500 mb-6" />
-            <h3 className="text-2xl font-bold mb-2">Success!</h3>
-            <p className="text-lg text-muted-foreground mb-4">
-              Your owner account is ready.
-              <br />
-              Redirecting to dashboard...
-            </p>
-          </div>
-        )}
-
-        <div className="mt-8 text-sm text-center text-muted-foreground">
-          Already have an owner account?{' '}
-          <a href="/login" className="text-blue-700 underline">
-            Log in
-          </a>
-        </div>
-      </div>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to home
+            </Link>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

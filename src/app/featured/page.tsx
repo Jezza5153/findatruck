@@ -1,155 +1,152 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Star, Loader2 } from 'lucide-react';
-import { FoodTruckCard } from '@/components/FoodTruckCard';
-import type { FoodTruck } from '@/lib/types';
-import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
-import { makeSerializable } from '@/lib/makeSerializable';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Star, MapPin, Truck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
+interface TruckData {
+  id: string;
+  name: string;
+  cuisine: string;
+  description?: string;
+  imageUrl?: string;
+  rating?: number;
+  isOpen?: boolean;
+  address?: string;
+  isFeatured?: boolean;
+}
 
-export default function FeaturedTrucksPage() {
-  const [featuredTrucks, setFeaturedTrucks] = useState<FoodTruck[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+export default function FeaturedPage() {
+  const [trucks, setTrucks] = useState<TruckData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchFeaturedTrucks() {
-      setIsLoading(true);
-      setError(null);
+    async function fetchTrucks() {
       try {
-        const trucksCollectionRef = collection(db, "trucks");
-        const q = query(trucksCollectionRef, where("isFeatured", "==", true));
-        const querySnapshot = await getDocs(q);
-
-        const fetchedTrucks: FoodTruck[] = [];
-        querySnapshot.forEach((doc) => {
-          const rawData = doc.data() || {};
-          const serializableData = makeSerializable(rawData); // Make data serializable
-
-          fetchedTrucks.push({
-            id: doc.id,
-            name: serializableData.name || 'Unnamed Truck',
-            cuisine: serializableData.cuisine || 'Unknown Cuisine',
-            description: serializableData.description || 'No description provided.',
-            imageUrl: serializableData.imageUrl || `https://placehold.co/400x200.png`,
-            ownerUid: serializableData.ownerUid || '',
-            address: serializableData.address || '',
-            lat: typeof serializableData.lat === "number" ? serializableData.lat : undefined,
-            lng: typeof serializableData.lng === "number" ? serializableData.lng : undefined,
-            operatingHoursSummary: serializableData.operatingHoursSummary || '',
-            isOpen: typeof serializableData.isOpen === "boolean" ? serializableData.isOpen : undefined,
-            isVisible: typeof serializableData.isVisible === "boolean" ? serializableData.isVisible : undefined,
-            rating: typeof serializableData.rating === "number" ? serializableData.rating : undefined,
-            numberOfRatings: typeof serializableData.numberOfRatings === "number" ? serializableData.numberOfRatings : undefined,
-            features: Array.isArray(serializableData.features) ? serializableData.features : [],
-            currentLocation: serializableData.currentLocation,
-            todaysMenu: Array.isArray(serializableData.todaysMenu) ? serializableData.todaysMenu : [],
-            testimonials: Array.isArray(serializableData.testimonials) ? serializableData.testimonials : [],
-            isFeatured: true,
-            // Ensure all other FoodTruck fields are mapped from serializableData
-            imagePath: serializableData.imagePath || `${(serializableData.name || 'food truck').toLowerCase().replace(/\s+/g, '-')}`, // default hint from name
-            imageGallery: Array.isArray(serializableData.imageGallery) ? serializableData.imageGallery : [],
-            todaysHours: serializableData.todaysHours,
-            regularHours: serializableData.regularHours,
-            specialHours: Array.isArray(serializableData.specialHours) ? serializableData.specialHours : [],
-            isTruckOpenOverride: serializableData.isTruckOpenOverride === undefined ? null : serializableData.isTruckOpenOverride,
-            tags: Array.isArray(serializableData.tags) ? serializableData.tags : [],
-            socialMediaLinks: serializableData.socialMediaLinks || {},
-            websiteUrl: serializableData.websiteUrl || '',
-            contactEmail: serializableData.contactEmail || '',
-            phone: serializableData.phone || '',
-            subscriptionTier: serializableData.subscriptionTier || 'free',
-            isFavorite: typeof serializableData.isFavorite === "boolean" ? serializableData.isFavorite : false,
-            createdAt: serializableData.createdAt, // Will be string | null
-            updatedAt: serializableData.updatedAt, // Will be string | null
-            distance: serializableData.distance || '',
-          });
-        });
-        setFeaturedTrucks(fetchedTrucks);
-      } catch (err: any) {
-        setError(err?.message || 'Could not load featured food trucks.');
-        toast({
-          title: "Error Loading Trucks",
-          description: err?.message || "Could not load featured food trucks.",
-          variant: "destructive"
-        });
+        const res = await fetch('/api/trucks?featured=true');
+        const data = await res.json();
+        if (data.success) {
+          setTrucks(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching trucks:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     }
-    fetchFeaturedTrucks();
-  }, [toast]);
+    fetchTrucks();
+  }, []);
 
   return (
-    <main className="container mx-auto px-4 py-8" role="main" aria-labelledby="featured-trucks-heading">
-      <div className="text-center mb-12">
-        <Star className="h-16 w-16 text-yellow-400 fill-yellow-400 mx-auto mb-4" aria-hidden="true" />
-        <h1 id="featured-trucks-heading" className="text-4xl md:text-5xl font-bold text-primary mb-2">
-          Featured Food Trucks
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Discover top-rated and premium partner trucks—curated for your next food adventure.
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 mb-4 shadow-lg">
+            <Star className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold mb-3">Featured Trucks</h1>
+          <p className="text-slate-400 max-w-lg mx-auto">
+            Discover our hand-picked selection of the best food trucks in your area
+          </p>
+        </motion.div>
+
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-72 bg-slate-700 rounded-xl" />
+            ))}
+          </div>
+        ) : trucks.length > 0 ? (
+          <motion.div
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.1 } }
+            }}
+          >
+            {trucks.map((truck, i) => (
+              <motion.div
+                key={truck.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+              >
+                <Link href={`/trucks/${truck.id}`}>
+                  <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 transition-all hover:scale-[1.02] overflow-hidden cursor-pointer h-full group">
+                    <div className="h-40 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center relative overflow-hidden">
+                      {truck.imageUrl ? (
+                        <img
+                          src={truck.imageUrl}
+                          alt={truck.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <Truck className="w-16 h-16 text-slate-500" />
+                      )}
+                      {truck.isFeatured && (
+                        <div className="absolute top-3 right-3 px-2 py-1 bg-yellow-500/90 rounded-full text-xs font-bold text-white flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          Featured
+                        </div>
+                      )}
+                      {truck.isOpen !== undefined && (
+                        <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold ${truck.isOpen ? 'bg-green-500/90 text-white' : 'bg-slate-600/90 text-slate-300'}`}>
+                          {truck.isOpen ? 'Open' : 'Closed'}
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-lg text-white group-hover:text-yellow-400 transition-colors">{truck.name}</h3>
+                          <p className="text-sm text-slate-400">{truck.cuisine}</p>
+                        </div>
+                        {truck.rating && (
+                          <div className="flex items-center gap-1 text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded-lg">
+                            <Star className="w-4 h-4 fill-current" />
+                            <span className="text-sm font-semibold">{truck.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      {truck.description && (
+                        <p className="text-sm text-slate-500 line-clamp-2 mb-3">{truck.description}</p>
+                      )}
+                      {truck.address && (
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {truck.address}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <Card className="bg-slate-800/50 border-slate-700/50">
+            <CardContent className="p-16 text-center">
+              <Truck className="w-20 h-20 mx-auto mb-4 text-slate-500" />
+              <h3 className="text-2xl font-semibold mb-2">No featured trucks yet</h3>
+              <p className="text-slate-400 mb-6">
+                Check back soon for our curated selection of amazing food trucks!
+              </p>
+              <Link href="/map" className="text-yellow-400 hover:text-yellow-300 font-medium">
+                Explore all trucks on the map →
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {isLoading && (
-        <div className="flex justify-center items-center py-10" aria-busy="true">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" aria-label="Loading" />
-          <span className="ml-4 text-lg">Loading featured trucks...</span>
-        </div>
-      )}
-
-      {error && !isLoading && (
-        <div className="flex justify-center">
-          <Alert variant="destructive" className="max-w-lg w-full">
-            <AlertTitle>Error Loading Featured Trucks</AlertTitle>
-            <AlertDescription>{error}. Please try again later.</AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {!isLoading && !error && featuredTrucks.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" aria-label="Featured Trucks">
-          {featuredTrucks.map(truck => (
-            <FoodTruckCard key={truck.id} truck={truck} />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && !error && featuredTrucks.length === 0 && (
-        <div className="text-center py-10" aria-label="No featured trucks"> {/* Keep the outer div for layout */}
-          <> {/* Wrap inner elements in a fragment */}
-            <Star className="h-16 w-16 text-muted-foreground mx-auto mb-5" />
-            <p className="text-xl font-semibold text-muted-foreground mb-3">No featured trucks yet.</p>
-            <p className="text-muted-foreground mb-6">
-              Check back soon or browse all trucks on the map!
-            </p>
-            <Link href="/map" className={cn(buttonVariants())}>
-               <span>Explore All Trucks</span>
-            </Link>
-          </>
-        </div>
-      )}
-
-      <div className="mt-16 text-center p-8 bg-muted rounded-2xl shadow-md mb-8" aria-label="Owner Call To Action">
-        <h2 className="text-2xl font-semibold text-primary mb-3">Are you a Food Truck Owner?</h2>
-        <p className="text-muted-foreground mb-5">
-          Want to get featured and reach more hungry customers?
-          Learn about premium listing options and owner benefits!
-        </p>
-         <Link href="/owner/billing" className={cn(buttonVariants({ size: "lg" }))}>
-            <span>Owner Portal &amp; Subscriptions</span>
-        </Link>
-      </div>
-    </main>
+    </div>
   );
 }

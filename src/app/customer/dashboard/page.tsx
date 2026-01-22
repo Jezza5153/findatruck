@@ -1,343 +1,193 @@
-
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { User, ShoppingBag, Heart, Bell, Edit3, Save, LogIn, Loader2, Mail, CheckCircle, CreditCard, MapPin, LocateFixed, Camera, X, Truck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, type User as FirebaseUser, updateProfile } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, collection, getDocs } from 'firebase/firestore';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import type { UserProfile, NotificationPreferences, FoodTruck } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MapPin, Star, Heart, Bell, ChevronRight, Truck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-// ---- FIXED TYPES (for safety in this file) ----
-const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
-  truckNearbyRadius: 2,
-  orderUpdates: true,
-  promotionalMessages: false,
-};
-
-const DEFAULT_USER_PROFILE: UserProfile = {
-  name: 'Guest User',
-  email: '',
-  avatarUrl: '',
-  savedPaymentMethods: [],
-  favoriteTrucks: [],
-  notificationPreferences: DEFAULT_NOTIFICATION_PREFS,
-};
-
-const DEFAULT_CENTER = { lat: -33.8688, lng: 151.2093 };
-
-function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const toRad = (d: number) => d * Math.PI / 180;
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+interface TruckData {
+  id: string;
+  name: string;
+  cuisine: string;
+  description?: string;
+  imageUrl?: string;
+  rating?: number;
+  isOpen?: boolean;
+  address?: string;
 }
 
 export default function CustomerDashboardPage() {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_USER_PROFILE);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [trucks, setTrucks] = useState<TruckData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Map state
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
-  const [addressInput, setAddressInput] = useState('');
-  const [trucks, setTrucks] = useState<any[]>([]);
-  const [trucksNearby, setTrucksNearby] = useState<any[]>([]);
-  const [allTruckMeta, setAllTruckMeta] = useState<FoodTruck[]>([]);
-  const [showSaved, setShowSaved] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<google.maps.Map | null>(null);
-  const markerRefs = useRef<google.maps.Marker[]>([]);
-  const userMarkerRef = useRef<google.maps.Marker | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const { toast } = useToast();
-
-  // --- Load user & Firestore profile ---
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setIsLoadingAuth(false);
-      if (user) {
-        setIsLoadingProfile(true);
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          let mergedProfile: UserProfile = {
-            ...DEFAULT_USER_PROFILE,
-            name: user.displayName || 'User',
-            email: user.email || '',
-            avatarUrl: user.photoURL || '',
-          };
-          if (userDocSnap.exists()) {
-            const data = userDocSnap.data();
-            mergedProfile = {
-              ...mergedProfile,
-              ...data,
-              notificationPreferences: {
-                ...DEFAULT_NOTIFICATION_PREFS,
-                ...(data.notificationPreferences || {}),
-              },
-            };
-          } else {
-            await setDoc(userDocRef, mergedProfile, { merge: true });
-            toast({ title: "Profile Created", description: "Welcome! Your profile is ready." });
-          }
-          setProfile(mergedProfile);
-          setNameInput(mergedProfile.name);
-        } catch (err: any) {
-          console.error("Profile load error:", err);
-          toast({
-            title: "Profile Load Error",
-            description: err.message || "Could not fetch your profile data. Please reload.",
-            variant: "destructive",
-          });
-        }
-        setIsLoadingProfile(false);
-      } else {
-        setProfile(DEFAULT_USER_PROFILE);
-        setNameInput('');
-      }
-    });
-    return () => unsubscribe();
-  }, [toast]); // Added toast to dependency array
-
-  // --- Inline edit for name ---
-  const handleNameSave = async () => {
-    if (!currentUser || !nameInput.trim()) return;
-    try {
-      await updateDoc(doc(db, 'users', currentUser.uid), { name: nameInput });
-      setProfile((p) => ({ ...p, name: nameInput }));
-      setIsEditingName(false);
-      toast({ title: "Profile Updated", description: "Name updated successfully." });
-    } catch (err: any) {
-      toast({ title: "Error", description: "Could not update name.", variant: "destructive" });
+    if (status === 'unauthenticated') {
+      router.push('/login');
     }
-  };
+  }, [status, router]);
 
-  // --- Avatar upload ---
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !currentUser) return;
-    // Placeholder: just show preview, don't upload for now
-    const url = URL.createObjectURL(file);
-    setProfile((p) => ({ ...p, avatarUrl: url }));
-    toast({ title: "Profile Pic Changed", description: "Your new photo looks great!" });
-  };
-
-  // --- Notification preferences handler ---
-  const handleNotificationChange = (key: keyof NotificationPreferences, value: boolean | number) => {
-    const newPrefs = { ...profile.notificationPreferences, [key]: value };
-    setProfile((p) => ({ ...p, notificationPreferences: newPrefs }));
-  };
-
-  const saveNotificationPreferences = async () => {
-    if (!currentUser) return;
-    setShowSaved(true);
-    try {
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        notificationPreferences: profile.notificationPreferences,
-      });
-      setTimeout(() => setShowSaved(false), 1000);
-      toast({ title: "Preferences Updated", description: "Notification settings saved." });
-    } catch (err: any) {
-      toast({ title: "Error", description: "Could not save preferences.", variant: "destructive" });
-      setShowSaved(false);
-    }
-  };
-
-  // --- Load Google Maps Script ---
-  useEffect(() => {
-    if (typeof window === "undefined" || window.google?.maps) {
-      setMapLoaded(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    script.onload = () => setMapLoaded(true);
-    script.onerror = () => setMapError('Failed to load map. Please refresh.');
-    document.head.appendChild(script);
-  }, []);
-
-  // --- Get location (browser or default) ---
-  useEffect(() => {
-    if (!mapLoaded) return;
-    if (location) return;
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setLocation(DEFAULT_CENTER),
-        { timeout: 4000 }
-      );
-    } else {
-      setLocation(DEFAULT_CENTER);
-    }
-  }, [mapLoaded, location]);
-
-  // --- Fetch trucks from Firestore ---
   useEffect(() => {
     async function fetchTrucks() {
       try {
-        const q = collection(db, 'trucks');
-        const qs = await getDocs(q);
-        const allTrucks = qs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setTrucks(allTrucks.filter((t: any) => t.lat && t.lng));
-        setAllTruckMeta(allTrucks as FoodTruck[]);
-      } catch (err: any) {
-        setMapError("Couldn't load trucks.");
+        const res = await fetch('/api/trucks?featured=true');
+        const data = await res.json();
+        if (data.success) {
+          setTrucks(data.data.slice(0, 6));
+        }
+      } catch (error) {
+        console.error('Error fetching trucks:', error);
+      } finally {
+        setLoading(false);
       }
     }
-    if (mapLoaded) fetchTrucks();
-  }, [mapLoaded]);
 
-  // --- Filter trucks within radius and update map ---
-  useEffect(() => {
-    if (!location || !mapLoaded || !window.google?.maps || !mapRef.current) return;
-    const nearby = trucks.filter((t: any) =>
-      haversine(location.lat, location.lng, t.lat, t.lng) <= (profile.notificationPreferences.truckNearbyRadius || 5)
-    );
-    setTrucksNearby(nearby);
-
-    if (!mapInstance.current) {
-      mapInstance.current = new window.google.maps.Map(mapRef.current, {
-        center: location,
-        zoom: 13,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-      });
-      geocoderRef.current = new window.google.maps.Geocoder();
-    } else {
-      mapInstance.current.setCenter(location);
+    if (status === 'authenticated') {
+      fetchTrucks();
     }
+  }, [status]);
 
-    markerRefs.current.forEach(m => m.setMap(null));
-    markerRefs.current = [];
-
-    for (const truck of nearby) {
-      const marker = new window.google.maps.Marker({
-        position: { lat: truck.lat, lng: truck.lng },
-        map: mapInstance.current,
-        icon: {
-          url: truck.logoUrl || '/foodtruck-here.png',
-          scaledSize: new window.google.maps.Size(40, 40),
-        },
-        title: truck.truckName || truck.name,
-      });
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `<div style="min-width:210px">
-          <strong>${truck.truckName || truck.name}</strong><br/>
-          <span>${truck.cuisine || ''}</span><br/>
-          ${truck.isOpen ? `<span style="color:green">Open Now</span>` : `<span style="color:gray">Closed</span>`}
-          <br/>
-          <a href="/trucks/${truck.id}" style="color:#228be6; font-weight:bold;">See Menu</a>
-        </div>`
-      });
-      marker.addListener('click', () => infoWindow.open(mapInstance.current!, marker));
-      markerRefs.current.push(marker);
-    }
-
-    if (userMarkerRef.current) userMarkerRef.current.setMap(null);
-    userMarkerRef.current = new window.google.maps.Marker({
-      position: location,
-      map: mapInstance.current,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        fillColor: "#4285f4",
-        fillOpacity: 1,
-        strokeColor: "#fff",
-        strokeWeight: 2,
-        scale: 10,
-      },
-      title: "Your location"
-    });
-  }, [location, mapLoaded, trucks, profile.notificationPreferences.truckNearbyRadius]);
-
-  // --- Address search handler ---
-  const handleAddressSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!geocoderRef.current || !addressInput) return;
-    geocoderRef.current.geocode({ address: addressInput }, (results, status) => {
-      if (status === "OK" && results && results[0]) {
-        setLocation({
-          lat: results[0].geometry.location.lat(),
-          lng: results[0].geometry.location.lng()
-        });
-      } else {
-        toast({ title: "Not found", description: "Couldn't locate that address.", variant: "destructive" });
-      }
-    });
-  };
-
-  // --- Use my location ---
-  const handleUseLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => toast({ title: "Error", description: "Could not get your location.", variant: "destructive" }),
-        { timeout: 5000 }
-      );
-    }
-  };
-
-  const getFavoriteTrucks = () => {
-    if (!profile.favoriteTrucks?.length) return [];
-    return profile.favoriteTrucks
-      .map(id => allTruckMeta.find(tr => tr.id === id))
-      .filter(Boolean) as FoodTruck[];
-  };
-
-  if (isLoadingAuth || (currentUser && isLoadingProfile)) {
+  if (status === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] py-20">
-        <Loader2 className="h-14 w-14 animate-spin text-primary mb-4" />
-        <p className="text-lg">Loading your dashboard...</p>
-      </div>
-    );
-  }
-  if (!currentUser) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <Alert variant="destructive" className="max-w-md mx-auto">
-          <Bell className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
-          <AlertDescription>You need to be logged in to view your dashboard.</AlertDescription>
-        </Alert>
-        <Button asChild className="mt-6">
-          <Link href="/login">
-            <span><LogIn className="mr-2 h-4 w-4" /> Login / Sign Up</span>
-          </Link>
-        </Button>
+      <div className="min-h-screen bg-slate-900 p-6">
+        <div className="container mx-auto max-w-6xl space-y-6">
+          <Skeleton className="h-12 w-64 bg-slate-700" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 bg-slate-700 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <TooltipProvider>
-      <div className="max-w-7xl mx-auto px-2 sm:px-8 py-10">
-        {/* ... rest of your dashboard layout ... */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome back, {session?.user?.name?.split(' ')[0] || 'there'}! 👋
+          </h1>
+          <p className="text-slate-400">
+            Ready to discover your next favorite food truck?
+          </p>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {[
+            { icon: MapPin, label: 'Find Trucks', href: '/map', color: 'from-blue-500 to-cyan-500' },
+            { icon: Star, label: 'Featured', href: '/featured', color: 'from-yellow-500 to-orange-500' },
+            { icon: Heart, label: 'Favorites', href: '/customer/dashboard', color: 'from-pink-500 to-rose-500' },
+            { icon: Bell, label: 'Notifications', href: '/customer/notifications', color: 'from-purple-500 to-violet-500' },
+          ].map((action, i) => (
+            <motion.div
+              key={action.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <Link href={action.href}>
+                <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 transition-all hover:scale-[1.02] cursor-pointer group">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white">{action.label}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Featured Trucks */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Star className="w-6 h-6 text-yellow-400" />
+              Featured Trucks
+            </h2>
+            <Link href="/featured">
+              <Button variant="ghost" className="text-slate-400 hover:text-white">
+                View all <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-64 bg-slate-700 rounded-xl" />
+              ))}
+            </div>
+          ) : trucks.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {trucks.map((truck) => (
+                <Link key={truck.id} href={`/trucks/${truck.id}`}>
+                  <Card className="bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 transition-all hover:scale-[1.02] overflow-hidden cursor-pointer h-full">
+                    <div className="h-32 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                      <Truck className="w-12 h-12 text-slate-500" />
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-white">{truck.name}</h3>
+                          <p className="text-sm text-slate-400">{truck.cuisine}</p>
+                        </div>
+                        {truck.rating && (
+                          <div className="flex items-center gap-1 text-yellow-400">
+                            <Star className="w-4 h-4 fill-current" />
+                            <span className="text-sm font-medium">{truck.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      {truck.address && (
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {truck.address}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-slate-800/50 border-slate-700/50">
+              <CardContent className="p-12 text-center">
+                <Truck className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <h3 className="text-xl font-semibold mb-2">No trucks yet</h3>
+                <p className="text-slate-400 mb-4">Check back soon for featured food trucks!</p>
+                <Link href="/map">
+                  <Button className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                    Explore the Map
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }

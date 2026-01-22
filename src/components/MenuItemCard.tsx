@@ -181,7 +181,7 @@ export function MenuItemCard({
                 onClick={() => handleQuantityChange(-1)}
                 className="h-9 w-9"
                 aria-label="Decrease quantity"
-                disabled={quantity <= 1 || item.outOfStock}
+                disabled={quantity <= 1 || !!item.outOfStock}
                 tabIndex={item.outOfStock ? -1 : 0}
               >
                 <MinusCircle className="h-5 w-5" />
@@ -196,7 +196,7 @@ export function MenuItemCard({
                 aria-label="Item quantity"
                 min={1}
                 inputMode="numeric"
-                disabled={item.outOfStock}
+                disabled={!!item.outOfStock}
               />
               <Button
                 variant="outline"
@@ -204,7 +204,7 @@ export function MenuItemCard({
                 onClick={() => handleQuantityChange(1)}
                 className="h-9 w-9"
                 aria-label="Increase quantity"
-                disabled={item.outOfStock}
+                disabled={!!item.outOfStock}
                 tabIndex={item.outOfStock ? -1 : 0}
               >
                 <PlusCircle className="h-5 w-5" />
@@ -220,8 +220,8 @@ export function MenuItemCard({
                 "w-full sm:w-auto flex-grow sm:flex-grow-0 h-9 text-base",
                 item.outOfStock && "pointer-events-none opacity-60"
               )}
-              disabled={item.outOfStock}
-              aria-disabled={item.outOfStock}
+              disabled={!!item.outOfStock}
+              aria-disabled={!!item.outOfStock}
               tabIndex={item.outOfStock ? -1 : 0}
               aria-label={`Add ${item.name} to cart`}
             >

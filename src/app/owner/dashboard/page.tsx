@@ -1,451 +1,413 @@
 'use client';
 
-import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import {
-  Loader2, AlertTriangle, Edit, MenuSquare, CalendarClock, Eye, LineChart, CreditCard, LogIn, MapPin, Globe2, CheckCircle2, XCircle, Info, Star, Trophy, Moon, Sun, UserPlus, Image as ImageIcon
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
-import type { UserDocument, FoodTruck, MenuItem } from '@/lib/types';
-import OwnerSidebar from '@/components/OwnerSidebar';
-import AnalyticsWidgets from '@/components/AnalyticsWidgets';
-import CustomerFeedback from '@/components/CustomerFeedback';
-import WeatherWidget from '@/components/WeatherWidget';
-import FoodTruckMap from '@/components/FoodTruckMap';
-import RealTimeAlert from '@/components/RealTimeAlert';
+import {
+  Truck, Utensils, ShoppingBag, DollarSign,
+  MapPin, Settings, ChevronRight,
+  TrendingUp, Clock, Users, Navigation, Loader2, Calendar, CheckCircle
+} from 'lucide-react';
 import { motion } from 'framer-motion';
-import NextImage from 'next/image';
 
-function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const theme = localStorage.theme;
-    if (
-      window.matchMedia('(prefers-color-scheme: dark)').matches ||
-      theme === 'dark'
-    ) {
-      document.documentElement.classList.add('dark');
-      setDark(true);
-    }
-  }, []);
-  function toggle() {
-    setDark(d => {
-      if (!d) {
-        document.documentElement.classList.add('dark');
-        localStorage.theme = 'dark';
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.theme = 'light';
-      }
-      return !d;
-    });
-  }
-  return (
-    <motion.button
-      aria-label="Toggle dark mode"
-      className="rounded-full border p-2 shadow hover:scale-110 transition bg-white dark:bg-gray-900"
-      onClick={toggle}
-      initial={{ scale: 0.8 }}
-      animate={{ scale: 1 }}
-    >
-      {dark ? <Sun className="text-yellow-400 w-5 h-5" /> : <Moon className="text-gray-700 w-5 h-5" />}
-    </motion.button>
-  );
+interface TruckData {
+  id: string;
+  name: string;
+  cuisine: string;
+  isOpen?: boolean;
+  isVisible?: boolean;
+  address?: string;
+  rating?: number;
+  currentLocation?: {
+    lat?: number;
+    lng?: number;
+    address?: string;
+    updatedAt?: string;
+    note?: string;
+  };
 }
 
-function StatusPill({ open, visible }: { open?: boolean; visible?: boolean }) {
-  if (!open) return (
-    <motion.span initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-red-100 text-red-700"
-    ><XCircle className="w-4 h-4 mr-1" /> Closed</motion.span>
-  );
-  if (!visible) return (
-    <motion.span initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800"
-    ><Info className="w-4 h-4 mr-1" /> Hidden</motion.span>
-  );
-  return (
-    <motion.span initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      className="inline-flex items-center px-2 py-0.5 text-xs rounded bg-green-100 text-green-800"
-    ><CheckCircle2 className="w-4 h-4 mr-1" /> Open & Visible</motion.span>
-  );
-}
-
-function formatAMPM(time: string = '') {
-  if (!time.includes(':')) return time;
-  let [hour, min] = time.split(':');
-  let h = parseInt(hour, 10);
-  let ampm = h >= 12 ? 'pm' : 'am';
-  let h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12.toString().padStart(2, '0')}:${min} ${ampm}`;
-}
-
-function setupProgress(truck?: Partial<FoodTruck>) {
-  if (!truck) return 0;
-  let n = 0;
-  if (truck.name) n++;
-  if (truck.cuisine) n++;
-  if (truck.currentLocation && truck.currentLocation.address) n++;
-  if (truck.todaysMenu && truck.todaysMenu.length > 0) n++;
-  if (truck.todaysHours && truck.todaysHours.open && truck.todaysHours.close) n++;
-  return Math.round((n / 5) * 100);
-}
-
-// ---- Customer Card Preview -----------
-function CustomerTruckCard({
-  truck,
-  menuItems
-}: {
-  truck: Partial<FoodTruck>,
-  menuItems: MenuItem[]
-}) {
-  const menuList = (Array.isArray(truck.todaysMenu) && menuItems.length)
-    ? truck.todaysMenu
-        .map((id: string) => menuItems.find(m => m.id === id))
-        .filter((m): m is MenuItem => !!m)
-    : [];
-  return (
-    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full">
-      <Card className="w-full border-primary border-[1.5px] bg-gradient-to-br from-white/70 to-green-50/70 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-xl mb-2 transition-transform hover:-translate-y-1 hover:shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <MapPin className="text-primary w-5 h-5" />
-            <span>{truck.name || "Your Truck Name"}</span>
-            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-          </CardTitle>
-          <CardDescription>
-            <span className="block">{truck.cuisine || "Cuisine Type"}</span>
-            <span className="block">{truck.description || "About your truck..."}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <div className="flex gap-4 items-center">
-            <Label>Status:</Label>
-            <StatusPill open={truck.isOpen} visible={truck.isVisible} />
-          </div>
-          <div className="flex gap-4 items-center">
-            <Label>Location:</Label>
-            <span>
-              {truck.currentLocation?.address
-                ? truck.currentLocation.address
-                : <span className="italic text-muted-foreground">No address set</span>
-              }
-              {!truck.currentLocation?.address && truck.currentLocation?.lat && truck.currentLocation?.lng &&
-                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">GPS set – not shown to customers</span>
-              }
-            </span>
-          </div>
-          <div className="flex gap-4 items-center">
-            <Label>Today's Hours:</Label>
-            <span>
-              {(truck.todaysHours?.open && truck.todaysHours?.close)
-                ? `${formatAMPM(truck.todaysHours.open)} – ${formatAMPM(truck.todaysHours.close)}`
-                : <span className="italic text-muted-foreground">Not set</span>
-              }
-            </span>
-          </div>
-          <div>
-            <Label>Today's Menu:</Label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {menuList.length
-                ? menuList.map((item, i) => {
-                    // Defensive: imageUrl is non-empty and valid
-                    const isImg = typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http');
-                    return (
-                      <span key={i} className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                        {isImg
-                          ? (
-                              <NextImage
-                                src={item.imageUrl}
-                                alt={item.name}
-                                width={20}
-                                height={20}
-                                className="rounded-full mr-1"
-                                unoptimized
-                                onError={(e) => {
-                                  if (process.env.NODE_ENV === 'development') {
-                                    // eslint-disable-next-line no-console
-                                    console.warn('Failed to load image:', item.imageUrl);
-                                  }
-                                }}
-                              />
-                            )
-                          : <ImageIcon className="w-4 h-4 mr-1 text-gray-300" />
-                        }
-                        {item.name}
-                      </span>
-                    );
-                  })
-                : <span className="italic text-muted-foreground">No menu set for today</span>
-              }
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+interface DashboardStats {
+  todayOrders: number;
+  todayRevenue: number;
+  activeCustomers: number;
+  avgPrepTime: string;
 }
 
 export default function OwnerDashboardPage() {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [truckData, setTruckData] = useState<Partial<FoodTruck> | null>(null);
-  const [truckId, setTruckId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const { toast } = useToast();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
-  // ----- Fetch Auth + Truck Data -----
+  const [truck, setTruck] = useState<TruckData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [stats] = useState<DashboardStats>({
+    todayOrders: 0,
+    todayRevenue: 0,
+    activeCustomers: 0,
+    avgPrepTime: '15 min'
+  });
+
+  // Location state
+  const [addressInput, setAddressInput] = useState('');
+  const [locationNote, setLocationNote] = useState('');
+  const [updatingLocation, setUpdatingLocation] = useState(false);
+  const [closingTime, setClosingTime] = useState('');
+  const [openingTime, setOpeningTime] = useState('');
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setIsLoading(true); setTruckData(null); setError(null);
-      if (!user) {
-        router.push('/login?redirect=/owner/dashboard'); setIsLoading(false); return;
-      }
-      setCurrentUser(user);
-
-      try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (!userDocSnap.exists()) {
-          toast({ title: "User Not Found", description: "User profile missing. Please login again.", variant: "destructive" });
-          router.push('/login'); setIsLoading(false); return;
-        }
-        const userData = userDocSnap.data() as UserDocument;
-        if (userData.role !== 'owner') {
-          toast({ title: "Access Denied", description: "This area is for food truck owners.", variant: "destructive" });
-          router.push('/'); setIsLoading(false); return;
-        }
-        const resolvedTruckId = userData.truckId || user.uid;
-        setTruckId(resolvedTruckId);
-        const truckDocRef = doc(db, "trucks", resolvedTruckId);
-        const snap = await getDoc(truckDocRef);
-        if (snap.exists()) setTruckData(snap.data() as Partial<FoodTruck>);
-        else setError("Truck profile not found.");
-        setIsLoading(false);
-      } catch (err: any) {
-        setError("Could not connect to Firestore. Please check your Firebase config.");
-        setIsLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [router, toast]);
-
-  // Fetch menu items for today's menu preview
-  useEffect(() => {
-    if (!truckId || !truckData?.todaysMenu?.length) { setMenuItems([]); return; }
-    (async () => {
-      try {
-        const itemsCol = collection(db, "trucks", truckId, "menuItems");
-        const itemsSnap = await getDocs(itemsCol);
-        setMenuItems(itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem)));
-      } catch (err) {
-        setMenuItems([]);
-      }
-    })();
-  }, [truckId, truckData?.todaysMenu]);
-
-  const updateTruck = useCallback(async (updates: Partial<FoodTruck>) => {
-    if (!truckId) return;
-    const sanitizedUpdates: Partial<FoodTruck> = { ...updates };
-    if ('lat' in sanitizedUpdates && sanitizedUpdates.lat === null) delete sanitizedUpdates.lat;
-    if ('lng' in sanitizedUpdates && sanitizedUpdates.lng === null) delete sanitizedUpdates.lng;
-    try {
-      await updateDoc(doc(db, "trucks", truckId), sanitizedUpdates);
-      setTruckData(prev => ({ ...prev, ...sanitizedUpdates }));
-    } catch (e) {
-      toast({ title: "Update failed", description: "Could not update truck data. Please check your connection.", variant: "destructive" });
+    if (status === 'unauthenticated') {
+      router.push('/owner/login');
     }
-  }, [truckId, toast]);
+  }, [status, router]);
 
-  const dashboardDisabled = !truckData?.name;
+  useEffect(() => {
+    async function fetchTruck() {
+      try {
+        const truckId = (session?.user as any)?.truckId;
+        if (truckId) {
+          const res = await fetch(`/api/trucks/${truckId}`);
+          const data = await res.json();
+          if (data.success) {
+            setTruck(data.data);
+            setIsOpen(data.data.isOpen || false);
+            setIsVisible(data.data.isVisible !== false);
+            if (data.data.currentLocation?.address) {
+              setAddressInput(data.data.currentLocation.address);
+            } else if (data.data.address) {
+              setAddressInput(data.data.address);
+            }
+            if (data.data.currentLocation?.note) {
+              setLocationNote(data.data.currentLocation.note);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching truck:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  // ---- Loading & Auth States ----
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <span className="ml-3 text-xl font-semibold tracking-tight">Loading owner dashboard...</span>
-      </div>
-    );
-  }
-  if (!currentUser) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <Alert variant="destructive" className="max-w-md mx-auto">
-          <LogIn className="h-4 w-4" />
-          <AlertTitle>Access Denied</AlertTitle>
-          <AlertDescription>You need to be logged in as an owner to view this page.</AlertDescription>
-        </Alert>
-        <Button asChild className="mt-6">
-          <Link href="/login?redirect=/owner/dashboard">Login as Owner</Link>
-        </Button>
-      </div>
-    );
-  }
-  if (!truckData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <div className="text-lg font-medium">Setting up your truck profile...</div>
-        <div className="text-muted-foreground mt-2 mb-6">Please refresh the page if this takes longer than 20 seconds.</div>
-        <Alert variant="destructive" className="max-w-lg mx-auto">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Truck Not Ready</AlertTitle>
-          <AlertDescription>
-            {error || "Your truck profile is still being set up in the background. Most dashboard actions will be unavailable until this completes."}
-            <Button variant="link" className="ml-2 p-0 h-auto" onClick={() => window.location.reload()}>
-              Retry Now
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+    if (status === 'authenticated') {
+      fetchTruck();
+    }
+  }, [status, session]);
 
-  const progress = setupProgress(truckData);
+  const toggleOpen = async () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
 
-  // ---- Social Share Handler ----
-  const handleShare = () => {
-    const url = `${window.location.origin}/trucks/${truckId}`;
-    const text = encodeURIComponent(`Find us today at: ${truckData.currentLocation?.address || "see our map"}! 🍔🚚 ${url}`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+    try {
+      const truckId = (session?.user as any)?.truckId;
+      await fetch(`/api/trucks/${truckId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen: newState })
+      });
+
+      toast({
+        title: newState ? '🟢 Truck is now open!' : '🔴 Truck is now closed',
+        description: newState ? 'Customers can now find you on the map' : 'You are hidden from customers',
+      });
+    } catch (error) {
+      setIsOpen(!newState);
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive'
+      });
+    }
   };
 
-  // ---------------- UI START -----------------
+  const useCurrentLocation = () => {
+    setUpdatingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const truckId = (session?.user as any)?.truckId;
+            await fetch(`/api/trucks/${truckId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                currentLocation: {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  address: `GPS: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`,
+                  updatedAt: new Date().toISOString(),
+                  note: locationNote
+                }
+              })
+            });
+            toast({
+              title: '📍 Location updated!',
+              description: 'Your GPS location has been saved'
+            });
+            setAddressInput(`GPS: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+          } catch (error) {
+            toast({ title: 'Error', description: 'Failed to save location', variant: 'destructive' });
+          } finally {
+            setUpdatingLocation(false);
+          }
+        },
+        () => {
+          toast({ title: 'Error', description: 'Could not get your location', variant: 'destructive' });
+          setUpdatingLocation(false);
+        }
+      );
+    } else {
+      toast({ title: 'Error', description: 'Geolocation not supported', variant: 'destructive' });
+      setUpdatingLocation(false);
+    }
+  };
+
+  const saveAddressLocation = async () => {
+    if (!addressInput.trim()) {
+      toast({ title: 'Error', description: 'Please enter an address', variant: 'destructive' });
+      return;
+    }
+    setUpdatingLocation(true);
+    try {
+      const truckId = (session?.user as any)?.truckId;
+      await fetch(`/api/trucks/${truckId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentLocation: {
+            address: addressInput,
+            updatedAt: new Date().toISOString(),
+            note: locationNote
+          }
+        })
+      });
+      toast({
+        title: '📍 Location updated!',
+        description: 'Your address has been saved'
+      });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to save location', variant: 'destructive' });
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 p-6">
+        <div className="container mx-auto max-w-6xl space-y-6">
+          <Skeleton className="h-12 w-64 bg-slate-800" />
+          <div className="grid md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 bg-slate-800 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* SIDEBAR */}
-      <OwnerSidebar activePage="dashboard" />
-
-      {/* MAIN CONTENT */}
-      <main className="flex-1 px-2 py-8 md:px-8 relative">
-        {/* Theme Toggle */}
-        <div className="absolute top-4 right-4 z-30"><ThemeToggle /></div>
-        {/* Heading */}
-        <div className="flex items-center justify-between mb-4">
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+        >
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Owner Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Welcome back, <span className="font-semibold">{truckData.ownerName || currentUser.email}</span>!</p>
+            <h1 className="text-3xl font-bold mb-1 text-white">
+              {truck?.name || 'Your Truck'} Dashboard
+            </h1>
+            <p className="text-slate-400">Manage your food truck operations</p>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Profile Completion */}
-        <div className="flex items-center gap-4 mb-8">
-          <span className="font-semibold text-primary">{progress}% Profile Complete</span>
-          <div className="flex-1">
-            <div className="h-2 w-36 rounded-full bg-muted overflow-hidden">
-              <div className={`h-2 rounded-full bg-primary transition-all`} style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        </div>
+        {/* Location & Status Card - Main Focus */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <Card className="bg-slate-900 border-slate-800 mb-6 shadow-xl">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-white">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-white" />
+                </div>
+                Where are you today?
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Open/Closed Toggle - Prominent */}
+              <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isOpen
+                  ? 'bg-green-500/10 border-green-500/50'
+                  : 'bg-slate-800 border-slate-700'
+                }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full ${isOpen ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50' : 'bg-slate-500'}`} />
+                  <div>
+                    <p className="font-bold text-lg text-white">{isOpen ? '🟢 You are OPEN' : '⚫ You are CLOSED'}</p>
+                    <p className="text-sm text-slate-400">{isOpen ? 'Customers can find you on the map' : 'Hidden from customers'}</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={isOpen}
+                  onCheckedChange={toggleOpen}
+                  className="data-[state=checked]:bg-green-500 scale-125"
+                />
+              </div>
 
-        {/* Alerts */}
-        <RealTimeAlert alerts={alerts} />
+              {/* Location Input */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <Label className="text-slate-300 font-medium">Current Location</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={useCurrentLocation}
+                      disabled={updatingLocation}
+                      className="bg-blue-600 hover:bg-blue-500 text-white"
+                    >
+                      {updatingLocation ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Navigation className="w-4 h-4 mr-2" />
+                      )}
+                      Use GPS
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Or enter address (e.g., Central Park, NYC)"
+                    value={addressInput}
+                    onChange={(e) => setAddressInput(e.target.value)}
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
+                  />
+                  <Input
+                    placeholder="Note (e.g., Near the fountain)"
+                    value={locationNote}
+                    onChange={(e) => setLocationNote(e.target.value)}
+                    className="bg-slate-800 border-slate-700 text-white text-sm placeholder:text-slate-500 focus:border-blue-500"
+                  />
+                </div>
 
-        {/* Main Grid: Analytics + Calendar + Map + Share + Reviews */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
-          {/* Left Column (Analytics, Sales, Calendar, Share) */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics & Stats</CardTitle>
-                <CardDescription>Overview of your truck’s performance.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnalyticsWidgets truckId={truckId!} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Fast links for common tasks.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="outline"><Link href="/owner/profile"><Edit className="w-4 h-4 mr-1" />Edit Profile</Link></Button>
-                  <Button asChild variant="outline"><Link href="/owner/menu"><MenuSquare className="w-4 h-4 mr-1" />Edit Menu</Link></Button>
-                  <Button asChild variant="outline"><Link href="/owner/schedule"><CalendarClock className="w-4 h-4 mr-1" />Set Hours</Link></Button>
-                  <Button asChild variant="outline"><Link href="/owner/analytics"><LineChart className="w-4 h-4 mr-1" />Full Analytics</Link></Button>
-                  <Button asChild variant="outline"><Link href="/owner/leaderboard"><Trophy className="w-4 h-4 mr-1" />Leaderboard</Link></Button>
-                  <Button variant="secondary" onClick={handleShare}><Star className="w-4 h-4 mr-1" />Share on X</Button>
+                <div className="space-y-3">
+                  <Label className="text-slate-300 font-medium">Today's Hours</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="time"
+                      value={openingTime}
+                      onChange={(e) => setOpeningTime(e.target.value)}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-blue-500"
+                    />
+                    <span className="text-slate-400 font-medium">to</span>
+                    <Input
+                      type="time"
+                      value={closingTime}
+                      onChange={(e) => setClosingTime(e.target.value)}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-blue-500"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Set your operating hours for today
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <Link href="/owner/schedule" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium">
+                  <Calendar className="w-4 h-4" />
+                  Plan future schedule →
+                </Link>
+                <Button
+                  onClick={saveAddressLocation}
+                  disabled={updatingLocation}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold shadow-lg"
+                >
+                  {updatingLocation ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Save Location
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        >
+          {[
+            { icon: ShoppingBag, label: "Today's Orders", value: stats.todayOrders, color: 'bg-blue-600', textColor: 'text-blue-400' },
+            { icon: DollarSign, label: "Today's Revenue", value: `$${stats.todayRevenue}`, color: 'bg-green-600', textColor: 'text-green-400' },
+            { icon: Users, label: 'Active Customers', value: stats.activeCustomers, color: 'bg-purple-600', textColor: 'text-purple-400' },
+            { icon: Clock, label: 'Avg Prep Time', value: stats.avgPrepTime, color: 'bg-orange-600', textColor: 'text-orange-400' },
+          ].map((stat) => (
+            <Card key={stat.label} className="bg-slate-900 border-slate-800 shadow-lg">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
+                    <p className="text-sm text-slate-400">{stat.label}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
+          ))}
+        </motion.div>
 
-          {/* Center/Right: Preview, Calendar, Weather, Feedback, Map */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <Card className="border-dashed border-blue-300/80 bg-blue-50/60 shadow-none">
-              <CardHeader>
-                <CardTitle>
-                  <Eye className="inline w-5 h-5 mr-2 text-primary" />
-                  Customer Card Preview
-                </CardTitle>
-                <CardDescription>This is your live public-facing card.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CustomerTruckCard truck={truckData} menuItems={menuItems} />
-              </CardContent>
-            </Card>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Latest Customer Reviews</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CustomerFeedback truckId={truckId!} />
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {[
+            { icon: Utensils, label: 'Manage Menu', href: '/owner/menu', desc: 'Edit items, categories & prices', color: 'bg-orange-600' },
+            { icon: ShoppingBag, label: 'View Orders', href: '/owner/orders', desc: 'Process incoming orders', color: 'bg-blue-600' },
+            { icon: TrendingUp, label: 'Analytics', href: '/owner/analytics', desc: 'View sales & performance', color: 'bg-green-600' },
+            { icon: Calendar, label: 'Schedule', href: '/owner/schedule', desc: 'Plan future locations & dates', color: 'bg-purple-600' },
+            { icon: Settings, label: 'Truck Settings', href: '/owner/profile', desc: 'Edit profile & hours', color: 'bg-slate-600' },
+            { icon: DollarSign, label: 'Billing', href: '/owner/billing', desc: 'Manage payments', color: 'bg-violet-600' },
+          ].map((action) => (
+            <Link key={action.label} href={action.href}>
+              <Card className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all cursor-pointer h-full group shadow-lg">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                    <action.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white group-hover:text-yellow-400 transition-colors">{action.label}</h3>
+                    <p className="text-sm text-slate-400">{action.desc}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Weather</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <WeatherWidget lat={truckData.lat} lng={truckData.lng} />
-                </CardContent>
-              </Card>
-            </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Trucks Map</CardTitle>
-                <CardDescription>See all active trucks on the map. Your truck is highlighted.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-xl overflow-hidden min-h-[250px]">
-                  <FoodTruckMap currentTruckId={truckId!} highlightMyTruck />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* PROFILE INCOMPLETE */}
-        {dashboardDisabled && (
-          <Alert variant="destructive" className="mb-6 mt-8">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Profile Incomplete</AlertTitle>
-            <AlertDescription>
-              Your truck profile is missing. Please&nbsp;
-              <Button asChild variant="link" className="p-0 h-auto ml-1 text-destructive hover:underline">
-                <Link href="/owner/profile">complete your profile</Link>
-              </Button>
-              &nbsp;before using dashboard features.
-            </AlertDescription>
-          </Alert>
-        )}
-      </main>
+            </Link>
+          ))}
+        </motion.div>
+      </div>
     </div>
   );
 }

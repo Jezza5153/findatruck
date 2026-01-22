@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from "react";
-import type { FoodTruck } from '@/lib/types';
+import type { FoodTruckDisplay } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import Image from 'next/image';
@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
 
 interface FoodTruckCardProps {
-  truck: FoodTruck;
+  truck: FoodTruckDisplay;
 }
 
 export function FoodTruckCard({ truck }: FoodTruckCardProps) {
@@ -62,7 +62,7 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
           {/* Feature + Favorite: Small, stylish pill overlays */}
           <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
             {isFeatured && (
-              <span className="inline-flex items-center bg-yellow-400/80 text-black px-2 py-0.5 text-xs font-semibold rounded-full shadow-sm ring-1 ring-yellow-500/40">
+              <span className="inline-flex items-center bg-accent text-accent-foreground px-2 py-0.5 text-xs font-semibold rounded-full shadow-sm">
                 <Star className="w-4 h-4 mr-1 -ml-1" /> Featured
               </span>
             )}
@@ -134,11 +134,8 @@ export function FoodTruckCard({ truck }: FoodTruckCardProps) {
         </div>
         {isOpen !== undefined && (
           <Badge
-            variant={isOpen ? "default" : "destructive"}
-            className={`mt-2 ${isOpen
-              ? 'bg-green-500 hover:bg-green-600 text-white'
-              : 'bg-red-500 hover:bg-red-600 text-white'
-              }`}
+            variant={isOpen ? "open" : "closed"}
+            className="mt-2"
             aria-label={isOpen ? "Open Now" : "Closed"}
           >
             {isOpen

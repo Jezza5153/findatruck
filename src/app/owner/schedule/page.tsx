@@ -1,401 +1,418 @@
-
 'use client';
-import { useState, useEffect } from 'react';
-import Calendar from 'react-calendar'; // Using react-calendar
-import 'react-calendar/dist/Calendar.css'; // Default styling for react-calendar
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarClock, Power, PlusCircle, Trash2, Loader2, AlertTriangle, LogIn } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import type { UserDocument, FoodTruck } from '@/lib/types'; // Import FoodTruck for main truck doc update
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Calendar, Clock, MapPin, Plus, Trash2, Save, Loader2, CalendarDays, X
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-type RegularHoursEntry = { openTime: string; closeTime: string; isClosed: boolean };
-type RegularHours = { [key: string]: RegularHoursEntry };
-type SpecialHour = {
+interface ScheduleEntry {
   id: string;
-  date: string; // YYYY-MM-DD
-  status: 'open-custom' | 'closed';
-  openTime?: string; // HH:mm
-  closeTime?: string; // HH:mm
-};
-
-const defaultRegularHours: RegularHours = daysOfWeek.reduce((acc, day) => {
-  acc[day] = { openTime: '09:00', closeTime: '17:00', isClosed: day === "Sunday" || day === "Saturday" };
-  return acc;
-}, {} as RegularHours);
+  date: string;
+  endDate?: string;
+  startTime: string;
+  endTime: string;
+  address: string;
+  note?: string;
+}
 
 export default function OwnerSchedulePage() {
-  const { toast } = useToast();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [truckId, setTruckId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [regularHours, setRegularHours] = useState<RegularHours>(defaultRegularHours);
-  const [specialHours, setSpecialHours] = useState<SpecialHour[]>([]);
-  const [isTruckOpenOverride, setIsTruckOpenOverride] = useState<boolean | null>(null);
-
-  const [calendarDate, setCalendarDate] = useState<Date | null>(null); // For react-calendar, type is Date or Date[]
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingSpecial, setEditingSpecial] = useState<SpecialHour | null>(null);
-  const [specialStatus, setSpecialStatus] = useState<'open-custom' | 'closed' | ''>('');
-  const [specialOpenTime, setSpecialOpenTime] = useState('');
-  const [specialCloseTime, setSpecialCloseTime] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEntry, setNewEntry] = useState({
+    date: '',
+    endDate: '',
+    startTime: '10:00',
+    endTime: '20:00',
+    address: '',
+    note: ''
+  });
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async user => {
-      if (user) {
-        setCurrentUser(user);
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data() as UserDocument;
-          if (userData.role === 'owner') {
-            const resolvedTruckId = userData.truckId || user.uid; 
-            setTruckId(resolvedTruckId);
-          } else {
-            toast({title: "Access Denied", description: "This page is for owners.", variant: "destructive"});
-            router.push('/login'); setIsLoading(false); return;
+    if (status === 'unauthenticated') {
+      router.push('/owner/login');
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    async function fetchSchedule() {
+      try {
+        const truckId = (session?.user as any)?.truckId;
+        if (truckId) {
+          const res = await fetch(`/api/trucks/${truckId}`);
+          const data = await res.json();
+          if (data.success && data.data.specialHours) {
+            // Convert specialHours to our schedule format
+            const entries = data.data.specialHours.map((h: any, i: number) => ({
+              id: `entry-${i}`,
+              date: h.date,
+              endDate: h.endDate,
+              startTime: h.openTime || '10:00',
+              endTime: h.closeTime || '20:00',
+              address: h.address || data.data.address || '',
+              note: h.note || ''
+            }));
+            setSchedule(entries);
           }
-        } else {
-            toast({title: "Error", description: "User profile not found.", variant: "destructive"});
-            router.push('/login'); setIsLoading(false); return;
         }
-      } else {
-        router.push('/login?redirect=/owner/schedule');
-        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+      } finally {
+        setLoading(false);
       }
-    });
-    return () => unsub();
-  }, [router, toast]);
+    }
 
-  useEffect(() => {
-    if (!truckId || !currentUser) {
-      if (!currentUser) setIsLoading(false); // If no user, stop loading
+    if (status === 'authenticated') {
+      fetchSchedule();
+    }
+  }, [status, session]);
+
+  const addEntry = () => {
+    if (!newEntry.date || !newEntry.address) {
+      toast({
+        title: 'Missing fields',
+        description: 'Please enter date and location',
+        variant: 'destructive'
+      });
       return;
     }
-    const fetchSchedule = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const scheduleDocRef = doc(db, "trucks", truckId, "settings", "schedule");
-        const snap = await getDoc(scheduleDocRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          setRegularHours(data.regularHours || defaultRegularHours);
-          setSpecialHours(data.specialHours || []);
-          setIsTruckOpenOverride(data.isTruckOpenOverride === undefined ? null : data.isTruckOpenOverride);
-        } else {
-          // No schedule document, use defaults. User can save to create one.
-           setRegularHours(defaultRegularHours);
-           setSpecialHours([]);
-           setIsTruckOpenOverride(null);
-        }
-      } catch(err: any) {
-        setError(err.message || "Failed to load schedule data.");
-        toast({title: "Load Error", description: err.message, variant: "destructive"});
-      }
-      setIsLoading(false);
+
+    const entry: ScheduleEntry = {
+      id: `entry-${Date.now()}`,
+      date: newEntry.date,
+      endDate: newEntry.endDate || undefined,
+      startTime: newEntry.startTime,
+      endTime: newEntry.endTime,
+      address: newEntry.address,
+      note: newEntry.note
     };
-    fetchSchedule();
-  }, [truckId, currentUser, toast]);
 
-  const dateToISO = (d: Date) => d.toISOString().slice(0, 10);
-
-  const openSpecialDialog = (date: Date) => {
-    const iso = dateToISO(date);
-    const found = specialHours.find(sh => sh.date === iso);
-    setCalendarDate(date);
-    if (found) {
-      setEditingSpecial(found);
-      setSpecialStatus(found.status);
-      setSpecialOpenTime(found.openTime || '09:00');
-      setSpecialCloseTime(found.closeTime || '17:00');
-    } else {
-      setEditingSpecial(null);
-      setSpecialStatus('');
-      setSpecialOpenTime('09:00');
-      setSpecialCloseTime('17:00');
-    }
-    setDialogOpen(true);
+    setSchedule([...schedule, entry].sort((a, b) => a.date.localeCompare(b.date)));
+    setNewEntry({ date: '', endDate: '', startTime: '10:00', endTime: '20:00', address: '', note: '' });
+    setShowAddForm(false);
+    toast({ title: '📅 Entry added!' });
   };
 
-  const handleSaveSpecial = () => {
-    if (!calendarDate || !specialStatus) {
-      toast({ title: "Missing Info", description: "Please select a status for the special day.", variant: "destructive" }); return;
-    }
-    const iso = dateToISO(calendarDate);
-    if (specialStatus === 'open-custom' && (!specialOpenTime || !specialCloseTime)) {
-      toast({ title: "Missing Times", description: "For 'Open (Custom Hours)', please enter both open and close times.", variant: "destructive" }); return;
-    }
-    
-    const newSpecialHour: SpecialHour = {
-      id: editingSpecial?.id || `${iso}_${Date.now()}`,
-      date: iso,
-      status: specialStatus,
-      openTime: specialStatus === 'open-custom' ? specialOpenTime : undefined,
-      closeTime: specialStatus === 'open-custom' ? specialCloseTime : undefined,
-    };
-    
-    const newList = specialHours.filter(sh => sh.date !== iso);
-    newList.push(newSpecialHour);
-    setSpecialHours(newList.sort((a, b) => a.date.localeCompare(b.date))); // Keep sorted
-    setDialogOpen(false);
-    toast({ title: "Special Day Saved", description: `Hours for ${iso} have been updated.` });
+  const deleteEntry = (id: string) => {
+    setSchedule(schedule.filter(e => e.id !== id));
+    toast({ title: 'Entry removed' });
   };
 
-  const handleDeleteSpecial = () => {
-    if (!calendarDate) return;
-    const iso = dateToISO(calendarDate);
-    setSpecialHours(specialHours.filter(sh => sh.date !== iso));
-    setDialogOpen(false);
-    toast({ title: "Special Day Removed", description: `Custom hours for ${iso} removed.`, variant: "destructive" });
-  };
-  
-  // Helper to determine if the truck is currently open based on schedule
-  const getTruckOpenStatusAndHoursSummary = (): { isOpen: boolean; summary: string } => {
-    if (isTruckOpenOverride !== null) {
-      return { isOpen: isTruckOpenOverride, summary: isTruckOpenOverride ? "Open (Manual Override)" : "Closed (Manual Override)" };
-    }
-
-    const now = new Date();
-    const todayISO = dateToISO(now);
-    const todayDayName = daysOfWeek[now.getDay() === 0 ? 6 : now.getDay() - 1]; // Sunday is 0 -> 6, Monday is 1 -> 0
-
-    const specialDay = specialHours.find(sh => sh.date === todayISO);
-
-    let currentDayHours;
-    let summaryPrefix = "";
-
-    if (specialDay) {
-      summaryPrefix = `Today (Special - ${specialDay.date}): `;
-      if (specialDay.status === 'closed') return { isOpen: false, summary: summaryPrefix + "Closed" };
-      currentDayHours = { openTime: specialDay.openTime!, closeTime: specialDay.closeTime!, isClosed: false };
-    } else {
-      summaryPrefix = `Today (${todayDayName}): `;
-      currentDayHours = regularHours[todayDayName];
-      if (currentDayHours.isClosed) return { isOpen: false, summary: summaryPrefix + "Closed" };
-    }
-    
-    const { openTime, closeTime } = currentDayHours;
-    const summary = summaryPrefix + `${openTime} - ${closeTime}`;
-
-    const [openH, openM] = openTime.split(':').map(Number);
-    const [closeH, closeM] = closeTime.split(':').map(Number);
-
-    const openDate = new Date(now);
-    openDate.setHours(openH, openM, 0, 0);
-    const closeDate = new Date(now);
-    closeDate.setHours(closeH, closeM, 0, 0);
-    
-    // Handle overnight case for close time (e.g. 22:00 - 02:00)
-    if (closeDate < openDate) { 
-      closeDate.setDate(closeDate.getDate() + 1); 
-      // If current time is past midnight but before new close time, also adjust 'now' for comparison
-      if (now < openDate) { // e.g. it's 1 AM, open was 10 PM previous day
-        const nowAdjusted = new Date(now);
-        nowAdjusted.setDate(nowAdjusted.getDate() +1);
-        return { isOpen: nowAdjusted >= openDate && nowAdjusted < closeDate, summary };
-      }
-    }
-    
-    return { isOpen: now >= openDate && now < closeDate, summary };
-  };
-
-
-  const handleSaveAll = async () => {
-    if (!truckId) {
-      toast({ title: "Error", description: "Truck ID not found.", variant: "destructive" }); return;
-    }
-    setIsSaving(true);
+  const saveSchedule = async () => {
+    setSaving(true);
     try {
-      const scheduleDocRef = doc(db, "trucks", truckId, "settings", "schedule");
-      await setDoc(scheduleDocRef, {
-        regularHours,
-        specialHours,
-        isTruckOpenOverride,
-        updatedAt: serverTimestamp(),
+      const truckId = (session?.user as any)?.truckId;
+      const specialHours = schedule.map(e => ({
+        date: e.date,
+        endDate: e.endDate,
+        status: 'open-custom',
+        openTime: e.startTime,
+        closeTime: e.endTime,
+        address: e.address,
+        note: e.note
+      }));
+
+      await fetch(`/api/trucks/${truckId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ specialHours })
       });
-      
-      // Update main truck document with current isOpen status and operatingHoursSummary
-      const { isOpen, summary } = getTruckOpenStatusAndHoursSummary();
-      const truckDocRef = doc(db, "trucks", truckId);
-      await updateDoc(truckDocRef, {
-        isOpen: isOpen,
-        operatingHoursSummary: summary, // This summary is for "today", might need a more general one.
-                                       // For now, we'll use this dynamic daily summary.
-                                       // A better general summary could be "Mon-Fri: 9-5, Sat: 10-2"
+
+      toast({
+        title: '✅ Schedule saved!',
+        description: 'Your planned locations are now visible to customers'
       });
-      
-      toast({ title: "Schedule Saved!", description: "Operating hours updated successfully." });
-    } catch (e: any) {
-      toast({ title: "Save Error", description: e?.message || "Failed to save schedule.", variant: "destructive" });
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to save schedule', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-    setIsSaving(false);
   };
 
-  const handleRegularHoursChange = (day: string, field: keyof RegularHoursEntry, value: string | boolean) => {
-    setRegularHours(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [field]: value }
-    }));
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
-  
-  if (isLoading) return (
-    <div className="container mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
-      <Loader2 className="h-10 w-10 animate-spin mb-4 text-primary" /><p className="text-muted-foreground">Loading schedule…</p>
-    </div>
-  );
 
-  if (!currentUser) { // Fallback if auth state changes unexpectedly
+  const isUpcoming = (dateStr: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateStr + 'T00:00:00');
+    return date >= today;
+  };
+
+  if (status === 'loading' || loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-         <Alert variant="destructive" className="max-w-md mx-auto"> <LogIn className="h-4 w-4" /> <AlertTitle>Access Denied</AlertTitle> <AlertDescription>Please log in as an owner.</AlertDescription></Alert>
-         <Button asChild className="mt-4"><Link href="/login?redirect=/owner/schedule">Login</Link></Button>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive" className="max-w-lg mx-auto"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
-        <div className="mt-6 text-center"><Button asChild variant="outline"><Link href="/owner/dashboard">Back to Dashboard</Link></Button></div>
-      </div>
-    );
-  }
-
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary flex items-center mb-4 sm:mb-0">
-          <CalendarClock className="mr-3 h-8 w-8" /> Schedule & Operating Hours
-        </h1>
-        <Button asChild variant="outline"><Link href="/owner/dashboard">Back to Dashboard</Link></Button>
-      </div>
-      <Card className="mb-8 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl">Special Hours Calendar</CardTitle>
-          <CardDescription>Click a date to set custom hours or mark as closed (e.g., holidays, events). Regular hours apply otherwise.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center items-center"> {/* Centering Calendar */}
-          <Calendar
-            tileClassName={({ date, view }) => {
-              if (view === 'month') {
-                const iso = dateToISO(date);
-                const special = specialHours.find(sh => sh.date === iso);
-                if (special) return special.status === 'closed' ? 'bg-red-300 !text-white hover:bg-red-400' : 'bg-green-300 !text-white hover:bg-green-400';
-              }
-              return "";
-            }}
-            onClickDay={(value) => openSpecialDialog(value as Date)} // Cast value to Date
-            minDetail="month"
-            prev2Label={null}
-            next2Label={null}
-            className="react-calendar-override rounded-md border shadow" // Custom class for more specific overrides
-          />
-        </CardContent>
-      </Card>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editingSpecial ? "Edit Special Hours for" : "Set Special Hours for"} {calendarDate ? dateToISO(calendarDate) : ''}</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <Label>Status for this day</Label>
-            <Select value={specialStatus} onValueChange={v => setSpecialStatus(v as 'open-custom' | 'closed' | '')}>
-              <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="open-custom">Open (Custom Hours)</SelectItem>
-                <SelectItem value="closed">Closed All Day</SelectItem>
-              </SelectContent>
-            </Select>
-            {specialStatus === 'open-custom' && (
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label htmlFor="specialOpenTime">Open Time</Label><Input id="specialOpenTime" type="time" value={specialOpenTime} onChange={e => setSpecialOpenTime(e.target.value)} className="mt-1"/></div>
-                <div><Label htmlFor="specialCloseTime">Close Time</Label><Input id="specialCloseTime" type="time" value={specialCloseTime} onChange={e => setSpecialCloseTime(e.target.value)} className="mt-1"/></div>
-              </div>
-            )}
-          </div>
-          <DialogFooter className="sm:justify-between mt-4">
-            {editingSpecial ? (<Button variant="destructive" onClick={handleDeleteSpecial} className="mr-auto sm:mr-0"><Trash2 className="h-4 w-4 mr-1" /> Delete Entry</Button>) : <div />}
-            <div className="flex gap-2"><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={handleSaveSpecial}>Save Special Day</Button></div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 shadow-lg">
-          <CardHeader><CardTitle className="text-2xl">Regular Weekly Hours</CardTitle><CardDescription>Set standard opening/closing times.</CardDescription></CardHeader>
-          <CardContent className="space-y-4">
-            {daysOfWeek.map(day => (
-              <div key={day} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end p-3 border rounded-md bg-muted/30">
-                <Label className="sm:col-span-1 font-semibold self-center text-sm">{day}</Label>
-                <div className="sm:col-span-1">
-                  <Label htmlFor={`${day}-open-time`} className="text-xs">Open</Label>
-                  <Input id={`${day}-open-time`} type="time" className="mt-1" value={regularHours[day].openTime} onChange={(e) => handleRegularHoursChange(day, 'openTime', e.target.value)} disabled={regularHours[day].isClosed || isSaving} />
-                </div>
-                <div className="sm:col-span-1">
-                  <Label htmlFor={`${day}-close-time`} className="text-xs">Close</Label>
-                  <Input id={`${day}-close-time`} type="time" className="mt-1" value={regularHours[day].closeTime} onChange={(e) => handleRegularHoursChange(day, 'closeTime', e.target.value)} disabled={regularHours[day].isClosed || isSaving} />
-                </div>
-                <div className="sm:col-span-1 flex items-center space-x-2 justify-self-start sm:justify-self-end pt-4 sm:pt-0">
-                  <Switch id={`${day}-closed`} checked={regularHours[day].isClosed} onCheckedChange={(checked) => handleRegularHoursChange(day, 'isClosed', checked)} disabled={isSaving} />
-                  <Label htmlFor={`${day}-closed`} className="text-xs">Closed</Label>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <div className="space-y-6">
-          <Card className="shadow-lg">
-            <CardHeader><CardTitle className="text-xl flex items-center"><Power className="mr-2 h-5 w-5" /> Override Status</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="override-status-select" className="font-medium">Manual Override</Label>
-                 <Select value={isTruckOpenOverride === null ? "auto" : (isTruckOpenOverride ? "open" : "closed")} onValueChange={(value) => { setIsTruckOpenOverride(value === "auto" ? null : value === "open");}} disabled={isSaving}>
-                    <SelectTrigger id="override-status-select" className="w-[150px]"><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="auto">Automatic (Schedule)</SelectItem>
-                        <SelectItem value="open">Force Open</SelectItem>
-                        <SelectItem value="closed">Force Closed</SelectItem>
-                    </SelectContent>
-                </Select>
-              </div>
-              <p className="text-xs text-muted-foreground">Manually set truck status, overriding schedule. "Automatic" uses defined hours.</p>
-            </CardContent>
-          </Card>
-          <Button className="w-full py-3 text-base" onClick={handleSaveAll} disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <PlusCircle className="mr-2 h-4 w-4" />}
-            Save All Schedule Changes
-          </Button>
+      <div className="min-h-screen bg-slate-900 p-6">
+        <div className="container mx-auto max-w-4xl space-y-6">
+          <Skeleton className="h-12 w-64 bg-slate-700" />
+          <Skeleton className="h-64 bg-slate-700 rounded-xl" />
         </div>
       </div>
-      <style jsx global>{`
-        .react-calendar-override { background: hsl(var(--card)); border-color: hsl(var(--border)); }
-        .react-calendar-override .react-calendar__navigation button { color: hsl(var(--primary)); }
-        .react-calendar-override .react-calendar__navigation button:hover { background-color: hsl(var(--accent)); color: hsl(var(--accent-foreground));}
-        .react-calendar-override .react-calendar__month-view__weekdays__weekday { color: hsl(var(--muted-foreground)); }
-        .react-calendar-override .react-calendar__tile { color: hsl(var(--foreground)); }
-        .react-calendar-override .react-calendar__tile:hover { background-color: hsl(var(--muted)); }
-        .react-calendar-override .react-calendar__tile--active { background-color: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important; }
-        .react-calendar-override .react-calendar__tile--now { background-color: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
-      `}</style>
+    );
+  }
+
+  const upcomingSchedule = schedule.filter(e => isUpcoming(e.date));
+  const pastSchedule = schedule.filter(e => !isUpcoming(e.date));
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="container mx-auto max-w-4xl px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8"
+        >
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <CalendarDays className="w-8 h-8 text-purple-400" />
+              Schedule Planner
+            </h1>
+            <p className="text-slate-400 mt-1">
+              Plan where you'll be • Customers can see your upcoming locations
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowAddForm(true)}
+              className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Date
+            </Button>
+            {schedule.length > 0 && (
+              <Button
+                onClick={saveSchedule}
+                disabled={saving}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
+              >
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Save All
+              </Button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Add Form */}
+        {showAddForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="bg-slate-800/80 border-purple-500/30 mb-6">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg text-purple-400">Add Scheduled Location</CardTitle>
+                <Button size="icon" variant="ghost" onClick={() => setShowAddForm(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Start Date *</Label>
+                    <Input
+                      type="date"
+                      value={newEntry.date}
+                      onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">End Date (optional, for range)</Label>
+                    <Input
+                      type="date"
+                      value={newEntry.endDate}
+                      onChange={(e) => setNewEntry({ ...newEntry, endDate: e.target.value })}
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Open Time</Label>
+                    <Input
+                      type="time"
+                      value={newEntry.startTime}
+                      onChange={(e) => setNewEntry({ ...newEntry, startTime: e.target.value })}
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Close Time</Label>
+                    <Input
+                      type="time"
+                      value={newEntry.endTime}
+                      onChange={(e) => setNewEntry({ ...newEntry, endTime: e.target.value })}
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Location / Address *</Label>
+                  <Input
+                    placeholder="e.g., Central Park, near the fountain"
+                    value={newEntry.address}
+                    onChange={(e) => setNewEntry({ ...newEntry, address: e.target.value })}
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Note (optional)</Label>
+                  <Input
+                    placeholder="e.g., Special taco Tuesday!"
+                    value={newEntry.note}
+                    onChange={(e) => setNewEntry({ ...newEntry, note: e.target.value })}
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddForm(false)}
+                    className="border-slate-600 bg-slate-700/50 text-slate-300"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={addEntry}
+                    className="bg-purple-500 hover:bg-purple-600"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Entry
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Upcoming Schedule */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-green-400" />
+            Upcoming ({upcomingSchedule.length})
+          </h2>
+
+          {upcomingSchedule.length > 0 ? (
+            <div className="space-y-3">
+              {upcomingSchedule.map((entry) => (
+                <Card key={entry.id} className="bg-slate-900 border-slate-800 hover:bg-slate-800 transition-colors shadow-lg">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="w-16 text-center py-2 bg-gradient-to-br from-purple-500/20 to-violet-500/20 rounded-lg border border-purple-500/30">
+                      <div className="text-2xl font-bold text-purple-400">
+                        {new Date(entry.date + 'T00:00:00').getDate()}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {new Date(entry.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className="w-4 h-4 text-red-400" />
+                        <span className="font-medium truncate">{entry.address}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {entry.startTime} - {entry.endTime}
+                        </span>
+                        {entry.endDate && (
+                          <span>→ {formatDate(entry.endDate)}</span>
+                        )}
+                      </div>
+                      {entry.note && (
+                        <p className="text-sm text-yellow-400 mt-1">📝 {entry.note}</p>
+                      )}
+                    </div>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteEntry(entry.id)}
+                      className="text-slate-400 hover:text-red-400 hover:bg-red-400/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-slate-900 border-slate-800 shadow-lg">
+              <CardContent className="p-8 text-center">
+                <CalendarDays className="w-12 h-12 mx-auto mb-3 text-slate-500" />
+                <p className="text-slate-400">No upcoming dates scheduled</p>
+                <Button
+                  onClick={() => setShowAddForm(true)}
+                  variant="outline"
+                  className="mt-4 border-slate-600 bg-slate-700/50 text-slate-300"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Date
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+
+        {/* Past Schedule */}
+        {pastSchedule.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-lg font-semibold mb-4 text-slate-500 flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Past ({pastSchedule.length})
+            </h2>
+            <div className="space-y-2 opacity-60">
+              {pastSchedule.slice(0, 5).map((entry) => (
+                <Card key={entry.id} className="bg-slate-800/30 border-slate-700/30">
+                  <CardContent className="p-3 flex items-center gap-4 text-sm">
+                    <span className="text-slate-500 w-24">{formatDate(entry.date)}</span>
+                    <span className="flex-1 truncate text-slate-400">{entry.address}</span>
+                    <span className="text-slate-500">{entry.startTime} - {entry.endTime}</span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteEntry(entry.id)}
+                      className="text-slate-500 hover:text-red-400 h-6 w-6"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 }

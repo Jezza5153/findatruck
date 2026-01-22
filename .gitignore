@@ -45,3 +45,4 @@ pnpm-debug.log*
 # genkit state
 .genkit/log/**
 .genkit/trace/**
+.vercel

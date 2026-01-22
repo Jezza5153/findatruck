@@ -1,6 +1,57 @@
+// ====================================
+// SHARED TYPES FOR FINDATRUCK
+// Re-exported from database schema where applicable
+// ====================================
 
-import type { Timestamp, FieldValue, GeoPoint } from 'firebase/firestore';
 import type React from 'react';
+
+// Re-export database model types
+export type {
+  User,
+  NewUser,
+  Truck,
+  NewTruck,
+  MenuItem,
+  NewMenuItem,
+  MenuCategory,
+  NewMenuCategory,
+  Order,
+  NewOrder,
+  Testimonial,
+  NewTestimonial,
+  Subscription,
+  NewSubscription,
+  CheckIn,
+  NewCheckIn,
+  Special,
+  NewSpecial,
+  Event,
+  NewEvent,
+  Review,
+  NewReview,
+  Notification,
+  NewNotification,
+  LoyaltyCard,
+  NewLoyaltyCard,
+} from './db/schema';
+
+// =======================
+// LEGACY TYPE ALIASES
+// (For backward compatibility during migration)
+// =======================
+
+// FoodTruck is an alias for Truck
+export type { Truck as FoodTruck } from './db/schema';
+
+// Extended FoodTruck with computed display properties
+import type { Truck } from './db/schema';
+export type FoodTruckDisplay = Truck & {
+  isFavorite?: boolean;
+  distance?: string;
+};
+
+// UserDocument is an alias for User
+export type { User as UserDocument } from './db/schema';
 
 // =======================
 // LOCATION TYPES
@@ -9,9 +60,9 @@ export type TruckLocation = {
   lat?: number;
   lng?: number;
   address?: string;
-  updatedAt?: string | null; // Changed from Timestamp | FieldValue
+  updatedAt?: string | null;
   note?: string;
-  coordinates?: { latitude: number; longitude: number }; // Changed from GeoPoint
+  coordinates?: { latitude: number; longitude: number };
 };
 
 // =======================
@@ -30,86 +81,8 @@ export type RegularHoursEntry = {
 };
 
 // =======================
-// FOOD TRUCK BASE TYPE
+// CUSTOMIZATION OPTIONS
 // =======================
-export type FoodTruck = {
-  id: string;
-  name: string;
-  cuisine: string;
-  description?: string;
-  imageUrl?: string;
-  imagePath?: string;
-  imageGallery?: string[];
-  ownerUid: string;
-
-  address?: string;
-  lat?: number;
-  lng?: number;
-  operatingHoursSummary?: string;
-  isOpen?: boolean;
-  isVisible?: boolean;
-
-  currentLocation?: TruckLocation;
-  todaysMenu?: string[];
-  todaysHours?: TodaysHours;
-
-  regularHours?: Record<string, RegularHoursEntry>;
-  specialHours?: Array<{
-    date: string; // YYYY-MM-DD
-    status: 'open-custom' | 'closed';
-    openTime?: string; // HH:mm
-    closeTime?: string; // HH:mm
-    note?: string;
-  }>;
-  isTruckOpenOverride?: boolean | null;
-
-  tags?: string[];
-  rating?: number;
-  numberOfRatings?: number;
-  features?: string[];
-  socialMediaLinks?: Record<string, string>;
-  websiteUrl?: string;
-  contactEmail?: string;
-  phone?: string;
-  isFeatured?: boolean;
-  subscriptionTier?: 'free' | 'plus' | 'pro' | 'enterprise' | string;
-  isFavorite?: boolean;
-  createdAt?: string | null; // Changed
-  updatedAt?: string | null; // Changed
-  distance?: string;
-  testimonials?: Testimonial[];
-};
-
-// =======================
-// MENU & CATEGORY TYPES
-// =======================
-export type MenuItem = {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  category: string;
-  imageUrl?: string;
-  imagePath?: string;
-  isSpecial?: boolean;
-  availability?: 'available' | 'sold_out' | 'unavailable';
-  customizations?: CustomizationOption[];
-  createdAt?: string | null; // Changed
-  updatedAt?: string | null; // Changed
-  order?: number; // Added from menu page
-  outOfStock?: boolean; // Added from menu page
-  tags?: string[]; // Added from menu page
-};
-
-export type MenuCategory = {
-  id: string;
-  name: string;
-  truckId: string; // Added for potential direct queries, though often subcollection
-  createdAt?: string | null; // Changed
-  updatedAt?: string | null; // Changed
-  order?: number; // Added from menu page
-};
-
 export type CustomizationOption = {
   id: string;
   name: string;
@@ -119,24 +92,9 @@ export type CustomizationOption = {
 };
 
 // =======================
-// TESTIMONIALS
-// =======================
-export type Testimonial = {
-  id: string;
-  truckId?: string; // Optional if subcollection
-  userId?: string;
-  name: string;
-  quote: string;
-  rating?: number;
-  avatarUrl?: string;
-  createdAt?: string | null; // Changed
-  dataAiHint?: string;
-};
-
-// =======================
 // USER TYPES
 // =======================
-export type UserRole = 'customer' | 'owner';
+export type UserRole = 'customer' | 'owner' | 'admin';
 
 export type NotificationPreferences = {
   truckNearbyRadius: number;
@@ -144,30 +102,13 @@ export type NotificationPreferences = {
   promotionalMessages: boolean;
 };
 
-export type UserDocument = {
-  uid: string;
-  email: string | null;
-  role: UserRole;
-  name?: string;
-  ownerName?: string; // If role is owner
-  truckName?: string; // Denormalized for owner users
-  cuisineType?: string; // Denormalized for owner users
-  truckId?: string; // Link to their truck if role is owner
-  favoriteTrucks?: string[];
-  notificationPreferences: NotificationPreferences;
-  createdAt: string | null; // Changed
-  updatedAt?: string | null; // Changed
-  // Potentially add more customer specific fields
-  // Potentially add more owner specific fields
-};
-
 export type UserProfile = {
   name: string;
   email: string;
-  avatarUrl: string;                    
-  savedPaymentMethods: string[];        
-  favoriteTrucks: string[];             
-  notificationPreferences: NotificationPreferences; 
+  avatarUrl: string;
+  savedPaymentMethods: string[];
+  favoriteTrucks: string[];
+  notificationPreferences: NotificationPreferences;
   role?: UserRole;
   truckName?: string;
   cuisineType?: string;
@@ -192,7 +133,7 @@ export type Cuisine = {
 };
 
 // =======================
-// ORDER TYPES
+// ORDER TYPES (for API responses)
 // =======================
 export interface OrderItemDetail {
   itemId: string;
@@ -201,24 +142,81 @@ export interface OrderItemDetail {
   price: number;
 }
 
-export interface Order {
-  id: string;
-  truckId: string;
-  customerId: string;
-  customerName?: string;
-  items: OrderItemDetail[];
-  totalAmount: number;
-  status: "New" | "Preparing" | "Ready for Pickup" | "Completed" | "Cancelled";
-  createdAt: string | null; // Changed
-  updatedAt?: string | null; // Changed
-  notes?: string;
-  pickupTime?: string | null; // Changed
-}
+export type OrderStatus = 'New' | 'Preparing' | 'Ready for Pickup' | 'Completed' | 'Cancelled';
 
 // =======================
 // TRUCK WITH MENU (for Map)
 // =======================
-export type TruckWithMenu = FoodTruck & {
-  todaysMenuItems: MenuItem[];
-  isHere: boolean; // Example, if derived dynamically
+export type TruckWithMenu = {
+  id: string;
+  name: string;
+  cuisine: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  ownerUid: string;
+  address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  isOpen?: boolean | null;
+  isVisible?: boolean | null;
+  rating?: number | null;
+  isFeatured?: boolean | null;
+  tags?: string[] | null;
+  features?: string[] | null;
+  phone?: string | null;
+  websiteUrl?: string | null;
+  // Extended fields
+  todaysMenuItems: Array<{
+    id: string;
+    name: string;
+    description?: string | null;
+    price: number;
+    imageUrl?: string | null;
+  }>;
+  isHere: boolean;
+  distance?: string;
 };
+
+// =======================
+// API RESPONSE TYPES
+// =======================
+export type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
+
+export type PaginatedResponse<T> = ApiResponse<{
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}>;
+
+// =======================
+// SESSION TYPES (NextAuth)
+// =======================
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string | null;
+      image?: string | null;
+      role: UserRole;
+      truckId?: string | null;
+    };
+  }
+
+  interface User {
+    role?: UserRole;
+    truckId?: string | null;
+  }
+
+  interface JWT {
+    id: string;
+    role: UserRole;
+    truckId?: string | null;
+  }
+}

@@ -1,186 +1,412 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { auth, db, storage } from '@/lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Loader2, User2, UploadCloud, Save, AlertTriangle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import NextImage from 'next/image';
+import { Settings, Save, Loader2, Truck, MapPin, Phone, Globe, Camera, Image as ImageIcon, Upload } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-function ProfilePhoto({ url, onChange, loading }: { url?: string, onChange: (f: File) => void, loading?: boolean }) {
-  return (
-    <div className="flex flex-col items-center gap-2 mb-4">
-      <div className="w-28 h-28 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-primary/30 shadow">
-        {url ? (
-          <NextImage src={url} width={112} height={112} alt="Profile" className="object-cover w-28 h-28" />
-        ) : (
-          <User2 className="w-12 h-12 text-muted-foreground" />
-        )}
-      </div>
-      <label className="inline-flex items-center gap-2 text-sm font-medium cursor-pointer mt-2">
-        <UploadCloud className="w-4 h-4" />
-        {loading ? "Uploading..." : "Change Photo"}
-        <input type="file" accept="image/*" className="hidden" disabled={loading} onChange={e => {
-          if (e.target.files?.[0]) onChange(e.target.files[0]);
-        }} />
-      </label>
-    </div>
-  );
+interface TruckProfile {
+  id: string;
+  name: string;
+  cuisine: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  ctaPhoneNumber?: string;
+  facebookHandle?: string;
+  instagramHandle?: string;
+  tiktokHandle?: string;
+  websiteUrl?: string;
+  imageUrl?: string;
+  logoUrl?: string;
 }
 
 export default function OwnerProfilePage() {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [truck, setTruck] = useState<any>(null);
-  const [truckId, setTruckId] = useState<string | null>(null);
-  const [photoLoading, setPhotoLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const { toast } = useToast();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
-  // Local state for form fields
-  const [name, setName] = useState('');
-  const [cuisine, setCuisine] = useState('');
-  const [desc, setDesc] = useState('');
-  const [photo, setPhoto] = useState<string>('');
-  const [social, setSocial] = useState('');
+  const [profile, setProfile] = useState<TruckProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
-  // Load auth/user/truck info
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async user => {
-      if (!user) {
-        router.push('/login?redirect=/owner/profile');
-        return;
-      }
-      setCurrentUser(user);
-      // Get truck id from user doc
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) return;
-      const userData = userDoc.data();
-      const tId = userData.truckId || user.uid;
-      setTruckId(tId);
-      // Get truck doc
-      const tDoc = await getDoc(doc(db, 'trucks', tId));
-      if (!tDoc.exists()) return;
-      const t = tDoc.data();
-      setTruck(t);
-      setName(t.name || '');
-      setCuisine(t.cuisine || '');
-      setDesc(t.description || '');
-      setPhoto(t.photoUrl || '');
-      setSocial(t.social || '');
-    });
-    return () => unsub();
-  }, [router]);
-
-  // Upload new photo
-  const handlePhoto = useCallback(async (file: File) => {
-    if (!currentUser || !truckId) return;
-    setPhotoLoading(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `truckPhotos/${truckId}.${ext}`;
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setPhoto(url);
-      await updateDoc(doc(db, 'trucks', truckId), { photoUrl: url });
-      toast({ title: "Photo Updated", description: "Your truck profile photo is live." });
-    } catch {
-      toast({ title: "Upload Failed", description: "Please try a different photo.", variant: "destructive" });
+    if (status === 'unauthenticated') {
+      router.push('/owner/login');
     }
-    setPhotoLoading(false);
-  }, [currentUser, truckId, toast]);
+  }, [status, router]);
 
-  // Save
-  const canSave = name.length >= 2 && cuisine.length >= 2 && desc.length >= 5;
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const truckId = (session?.user as any)?.truckId;
+        if (truckId) {
+          const res = await fetch(`/api/trucks/${truckId}`);
+          const data = await res.json();
+          if (data.success) {
+            setProfile(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const handleSave = useCallback(async () => {
-    if (!truckId) return;
+    if (status === 'authenticated') {
+      fetchProfile();
+    }
+  }, [status, session]);
+
+  const handleImageUpload = async (file: File, type: 'logo' | 'cover') => {
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingCover;
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        if (type === 'logo') {
+          setProfile(prev => prev ? { ...prev, logoUrl: data.url } : null);
+        } else {
+          setProfile(prev => prev ? { ...prev, imageUrl: data.url } : null);
+        }
+        toast({ title: `${type === 'logo' ? 'Logo' : 'Cover image'} uploaded!` });
+      } else {
+        throw new Error(data.error || 'Upload failed');
+      }
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description: 'Could not upload image',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profile) return;
+
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'trucks', truckId), {
-        name: name.trim(),
-        cuisine: cuisine.trim(),
-        description: desc.trim(),
-        photoUrl: photo,
-        social: social.trim()
+      const res = await fetch(`/api/trucks/${profile.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
       });
-      toast({ title: "Profile Saved", description: "Truck details updated." });
-      setTruck({
-        ...truck,
-        name: name.trim(),
-        cuisine: cuisine.trim(),
-        description: desc.trim(),
-        photoUrl: photo,
-        social: social.trim()
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error saving profile.');
-    }
-    setSaving(false);
-  }, [truck, truckId, name, cuisine, desc, photo, social, toast]);
 
-  // ---- UI ----
-  if (!currentUser || !truck) {
+      if (res.ok) {
+        toast({ title: '✅ Profile saved!' });
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save profile',
+        variant: 'destructive'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (status === 'loading' || loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
-        <div className="font-medium">Loading your truck profile...</div>
+      <div className="min-h-screen bg-slate-950 p-6">
+        <div className="container mx-auto max-w-2xl space-y-6">
+          <Skeleton className="h-12 w-64 bg-slate-800" />
+          <Skeleton className="h-96 bg-slate-800 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto pt-12 pb-24 px-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Your Truck Profile</CardTitle>
-          <CardDescription>
-            Customers see this. A great profile gets more sales!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProfilePhoto url={photo} onChange={handlePhoto} loading={photoLoading} />
-          <div className="mb-4">
-            <Label htmlFor="truck-name" className="font-medium">Truck Name *</Label>
-            <Input id="truck-name" value={name} onChange={e => setName(e.target.value)} maxLength={32} placeholder="eg. Tasty Thai" autoFocus required />
-          </div>
-          <div className="mb-4">
-            <Label htmlFor="truck-cuisine" className="font-medium">Cuisine *</Label>
-            <Input id="truck-cuisine" value={cuisine} onChange={e => setCuisine(e.target.value)} maxLength={24} placeholder="eg. Thai, Burgers, Fusion..." required />
-          </div>
-          <div className="mb-4">
-            <Label htmlFor="truck-desc" className="font-medium">Short Description *</Label>
-            <Input id="truck-desc" value={desc} onChange={e => setDesc(e.target.value)} maxLength={120} placeholder="Write a short, delicious intro!" required />
-          </div>
-          <div className="mb-6">
-            <Label htmlFor="truck-social" className="font-medium">Instagram or Social (optional)</Label>
-            <Input id="truck-social" value={social} onChange={e => setSocial(e.target.value)} maxLength={40} placeholder="@yourtruck" />
-          </div>
-          {!canSave && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Complete Profile Required</AlertTitle>
-              <AlertDescription>
-                Please fill in Truck Name, Cuisine, and Description (at least 5 characters).
-              </AlertDescription>
-            </Alert>
-          )}
-          <Button onClick={handleSave} className="w-full gap-2" disabled={!canSave || saving}>
-            <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="container mx-auto max-w-2xl px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <Settings className="w-8 h-8 text-slate-400" />
+            Truck Profile
+          </h1>
+          <p className="text-slate-400 mt-1">Edit your truck's information and images</p>
+        </motion.div>
+
+        {/* Images Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-6"
+        >
+          <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+            {/* Cover Image */}
+            <div
+              className="relative h-48 bg-slate-800 cursor-pointer group"
+              onClick={() => coverInputRef.current?.click()}
+            >
+              {profile?.imageUrl ? (
+                <img
+                  src={profile.imageUrl}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                  <ImageIcon className="w-12 h-12 mb-2" />
+                  <span>Add cover image</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                {uploadingCover ? (
+                  <Loader2 className="w-8 h-8 animate-spin text-white" />
+                ) : (
+                  <div className="text-white text-center">
+                    <Camera className="w-8 h-8 mx-auto mb-1" />
+                    <span className="text-sm">Change cover</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file, 'cover');
+                }}
+              />
+            </div>
+
+            {/* Logo */}
+            <div className="relative px-6 pb-6">
+              <div
+                className="absolute -top-12 left-6 w-24 h-24 rounded-xl overflow-hidden border-4 border-slate-900 bg-slate-800 cursor-pointer group shadow-xl"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {profile?.logoUrl ? (
+                  <img
+                    src={profile.logoUrl}
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                    <Truck className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  {uploadingLogo ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-white" />
+                  )}
+                </div>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file, 'logo');
+                  }}
+                />
+              </div>
+              <div className="pt-16">
+                <p className="text-sm text-slate-400">
+                  <Camera className="w-4 h-4 inline mr-1" />
+                  Click images above to upload logo and cover photo
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Profile Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-6 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  Truck Name
+                </Label>
+                <Input
+                  value={profile?.name || ''}
+                  onChange={(e) => setProfile(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300">Cuisine Type</Label>
+                <Input
+                  placeholder="e.g., Mexican, Thai, BBQ"
+                  value={profile?.cuisine || ''}
+                  onChange={(e) => setProfile(prev => prev ? { ...prev, cuisine: e.target.value } : null)}
+                  className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300">Description</Label>
+                <Textarea
+                  placeholder="Tell customers about your truck..."
+                  value={profile?.description || ''}
+                  onChange={(e) => setProfile(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  className="bg-slate-800 border-slate-700 text-white min-h-[100px] focus:border-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Default Address
+                </Label>
+                <Input
+                  placeholder="Your usual location"
+                  value={profile?.address || ''}
+                  onChange={(e) => setProfile(prev => prev ? { ...prev, address: e.target.value } : null)}
+                  className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-slate-300 flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Phone
+                  </Label>
+                  <Input
+                    placeholder="+1 234 567 890"
+                    value={profile?.phone || ''}
+                    onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                    className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300 flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-green-400" />
+                    CTA Phone (Prominent)
+                  </Label>
+                  <Input
+                    placeholder="+1 234 567 890"
+                    value={profile?.ctaPhoneNumber || ''}
+                    onChange={(e) => setProfile(prev => prev ? { ...prev, ctaPhoneNumber: e.target.value } : null)}
+                    className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Website
+                </Label>
+                <Input
+                  placeholder="https://..."
+                  value={profile?.websiteUrl || ''}
+                  onChange={(e) => setProfile(prev => prev ? { ...prev, websiteUrl: e.target.value } : null)}
+                  className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                />
+              </div>
+
+              {/* Social Media Handles */}
+              <div className="border-t border-slate-700 pt-6 mt-6">
+                <h3 className="text-lg font-semibold text-slate-200 mb-4">Social Media</h3>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                      Facebook
+                    </Label>
+                    <Input
+                      placeholder="yourpage"
+                      value={profile?.facebookHandle || ''}
+                      onChange={(e) => setProfile(prev => prev ? { ...prev, facebookHandle: e.target.value } : null)}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+                      Instagram
+                    </Label>
+                    <Input
+                      placeholder="yourhandle"
+                      value={profile?.instagramHandle || ''}
+                      onChange={(e) => setProfile(prev => prev ? { ...prev, instagramHandle: e.target.value } : null)}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-slate-300 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" /></svg>
+                      TikTok
+                    </Label>
+                    <Input
+                      placeholder="yourhandle"
+                      value={profile?.tiktokHandle || ''}
+                      onChange={(e) => setProfile(prev => prev ? { ...prev, tiktokHandle: e.target.value } : null)}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-white font-semibold"
+              >
+                {saving ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" />Save Changes</>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

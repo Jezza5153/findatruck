@@ -60,7 +60,7 @@ export function SiteFooter() {
                     href="/signup"
                     className="text-muted-foreground hover:text-primary transition-colors flex items-center"
                   >
-                   <span>
+                    <span>
                       <User className="w-4 h-4 mr-1.5 inline-block transition-transform hover:scale-110" />
                       Customer Signup
                     </span>
@@ -119,6 +119,7 @@ export function SiteFooter() {
                     </span>
                   </Link>
                 </li>
+                {/* Hidden for free launch
                 <li>
                   <Link
                     href="/owner/billing"
@@ -130,6 +131,7 @@ export function SiteFooter() {
                     </span>
                   </Link>
                 </li>
+                */}
               </ul>
             </div>
 

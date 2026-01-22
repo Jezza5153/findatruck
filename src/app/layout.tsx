@@ -1,10 +1,12 @@
-import React from 'react'; 
+import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { Toaster } from '@/components/ui/toaster';
+import { SessionProvider } from '@/components/SessionProvider';
+import CustomerBottomNav from '@/components/CustomerBottomNav';
 import { cn } from '@/lib/utils';
 
 const inter = Inter({
@@ -60,27 +62,29 @@ export default function RootLayout({ children }: RootLayoutProps) {
           inter.variable
         )}
       >
-        {/* Accessibility skip link */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 z-50"
-        >
-          Skip to content
-        </a>
-        <div className="relative flex min-h-dvh flex-col">
-          <SiteHeader />
-          <main
-            id="main-content"
-            role="main"
-            tabIndex={-1}
-            className="flex-1 outline-none"
+        <SessionProvider>
+          {/* Accessibility skip link */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only absolute top-0 left-0 bg-primary text-primary-foreground px-4 py-2 z-50"
           >
-            {/* Robustly ensure no Children.only error by always providing a valid element */}
-            {React.isValidElement(children) ? children : <div>{children === null || children === undefined ? null : children}</div>}
-          </main>
-          <SiteFooter />
-        </div>
-        <Toaster />
+            Skip to content
+          </a>
+          <div className="relative flex min-h-dvh flex-col">
+            <SiteHeader />
+            <main
+              id="main-content"
+              role="main"
+              tabIndex={-1}
+              className="flex-1 outline-none"
+            >
+              {React.isValidElement(children) ? children : <div>{children === null || children === undefined ? null : children}</div>}
+            </main>
+            <SiteFooter />
+          </div>
+          <CustomerBottomNav />
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );

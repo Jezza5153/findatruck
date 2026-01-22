@@ -1,32 +1,30 @@
 'use client';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MenuSquare, LineChart, CalendarClock, CreditCard, Edit, Eye } from "lucide-react";
+import { LayoutDashboard, LineChart, CalendarClock, Edit, Eye, Utensils } from "lucide-react";
 
 const menu = [
-  { href: "/owner/dashboard", label: "Dashboard", icon: <MenuSquare /> },
-  { href: "/owner/profile", label: "Truck Profile", icon: <Edit /> },
-  { href: "/owner/menu", label: "Menu", icon: <MenuSquare /> },
-  { href: "/owner/schedule", label: "Schedule", icon: <CalendarClock /> },
-  { href: "/owner/orders", label: "Orders", icon: <Eye /> },
-  { href: "/owner/analytics", label: "Analytics", icon: <LineChart /> },
-  { href: "/owner/billing", label: "Billing", icon: <CreditCard /> },
+  { href: "/owner/dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+  { href: "/owner/profile", label: "Truck Profile", icon: <Edit className="w-5 h-5" /> },
+  { href: "/owner/menu", label: "Menu", icon: <Utensils className="w-5 h-5" /> },
+  { href: "/owner/schedule", label: "Schedule", icon: <CalendarClock className="w-5 h-5" /> },
+  { href: "/owner/orders", label: "Orders", icon: <Eye className="w-5 h-5" /> },
+  { href: "/owner/analytics", label: "Analytics", icon: <LineChart className="w-5 h-5" /> },
 ];
 
 const OwnerSidebar = () => {
   const pathname = usePathname();
   return (
-    <aside className="hidden md:flex flex-col w-60 min-h-screen bg-[hsl(var(--sidebar-background))] border-r border-[hsl(var(--sidebar-border))] px-4 py-6">
+    <aside className="hidden md:flex flex-col w-60 min-h-screen bg-slate-900 border-r border-slate-700 px-4 py-6">
       <nav className="space-y-1">
         {menu.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center px-4 py-2 rounded-lg transition font-medium text-base gap-3 ${
-              pathname === item.href
-                ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-primary))]"
-            }`}
+            className={`flex items-center px-4 py-3 rounded-xl transition-all font-medium text-sm gap-3 ${pathname === item.href
+                ? "bg-gradient-to-r from-primary to-yellow-500/80 text-white shadow-lg"
+                : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              }`}
           >
             {item.icon}
             <span>{item.label}</span>
@@ -38,3 +36,4 @@ const OwnerSidebar = () => {
 };
 
 export default OwnerSidebar;
+

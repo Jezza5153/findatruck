@@ -1,356 +1,270 @@
-
 'use client';
-import React, { useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu,
-  Utensils,
-  LogOut,
-  UserCircle,
-  Home,
-  MapPin,
-  HelpCircle,
-  Bell,
-  Gift,
-  LogIn as LogInIcon,
-  Star,
-  ChefHat,
-  Settings,
+  Menu, X, MapPin, Star, User, LogIn, LogOut,
+  ChefHat, LayoutDashboard, Utensils, Settings, Bell
 } from 'lucide-react';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter, usePathname } from 'next/navigation';
-import type { UserDocument } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import HeaderStatsBar from '@/components/HeaderStatsBar';
+
+const navLinks = [
+  { href: '/map', label: 'Find Trucks', icon: MapPin },
+  { href: '/featured', label: 'Featured', icon: Star },
+];
 
 export function SiteHeader() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserDocument['role'] | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
-  const pathnameRaw = usePathname();
+  const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Normalize trailing slashes (for accurate active links)
-  const pathname = pathnameRaw?.endsWith('/') && pathnameRaw.length > 1
-    ? pathnameRaw.slice(0, -1)
-    : pathnameRaw;
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated';
+  const userRole = (session?.user as any)?.role;
+  const isOwner = userRole === 'owner';
 
-  useEffect(() => {
-    setIsLoadingAuth(true);
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        try {
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data() as UserDocument;
-            setUserRole(userData.role);
-            setUserName(
-              userData.truckName ||
-              userData.name ||
-              currentUser.displayName ||
-              currentUser.email ||
-              'User'
-            );
-          } else {
-            setUserRole(null);
-            setUserName(null);
-          }
-        } catch (error) {
-          setUserRole(null);
-          setUserName(null);
-        }
-      } else {
-        setUserRole(null);
-        setUserName(null);
-      }
-      setIsLoadingAuth(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setUserRole(null);
-      setUserName(null);
-      setIsSheetOpen(false);
-      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-      router.push('/');
-    } catch (error) {
-      toast({
-        title: 'Logout Failed',
-        description: 'Could not log you out. Please try again.',
-        variant: 'destructive',
-      });
-    }
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
   };
 
-  // Main icon for branding
-  const BrandIcon = Utensils;
+  // Don't show header on auth pages
+  const isAuthPage = pathname?.startsWith('/login') ||
+    pathname?.startsWith('/signup') ||
+    pathname?.startsWith('/owner/login') ||
+    pathname?.startsWith('/owner/signup');
 
-  // Navigation Links (centralized for DRY code)
-  const commonNavLinks = [
-    { href: '/map', label: 'Find Trucks', icon: MapPin },
-    { href: '/featured', label: 'Featured', icon: Star },
-    { href: '/help', label: 'Help & FAQ', icon: HelpCircle },
-  ];
-  const customerAuthNavLinks = [
-    { href: '/customer/dashboard', label: 'My Dashboard', icon: Settings },
-    { href: '/customer/notifications', label: 'Notifications', icon: Bell },
-    { href: '/customer/rewards', label: 'Rewards', icon: Gift },
-  ];
-  const ownerAuthNavLinks = [
-    { href: '/owner/dashboard', label: 'Owner Dashboard', icon: ChefHat },
-  ];
-
-  const handleLinkClick = () => setIsSheetOpen(false);
-
-  /**
-   * Render Navigation Links (handles both mobile & desktop)
-   */
-  const renderNavLinks = (isMobile = false) => {
-    const mobileBaseClass = 'justify-start text-base py-3 w-full';
-    const desktopBaseClass = 'text-sm';
-    const iconClass = isMobile ? 'mr-3 h-5 w-5' : 'mr-2 h-4 w-4';
-
-    return (
-      <>
-        {isMobile && (
-          <Link
-            href="/"
-            aria-label="Truck Tracker Home"
-            className={cn(buttonVariants({ variant: 'ghost', size: 'lg' }), mobileBaseClass)}
-            onClick={handleLinkClick}
-          >
-            <span className="flex items-center">
-              <Home className={iconClass} />
-              Home
-            </span>
-          </Link>
-        )}
-
-        {commonNavLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={cn(
-              buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
-              isMobile ? mobileBaseClass : desktopBaseClass,
-              pathname === link.href ? 'bg-primary/10 text-primary font-semibold' : ''
-            )}
-            aria-current={pathname === link.href ? 'page' : undefined}
-            onClick={handleLinkClick}
-          >
-            <span className="flex items-center">
-              {React.createElement(link.icon, { className: iconClass })}
-              {link.label}
-            </span>
-          </Link>
-        ))}
-
-        {/* Authenticated navigation */}
-        {user && !isLoadingAuth && (
-          <>
-            {userRole === 'customer' &&
-              customerAuthNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
-                    isMobile ? mobileBaseClass : desktopBaseClass,
-                    pathname === link.href ? 'bg-primary/10 text-primary font-semibold' : ''
-                  )}
-                  aria-current={pathname === link.href ? 'page' : undefined}
-                  onClick={handleLinkClick}
-                >
-                  <span className="flex items-center">
-                    {React.createElement(link.icon, { className: iconClass })}
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            {userRole === 'owner' &&
-              ownerAuthNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
-                    isMobile
-                      ? `${mobileBaseClass} text-accent border-accent hover:bg-accent/10 hover:text-accent`
-                      : desktopBaseClass,
-                    pathname === link.href
-                      ? isMobile
-                        ? 'bg-accent/20 text-accent-foreground font-semibold'
-                        : 'bg-primary/10 text-primary font-semibold'
-                      : ''
-                  )}
-                  aria-current={pathname === link.href ? 'page' : undefined}
-                  onClick={handleLinkClick}
-                >
-                  <span className="flex items-center">
-                    {React.createElement(link.icon, { className: iconClass })}
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            {isMobile && <hr className="my-2 border-border" />}
-            <Button
-              size={isMobile ? 'lg' : 'sm'}
-              variant={isMobile ? 'destructive' : 'outline'}
-              onClick={handleLogout}
-              className={cn(isMobile ? mobileBaseClass : desktopBaseClass)}
-            >
-              <span className="flex items-center">
-                <LogOut className={iconClass} />
-                Logout
-              </span>
-            </Button>
-          </>
-        )}
-
-        {/* Not authenticated */}
-        {!user && !isLoadingAuth && (
-          <>
-            {isMobile && <hr className="my-2 border-border" />}
-            <Link
-              href="/login"
-              className={cn(
-                buttonVariants({ variant: 'ghost', size: isMobile ? 'lg' : 'sm' }),
-                isMobile ? mobileBaseClass : desktopBaseClass
-              )}
-              onClick={handleLinkClick}
-            >
-              <span className="flex items-center">
-                <LogInIcon className={iconClass} />
-                Login
-              </span>
-            </Link>
-            <Link
-              href="/signup"
-              className={cn(
-                buttonVariants({ variant: 'default', size: isMobile ? 'lg' : 'sm' }),
-                isMobile ? `${mobileBaseClass} bg-primary text-primary-foreground hover:bg-primary/90` : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              )}
-              onClick={handleLinkClick}
-            >
-              <span className="flex items-center">
-                <UserCircle className={iconClass} />
-                Customer Sign Up
-              </span>
-            </Link>
-            {isMobile && (
-              <Link
-                href="/owner/signup"
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'lg' }),
-                  mobileBaseClass,
-                  'text-accent border-accent hover:bg-accent/10 hover:text-accent'
-                )}
-                onClick={handleLinkClick}
-              >
-                <span className="flex items-center">
-                  <ChefHat className={iconClass} />
-                  Owner Sign Up
-                </span>
-              </Link>
-            )}
-          </>
-        )}
-      </>
-    );
-  };
+  if (isAuthPage) {
+    return null;
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        {/* Brand/logo */}
-        <Link
-          href="/"
-          className="mr-6 flex items-center space-x-2 group"
-          aria-label="Truck Tracker Home"
-          onClick={isSheetOpen ? handleLinkClick : undefined}
-        >
-          <span className="flex items-center"> {/* Wrapper for single child */}
-            <BrandIcon className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-            <span className="font-bold sm:inline-block text-lg tracking-tight ml-2">Truck Tracker</span>
-          </span>
-        </Link>
-        {/* Stats bar (centered) */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="relative h-0 w-full">
-            <HeaderStatsBar />
+    <header className="sticky top-0 z-50 w-full bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <Utensils className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-xl text-white hidden sm:block">
+              Findatruck
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-white/10 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  <link.icon className="w-4 h-4" />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-3">
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+            ) : isAuthenticated ? (
+              <>
+                {/* Notifications (placeholder) */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-slate-400 hover:text-white hover:bg-white/10 hidden sm:flex"
+                >
+                  <Bell className="w-5 h-5" />
+                </Button>
+
+                {/* User Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-9 w-9 rounded-full ring-2 ring-slate-600/50 hover:ring-primary/50 transition-all"
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || 'User'} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-yellow-500 text-white font-semibold">
+                          {session.user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-white">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{session.user?.name}</p>
+                        <p className="text-xs text-slate-400">{session.user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-slate-700" />
+
+                    {isOwner ? (
+                      <>
+                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                          <Link href="/owner/dashboard" className="flex items-center">
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                          <Link href="/owner/menu" className="flex items-center">
+                            <Utensils className="mr-2 h-4 w-4" />
+                            Manage Menu
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                          <Link href="/owner/profile" className="flex items-center">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Settings
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                          <Link href="/customer/dashboard" className="flex items-center">
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            My Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="hover:bg-slate-700 cursor-pointer">
+                          <Link href="/customer/notifications" className="flex items-center">
+                            <Bell className="mr-2 h-4 w-4" />
+                            Notifications
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
+                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="hover:bg-slate-700 cursor-pointer text-red-400 focus:text-red-400"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    className="text-slate-300 hover:text-white hover:bg-white/10"
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/signup" className="hidden sm:block">
+                  <Button className="bg-gradient-to-r from-primary to-yellow-500 hover:from-primary/90 hover:to-yellow-500/90 text-white">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-slate-400 hover:text-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
           </div>
         </div>
-        {/* Desktop nav and menu trigger */}
-        <div className="flex items-center gap-2">
-          <nav className="hidden md:flex gap-1 items-center">{renderNavLinks(false)}</nav>
-          {user && !isLoadingAuth && (
-            <div className="hidden md:flex items-center gap-3 ml-2 max-w-[180px]">
-              <UserCircle className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm font-medium text-muted-foreground truncate" title={userName || undefined}>
-                {userName || 'User'}
-              </span>
-            </div>
-          )}
-          {/* Mobile Menu */}
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" className="md:hidden px-2" aria-label="Open menu">
-                <span className="flex items-center justify-center"> {/* Ensures single child for Button */}
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle Menu</span>
-                </span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0" aria-label="Truck Tracker Menu">
-              <SheetHeader className="p-4 border-b relative">
-                <Link href="/" className="flex items-center space-x-2" onClick={handleLinkClick} aria-label="Truck Tracker Home">
-                  <span className="flex items-center"> {/* Wrapper for single child */}
-                    <BrandIcon className="h-6 w-6 text-primary" />
-                    <SheetTitle>Truck Tracker</SheetTitle>
-                  </span>
-                </Link>
-                <VisuallyHidden>
-                  <SheetTitle>Menu</SheetTitle>
-                </VisuallyHidden>
-                <SheetClose
-                  className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
-                  aria-label="Close menu"
-                />
-              </SheetHeader>
-              <div className="p-4 flex flex-col gap-2">
-                {user && !isLoadingAuth && (
-                  <div className="flex items-center gap-3 mb-2 border-b pb-3">
-                    <UserCircle className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
-                    <span className="font-semibold text-base truncate max-w-[160px]" title={userName || undefined}>
-                      {userName || 'User'}
-                    </span>
-                  </div>
-                )}
-                {renderNavLinks(true)}
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
       </div>
-      {/* Gradient shadow under header */}
-      <div className="absolute left-0 right-0 top-16 h-2 bg-gradient-to-b from-background/70 to-transparent pointer-events-none z-30" />
+
+      {/* Mobile Navigation */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden overflow-hidden bg-slate-900/95 border-t border-slate-700/50"
+          >
+            <nav className="container mx-auto px-4 py-4 space-y-2">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              {isAuthenticated && (
+                <>
+                  <div className="border-t border-slate-700/50 my-2 pt-2" />
+                  {isOwner ? (
+                    <Link
+                      href="/owner/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+                    >
+                      <LayoutDashboard className="w-5 h-5" />
+                      Dashboard
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/customer/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+                    >
+                      <User className="w-5 h-5" />
+                      My Account
+                    </Link>
+                  )}
+                </>
+              )}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
-
-export default SiteHeader;

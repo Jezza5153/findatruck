@@ -1,169 +1,196 @@
-
 'use client';
-import React, { Suspense } from 'react';
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LogIn, Utensils, UserPlus, ChefHat, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useToast } from "@/hooks/use-toast";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
-import type { UserDocument } from "@/lib/types";
-import * as z from "zod";
-import { cn } from '@/lib/utils';
 
-const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
-});
+import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, LogIn, ChefHat, User, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
 
-function LoginPageInner() { 
+function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
 
-  const handleLogin: SubmitHandler<LoginFormValues> = async (data) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data() as UserDocument;
-        const redirectUrl = searchParams.get('redirect') || (userData.role === 'owner' ? '/owner/dashboard' : '/customer/dashboard');
-        toast({
-          title: "Login Successful!",
-          description: `Welcome back, ${userData.name || userData.ownerName || 'User'}! Redirecting...`,
-        });
-        router.push(redirectUrl);
-      } else {
-        await signOut(auth);
-        toast({
-          title: "Login Failed",
-          description: "User profile not found. Please try signing up or contact support.",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      let errorMessage = "An error occurred during login. Please try again.";
-      if (error.code) {
-        switch (error.code) {
-            case 'auth/user-not-found':
-            case 'auth/wrong-password':
-            case 'auth/invalid-credential': 
-            errorMessage = "Invalid email or password. Please check your credentials.";
-            break;
-            case 'auth/too-many-requests':
-            errorMessage = "Too many login attempts. Please try again later or reset your password.";
-            break;
-            case 'auth/user-disabled':
-            errorMessage = "This account has been disabled. Please contact support.";
-            break;
-            default:
-            errorMessage = `Login failed: ${error.message || "Please try again."}`;
-        }
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !password) {
       toast({
-        title: "Login Failed",
-        description: errorMessage,
-        variant: "destructive",
+        title: 'Missing fields',
+        description: 'Please enter both email and password.',
+        variant: 'destructive',
       });
-      setError("email", { message: errorMessage });
-      setError("password", { message: "" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await signIn('credentials', {
+        email: email.toLowerCase(),
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast({
+          title: 'Login failed',
+          description: 'Invalid email or password. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Welcome back!',
+          description: 'Login successful. Redirecting...',
+        });
+
+        // Redirect based on callback or to home
+        router.push('/');
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-primary/5">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <Utensils className="mx-auto h-12 w-12 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold tracking-tight">Welcome to Truck Tracker!</CardTitle>
-          <CardDescription>Log in to continue to your account.</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit(handleLogin)} autoComplete="on">
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="email-login">Email address</Label>
-              <Input 
-                id="email-login" 
-                type="email" 
-                {...register("email")} 
-                placeholder="you@example.com" 
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                aria-describedby="email-login-error"
-              />
-              {errors.email && <p id="email-login-error" className="text-xs text-destructive mt-1">{errors.email.message}</p>}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        <Card className="border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl">
+          <CardHeader className="space-y-2 text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-yellow-500 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
+              <LogIn className="w-8 h-8 text-white" />
             </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password-login">Password</Label>
-                <Link href="#" passHref legacyBehavior>
-                  <a className="text-sm font-medium text-primary hover:underline" tabIndex={0}>
-                    Forgot your password?
-                  </a>
+            <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
+            <CardDescription className="text-slate-400">
+              Sign in to your Findatruck account
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-primary to-yellow-500 hover:from-primary/90 hover:to-yellow-500/90 text-white font-semibold py-6 text-lg shadow-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-600" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-slate-800 px-4 text-slate-400">New to Findatruck?</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Link href="/signup">
+                  <Button
+                    variant="outline"
+                    className="w-full bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Customer
+                  </Button>
+                </Link>
+                <Link href="/owner/signup">
+                  <Button
+                    variant="outline"
+                    className="w-full bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                  >
+                    <ChefHat className="mr-2 h-4 w-4" />
+                    Owner
+                  </Button>
                 </Link>
               </div>
-              <Input 
-                id="password-login" 
-                type="password" 
-                {...register("password")} 
-                placeholder="••••••••" 
-                autoComplete="current-password"
-                aria-invalid={!!errors.password}
-                aria-describedby="password-login-error"
-              />
-              {errors.password && <p id="password-login-error" className="text-xs text-destructive mt-1">{errors.password.message}</p>}
             </div>
-            <div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isSubmitting} aria-busy={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                {isSubmitting ? "Logging in..." : "Log In"}
-              </Button>
-            </div>
-          </CardContent>
-        </form>
-        <CardFooter className="flex flex-col items-center space-y-3 pt-4">
-            <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
-                <Link href="/signup" className={cn(buttonVariants({ variant: "outline" }), "w-full flex items-center justify-center")}>
-                  <span><UserPlus className="mr-2 h-4 w-4" /> Customer Signup</span>
-                </Link>
-                <Link href="/owner/signup" className={cn(buttonVariants({ variant: "outline" }), "w-full flex items-center justify-center text-accent border-accent hover:bg-accent/10 hover:text-accent")}>
-                  <span><ChefHat className="mr-2 h-4 w-4" /> Owner Signup</span>
-                </Link>
-            </div>
-        </CardFooter>
-      </Card>
-    </div>
-  );
-}
 
-export default function Page() {
-  return (
-    <Suspense fallback={
-      <div className="w-full h-screen flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2">Loading...</span>
-      </div>
-    }>
-      <LoginPageInner />
-    </Suspense>
+            <Link
+              href="/"
+              className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to home
+            </Link>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
 }

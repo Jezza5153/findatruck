@@ -4,97 +4,103 @@
 
 @layer base {
   :root {
-    /* New Color Scheme: Nature-inspired blue, yellow, bright green */
-    --background: 210 40% 98%; /* Light Blue-Gray (Almost White) */
-    --foreground: 210 40% 10%; /* Dark Blue-Gray */
+    /* FindATruck Brand System */
+    /* Primary: Truck Orange #FF6A00 → HSL 25 100% 50% */
+    /* Accent: Signal Yellow #FFC700 → HSL 47 100% 50% */
+    /* Background: Warm White #FAFAF7 → HSL 60 20% 97% */
+    /* Dark: Asphalt #1F1F1F → HSL 0 0% 12% */
+    /* Muted: Concrete Gray #9CA3AF → HSL 218 11% 65% */
 
-    --card: 210 40% 98%;
-    --card-foreground: 210 40% 10%;
+    --background: 60 20% 97%; /* Warm White */
+    --foreground: 0 0% 12%; /* Asphalt */
 
-    --popover: 210 40% 98%;
-    --popover-foreground: 210 40% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
 
-    --primary: 220 70% 50%; /* Bright Blue */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+
+    --primary: 25 100% 50%; /* Truck Orange */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 50 100% 50%; /* Bright Yellow */
-    --secondary-foreground: 50 100% 15%; /* Darker Yellow/Brown for text on yellow */
+    --secondary: 47 100% 50%; /* Signal Yellow */
+    --secondary-foreground: 0 0% 12%; /* Asphalt */
 
-    --muted: 210 40% 90%; /* Lighter Blue-Gray */
-    --muted-foreground: 210 20% 45%; /* Medium Blue-Gray */
+    --muted: 60 10% 92%;
+    --muted-foreground: 218 11% 45%; /* Concrete Gray - darker for text */
 
-    --accent: 100 70% 45%; /* Bright Green */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 47 100% 50%; /* Signal Yellow */
+    --accent-foreground: 0 0% 12%;
 
-    --destructive: 0 84.2% 60.2%; /* Kept from original, commonly red */
-    --destructive-foreground: 0 0% 98%; /* Kept from original */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 210 30% 80%; /* Light Blue-Gray Border */
-    --input: 210 30% 80%; /* Light Blue-Gray Input Background or Border */
-    --ring: 220 70% 50%; /* Bright Blue for focus ring */
+    --border: 218 11% 80%;
+    --input: 218 11% 80%;
+    --ring: 25 100% 50%; /* Truck Orange */
 
-    --chart-1: 220 70% 50%; /* Blue */
-    --chart-2: 50 100% 50%; /* Yellow */
-    --chart-3: 100 70% 45%; /* Green */
-    --chart-4: 30 90% 55%; /* Orange - can be an additional accent */
-    --chart-5: 300 70% 60%; /* Purple - can be an additional accent */
+    --chart-1: 25 100% 50%; /* Orange */
+    --chart-2: 47 100% 50%; /* Yellow */
+    --chart-3: 142 71% 45%; /* Green for success */
+    --chart-4: 0 84% 60%; /* Red */
+    --chart-5: 262 83% 58%; /* Purple */
     --radius: 0.5rem;
 
-    /* Sidebar variables - using new theme */
-    --sidebar-background: 210 40% 96%; /* Slightly off-white blue */
-    --sidebar-foreground: 210 40% 20%; /* Dark blue-gray text */
-    --sidebar-primary: 220 70% 50%; /* Bright Blue */
-    --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 210 40% 90%; /* Lighter blue-gray accent */
-    --sidebar-accent-foreground: 210 40% 15%; /* Darker text for accent */
-    --sidebar-border: 210 30% 75%;
-    --sidebar-ring: 220 70% 50%;
+    /* Sidebar variables - brand aligned */
+    --sidebar-background: 0 0% 12%; /* Asphalt */
+    --sidebar-foreground: 60 20% 95%;
+    --sidebar-primary: 25 100% 50%; /* Truck Orange */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 60 20% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 25 100% 50%;
   }
 
   .dark {
-    --background: 210 40% 10%; /* Dark Blue-Gray */
-    --foreground: 210 40% 95%; /* Light Blue-Gray (Almost White) */
+    --background: 0 0% 8%; /* Dark Asphalt */
+    --foreground: 60 10% 95%; /* Off-white */
 
-    --card: 210 40% 10%;
-    --card-foreground: 210 40% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 60 10% 95%;
 
-    --popover: 210 40% 10%;
-    --popover-foreground: 210 40% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 60 10% 95%;
 
-    --primary: 220 70% 60%; /* Slightly lighter Bright Blue for dark mode */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 25 100% 55%; /* Slightly lighter Orange for dark mode */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 50 100% 55%; /* Slightly desaturated Bright Yellow */
-    --secondary-foreground: 50 100% 10%; /* Very Dark Yellow/Brown */
+    --secondary: 47 100% 55%; /* Slightly lighter Yellow */
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 210 40% 20%; /* Darker Blue-Gray */
-    --muted-foreground: 210 30% 70%; /* Lighter Blue-Gray for muted text */
+    --muted: 0 0% 16%;
+    --muted-foreground: 218 11% 65%; /* Concrete Gray */
 
-    --accent: 100 70% 55%; /* Slightly lighter Bright Green */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 47 100% 55%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 72.2% 50.6%; /* Kept */
-    --destructive-foreground: 0 0% 98%; /* Kept */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 210 30% 30%; /* Darker Blue-Gray Border */
-    --input: 210 30% 30%; /* Darker Blue-Gray Input Background or Border */
-    --ring: 220 70% 60%; /* Lighter Bright Blue for focus ring */
-    
-    --chart-1: 220 70% 60%;
-    --chart-2: 50 100% 60%;
-    --chart-3: 100 70% 55%;
-    --chart-4: 30 90% 60%;
-    --chart-5: 300 70% 65%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 25 100% 55%;
 
-    /* Sidebar variables - dark theme adjustments */
-    --sidebar-background: 210 40% 12%; /* Darker blue-gray */
-    --sidebar-foreground: 210 40% 90%; /* Light blue-gray text */
-    --sidebar-primary: 220 70% 60%; /* Lighter blue */
+    --chart-1: 25 100% 55%;
+    --chart-2: 47 100% 55%;
+    --chart-3: 142 71% 50%;
+    --chart-4: 0 72% 55%;
+    --chart-5: 262 83% 62%;
+
+    /* Sidebar variables - dark theme */
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 60 10% 90%;
+    --sidebar-primary: 25 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 25%; /* Medium-dark blue-gray */
-    --sidebar-accent-foreground: 210 40% 85%;
-    --sidebar-border: 210 30% 25%;
-    --sidebar-ring: 220 70% 60%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 60 10% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 25 100% 55%;
   }
 }
 
@@ -104,25 +110,26 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), system-ui, sans-serif; /* Inter is primary */
+    font-family: var(--font-inter), system-ui, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
   }
 }
+
 /* --- Sidebar Styles for Owner Dashboard/Menu --- */
 .sidebar-nav {
   width: 240px;
   min-height: calc(100vh - 48px);
-  background: #11141b;
+  background: hsl(var(--sidebar-background));
   display: flex;
   flex-direction: column;
   padding: 2rem 0.5rem 2rem 0.5rem;
-  border-right: 1px solid #252525;
+  border-right: 1px solid hsl(var(--sidebar-border));
 }
 
 .sidebar-link {
-  color: #d4d7dd;
+  color: hsl(var(--sidebar-foreground));
   display: flex;
   align-items: center;
   padding: 0.75rem 1.25rem;
@@ -137,12 +144,12 @@
 
 .sidebar-link.active,
 .sidebar-link:hover {
-  background: #1b2232;
-  color: #19b8ab;
+  background: hsl(var(--sidebar-accent));
+  color: hsl(var(--sidebar-primary));
 }
 
 .sidebar-header {
-  color: #fafcff;
+  color: hsl(var(--sidebar-foreground));
   font-weight: 700;
   font-size: 1.2rem;
   padding-left: 1.25rem;
