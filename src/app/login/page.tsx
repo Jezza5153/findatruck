@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50" />}>
       <LoginForm />
     </Suspense>
   );
@@ -57,11 +58,10 @@ function LoginForm() {
         });
       } else {
         toast({
-          title: 'Welcome back!',
+          title: 'Welcome back! 🎉',
           description: 'Login successful. Redirecting...',
         });
 
-        // Redirect based on callback or to home
         router.push('/');
         router.refresh();
       }
@@ -78,11 +78,13 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-10 left-10 text-8xl opacity-20">🌮</div>
+        <div className="absolute top-20 right-20 text-6xl opacity-20">🍔</div>
+        <div className="absolute bottom-10 left-1/4 text-7xl opacity-20">🍕</div>
+        <div className="absolute bottom-20 right-10 text-5xl opacity-20">🌭</div>
       </div>
 
       <motion.div
@@ -91,21 +93,27 @@ function LoginForm() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl">
-          <CardHeader className="space-y-2 text-center">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-yellow-500 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-              <IconLogIn className="w-8 h-8 text-white" />
+        <Card className="border-2 border-orange-200 bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl">
+          <CardHeader className="space-y-2 text-center pb-2">
+            <div className="mx-auto mb-2">
+              <Image
+                src="/logo.png"
+                alt="FindATruck"
+                width={80}
+                height={60}
+                className="h-16 w-auto"
+              />
             </div>
-            <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
-            <CardDescription className="text-slate-400">
-              Sign in to your Findatruck account
+            <CardTitle className="text-2xl font-bold text-slate-800">Welcome Back! 👋</CardTitle>
+            <CardDescription className="text-slate-500">
+              Sign in to find your favorite food trucks
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Label htmlFor="email" className="text-slate-700 font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -113,12 +121,17 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
+                  className="bg-white border-2 border-orange-200 text-slate-800 placeholder:text-slate-400 focus:border-orange-400 rounded-xl h-12"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password" className="text-slate-700 font-medium">Password</Label>
+                  <Link href="/forgot-password" className="text-sm text-orange-600 hover:text-orange-500 font-medium">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -126,14 +139,14 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className="bg-slate-900/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-primary"
+                  className="bg-white border-2 border-orange-200 text-slate-800 placeholder:text-slate-400 focus:border-orange-400 rounded-xl h-12"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-primary to-yellow-500 hover:from-primary/90 hover:to-yellow-500/90 text-white font-semibold py-6 text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-6 text-lg shadow-lg rounded-xl"
               >
                 {isLoading ? (
                   <>
@@ -152,10 +165,10 @@ function LoginForm() {
             <div className="mt-6 space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-600" />
+                  <span className="w-full border-t border-orange-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-slate-800 px-4 text-slate-400">New to Findatruck?</span>
+                  <span className="bg-white px-4 text-slate-500">New to FindATruck?</span>
                 </div>
               </div>
 
@@ -163,7 +176,7 @@ function LoginForm() {
                 <Link href="/signup">
                   <Button
                     variant="outline"
-                    className="w-full bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                    className="w-full bg-white border-2 border-orange-200 text-slate-700 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-400 rounded-xl h-12"
                   >
                     <IconUser className="mr-2 h-4 w-4" />
                     Customer
@@ -172,7 +185,7 @@ function LoginForm() {
                 <Link href="/owner/signup">
                   <Button
                     variant="outline"
-                    className="w-full bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-white hover:border-slate-500"
+                    className="w-full bg-white border-2 border-orange-200 text-slate-700 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-400 rounded-xl h-12"
                   >
                     <IconChefHat className="mr-2 h-4 w-4" />
                     Owner
@@ -183,7 +196,7 @@ function LoginForm() {
 
             <Link
               href="/"
-              className="mt-6 flex items-center justify-center text-sm text-slate-400 hover:text-white transition-colors"
+              className="mt-6 flex items-center justify-center text-sm text-slate-500 hover:text-orange-600 transition-colors font-medium"
             >
               <IconArrowLeft className="mr-2 h-4 w-4" />
               Back to home
