@@ -232,7 +232,7 @@ export default function MapPage() {
                   viewMode === 'list' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:text-orange-600'
                 )}
               >
-                <IconList className="w-4 h-4" />
+                <IconList className={cn("w-4 h-4", viewMode === 'list' && "stroke-current", viewMode !== 'list' && "stroke-slate-500")} />
               </Button>
               <Button
                 variant="ghost"
@@ -243,7 +243,7 @@ export default function MapPage() {
                   viewMode === 'map' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:text-orange-600'
                 )}
               >
-                <IconMapIcon className="w-4 h-4" />
+                <IconMapIcon className={cn("w-4 h-4", viewMode === 'map' && "stroke-current", viewMode !== 'map' && "stroke-slate-500")} />
               </Button>
             </div>
           </div>
