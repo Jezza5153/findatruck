@@ -15,7 +15,7 @@ const menu = [
 const OwnerSidebar = () => {
   const pathname = usePathname();
   return (
-    <aside className="hidden md:flex flex-col w-60 min-h-screen bg-slate-900 border-r border-slate-700 px-4 py-6">
+    <aside className="hidden md:flex flex-col w-60 min-h-screen bg-asphalt border-r border-subtle px-4 py-6">
       <nav className="space-y-1">
         {menu.map((item) => (
           <Link
@@ -23,7 +23,7 @@ const OwnerSidebar = () => {
             href={item.href}
             className={`flex items-center px-4 py-3 rounded-xl transition-all font-medium text-sm gap-3 ${pathname === item.href
               ? "bg-gradient-to-r from-primary to-yellow-500/80 text-white shadow-lg"
-              : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              : "text-warm-secondary hover:bg-elevated hover:text-warm-white"
               }`}
           >
             {item.icon}

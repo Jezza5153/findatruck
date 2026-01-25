@@ -77,10 +77,10 @@ export default function ForgotPasswordPage() {
                             </div>
                             <h1 className="text-2xl font-bold mb-2">Check Your Email</h1>
                             <p className="text-slate-400 mb-6">
-                                If an account exists for <strong className="text-white">{email}</strong>, we've sent password reset instructions.
+                                We&apos;ve noted your request for <strong className="text-white">{email}</strong>. In production, you&apos;d receive a password reset email.
                             </p>
                             <p className="text-sm text-slate-500 mb-6">
-                                Didn't receive the email? Check your spam folder or try again.
+                                <span className="text-yellow-400">Note:</span> Email sending is not yet configured. Contact support if you need account help.
                             </p>
                             <div className="flex flex-col gap-3">
                                 <Button

@@ -200,17 +200,25 @@ export default function SettingsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-slate-800/50 rounded-xl border border-slate-700/30"
+                    className="bg-white rounded-3xl border-2 border-orange-100 shadow-md"
                 >
-                    <div className="p-4 border-b border-slate-700/30">
-                        <h3 className="font-semibold">Delivery Method</h3>
+                    <div className="p-4 border-b border-orange-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                                <IconSmartphone className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">Delivery Method</h3>
+                                <p className="text-sm text-slate-500">How to receive notifications</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="divide-y divide-slate-700/30">
+                    <div className="divide-y divide-orange-100">
                         <div className="flex items-center justify-between p-4">
                             <div className="flex items-center gap-3">
-                                <IconMail className="w-5 h-5 text-slate-400" />
-                                <Label className="text-white">Email notifications</Label>
+                                <IconMail className="w-5 h-5 text-orange-500" />
+                                <Label className="text-slate-700 font-medium">Email notifications</Label>
                             </div>
                             <Switch
                                 checked={settings.emailNotifications}
@@ -219,8 +227,8 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex items-center justify-between p-4">
                             <div className="flex items-center gap-3">
-                                <IconSmartphone className="w-5 h-5 text-slate-400" />
-                                <Label className="text-white">Push notifications</Label>
+                                <IconSmartphone className="w-5 h-5 text-orange-500" />
+                                <Label className="text-slate-700 font-medium">Push notifications</Label>
                             </div>
                             <Switch
                                 checked={settings.pushNotifications}
@@ -235,26 +243,27 @@ export default function SettingsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="bg-slate-800/50 rounded-xl border border-slate-700/30"
+                    className="bg-white rounded-3xl border-2 border-orange-100 shadow-md"
                 >
-                    <div className="p-4 border-b border-slate-700/30">
+                    <div className="p-4 border-b border-orange-100">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                                <IconShield className="w-5 h-5 text-green-400" />
+                            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                                <IconShield className="w-5 h-5 text-green-600" />
                             </div>
                             <div>
-                                <h3 className="font-semibold">Privacy & Security</h3>
+                                <h3 className="font-bold text-slate-800">Privacy & Security</h3>
+                                <p className="text-sm text-slate-500">Manage your account security</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="divide-y divide-slate-700/30">
+                    <div className="divide-y divide-orange-100">
                         <button
                             onClick={() => router.push('/forgot-password')}
-                            className="w-full flex items-center justify-between p-4 hover:bg-slate-700/30 transition-colors"
+                            className="w-full flex items-center justify-between p-4 hover:bg-orange-50 transition-colors text-slate-700 font-medium"
                         >
                             <span>Change password</span>
-                            <IconChevronRight className="w-5 h-5 text-slate-500" />
+                            <IconChevronRight className="w-5 h-5 text-orange-500" />
                         </button>
                     </div>
                 </motion.div>
