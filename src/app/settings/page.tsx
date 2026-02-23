@@ -117,7 +117,7 @@ export default function SettingsPage() {
             <div className="pt-8 pb-6 px-4">
                 <div className="container mx-auto max-w-2xl">
                     <h1 className="text-2xl font-bold text-slate-800">Settings ⚙️</h1>
-                    <p className="text-slate-500">Customize your FindATruck experience</p>
+                    <p className="text-slate-500">Customize your Food Truck Next 2 Me experience</p>
                 </div>
             </div>
 

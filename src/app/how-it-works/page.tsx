@@ -148,7 +148,7 @@ export default function HowItWorksPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-2xl sm:text-3xl font-bold mb-4">Why Join FindATruck?</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold mb-4">Why Join Food Truck Next 2 Me?</h2>
                         <p className="text-slate-400 max-w-lg mx-auto">
                             The best way to discover, follow, and get rewarded by your favorite food trucks
                         </p>

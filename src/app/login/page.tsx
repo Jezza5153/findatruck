@@ -98,7 +98,7 @@ function LoginForm() {
             <div className="mx-auto mb-2">
               <Image
                 src="/logo.png"
-                alt="FindATruck"
+                alt="Food Truck Next 2 Me"
                 width={80}
                 height={60}
                 className="h-16 w-auto"
@@ -168,7 +168,7 @@ function LoginForm() {
                   <span className="w-full border-t border-orange-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-slate-500">New to FindATruck?</span>
+                  <span className="bg-white px-4 text-slate-500">New to Food Truck Next 2 Me?</span>
                 </div>
               </div>
 

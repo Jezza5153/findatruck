@@ -140,7 +140,7 @@ export default function OwnerSignupPage() {
       }
 
       toast({
-        title: 'Welcome to Findatruck!',
+        title: 'Welcome to Food Truck Next 2 Me!',
         description: 'Your account and truck have been created.',
       });
 

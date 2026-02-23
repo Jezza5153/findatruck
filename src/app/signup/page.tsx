@@ -95,7 +95,7 @@ function SignupForm() {
 
       toast({
         title: 'Account created! 🎉',
-        description: 'Welcome to FindATruck. Redirecting...',
+        description: 'Welcome to Food Truck Next 2 Me. Redirecting...',
       });
 
       router.push('/customer/dashboard');
@@ -133,13 +133,13 @@ function SignupForm() {
             <div className="mx-auto mb-2">
               <Image
                 src="/logo.png"
-                alt="FindATruck"
+                alt="Food Truck Next 2 Me"
                 width={80}
                 height={60}
                 className="h-16 w-auto"
               />
             </div>
-            <CardTitle className="text-2xl font-bold text-slate-800">Join FindATruck! 🚚</CardTitle>
+            <CardTitle className="text-2xl font-bold text-slate-800">Join Food Truck Next 2 Me! 🚚</CardTitle>
             <CardDescription className="text-slate-500">
               Create your account to start finding food trucks
             </CardDescription>

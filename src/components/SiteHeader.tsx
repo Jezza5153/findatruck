@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { href: '/map', label: 'Find Trucks', icon: IconMapPin },
   { href: '/featured', label: 'Featured', icon: IconStar },
+  { href: '/hire-food-truck', label: 'Hire', icon: IconChefHat },
+  { href: '/blog', label: 'Blog', icon: IconUtensils },
 ];
 
 export function SiteHeader() {
@@ -59,7 +61,7 @@ export function SiteHeader() {
             <div className="bg-white rounded-xl p-1 shadow-sm">
               <img
                 src="/logo.png"
-                alt="FindATruck Logo"
+                alt="Food Truck Next 2 Me"
                 className="h-10 w-auto group-hover:scale-105 transition-transform"
               />
             </div>

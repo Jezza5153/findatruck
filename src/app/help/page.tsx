@@ -37,7 +37,7 @@ const faqItems = [
   },
   {
     value: "item-6",
-    question: "How do I register my food truck on FindATruck?",
+    question: "How do I register my food truck on Food Truck Next 2 Me?",
     answer: "Food truck owners can register by navigating to the 'Owner Portal' (link in the site header or footer) and selecting 'Register Your Truck'. You'll need to provide details about your truck, cuisine, and create an owner account."
   }
 ];

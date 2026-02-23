@@ -39,7 +39,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
               <IconChefHat className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-xl text-white">Findatruck</span>
+            <span className="font-bold text-xl text-white">Food Truck Next 2 Me</span>
           </Link>
         </div>
 

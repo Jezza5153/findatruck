@@ -24,11 +24,11 @@ export function SiteFooter() {
               <Link
                 href="/"
                 className="inline-flex items-center mb-3"
-                aria-label="Home - FindATruck"
+                aria-label="Home - Food Truck Next 2 Me"
               >
                 <Image
                   src="/logo.png"
-                  alt="FindATruck"
+                  alt="Food Truck Next 2 Me — Adelaide Food Truck Finder"
                   width={120}
                   height={80}
                   className="h-16 w-auto"
@@ -135,6 +135,33 @@ export function SiteFooter() {
                     How It Works
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="/blog"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
+                  >
+                    <IconFileText className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/food-trucks"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
+                  >
+                    <IconMapPin className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Browse by Location
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/hire-food-truck"
+                    className="text-slate-600 hover:text-orange-600 transition-colors flex items-center"
+                  >
+                    <IconChefHat className="w-4 h-4 mr-1.5 text-orange-500" />
+                    Hire a Food Truck
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -169,7 +196,7 @@ export function SiteFooter() {
 
         <div className="border-t border-orange-200 py-6">
           <p className="text-center text-xs text-slate-500">
-            © {currentYear} FindATruck. All rights reserved. Made with 🧡 for food truck lovers everywhere!
+            © {currentYear} Food Truck Next 2 Me. All rights reserved. Made with 🧡 in Adelaide, South Australia!
           </p>
         </div>
       </div>

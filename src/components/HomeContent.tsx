@@ -161,7 +161,7 @@ export default function HomeContent() {
               <div className="inline-block bg-white rounded-3xl p-4 shadow-2xl shadow-orange-500/30">
                 <Image
                   src="/logo.png"
-                  alt="FindATruck"
+                  alt="Food Truck Next 2 Me"
                   width={180}
                   height={120}
                   className="h-24 w-auto"
