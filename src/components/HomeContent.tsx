@@ -48,6 +48,23 @@ function getRelativeTime(dateString?: string): string | null {
   return `${Math.floor(diffHours / 24)}d ago`;
 }
 
+// Haversine distance in km
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)}m`;
+  if (km < 10) return `${km.toFixed(1)}km`;
+  return `${Math.round(km)}km`;
+}
+
 type FilterType = 'all' | 'open';
 
 export default function HomeContent() {
@@ -114,7 +131,16 @@ export default function HomeContent() {
     }
   };
 
-  const filteredTrucks = trucks
+  // Calculate distances from user to each truck
+  const trucksWithDistance = trucks.map(truck => {
+    let distance: number | null = null;
+    if (userLocation && truck.lat && truck.lng) {
+      distance = haversineKm(userLocation.lat, userLocation.lng, truck.lat, truck.lng);
+    }
+    return { ...truck, distance };
+  });
+
+  const filteredTrucks = trucksWithDistance
     .filter(truck => {
       if (filter === 'open') return truck.isOpen;
       return true;
@@ -124,11 +150,24 @@ export default function HomeContent() {
       truck.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+  // Sort: open first, then by distance (nearest first) if GPS available
   const sortedTrucks = [...filteredTrucks].sort((a, b) => {
     if (a.isOpen && !b.isOpen) return -1;
     if (!a.isOpen && b.isOpen) return 1;
+    // Within same open/closed group, sort by distance
+    if (a.distance !== null && b.distance !== null) return a.distance - b.distance;
+    if (a.distance !== null) return -1;
+    if (b.distance !== null) return 1;
     return 0;
   });
+
+  // Near You: top 5 open trucks closest to user
+  const nearbyTrucks = userLocation
+    ? trucksWithDistance
+      .filter(t => t.isOpen && t.distance !== null && t.distance < 50)
+      .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999))
+      .slice(0, 5)
+    : [];
 
   const openTruckCount = trucks.filter(t => t.isOpen).length;
 
@@ -318,6 +357,55 @@ export default function HomeContent() {
           </div>
         </motion.div>
 
+        {/* Near You Section */}
+        {nearbyTrucks.length > 0 && !searchTerm && filter === 'all' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+                <IconNavigation className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Near You</h2>
+                <p className="text-sm text-slate-500">Open trucks closest to your location</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {nearbyTrucks.map((truck) => (
+                <Link key={truck.id} href={`/trucks/${truck.id}`}>
+                  <div className="bg-white rounded-2xl border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all p-4 cursor-pointer group">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {truck.imageUrl ? (
+                          <img src={truck.imageUrl} alt={truck.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">🚚</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-sm text-slate-800 truncate group-hover:text-green-600 transition-colors">{truck.name}</h3>
+                        <p className="text-xs text-slate-500 truncate">{truck.cuisine}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">🟢 Open</span>
+                      {truck.distance !== null && (
+                        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                          📍 {formatDistance(truck.distance)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Content */}
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -395,16 +483,23 @@ export default function HomeContent() {
                         )}
                       </div>
 
-                      {truck.address && (
-                        <p className="text-sm text-slate-400 flex items-center gap-2 mb-3">
-                          <IconMapPin className="w-4 h-4 text-orange-400" />
-                          <span className="truncate">{truck.address}</span>
-                        </p>
-                      )}
+                      <div className="flex items-center justify-between mb-3">
+                        {truck.address && (
+                          <p className="text-sm text-slate-400 flex items-center gap-1.5 min-w-0">
+                            <IconMapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                            <span className="truncate">{truck.address}</span>
+                          </p>
+                        )}
+                        {truck.distance !== null && (
+                          <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-full whitespace-nowrap ml-2 flex-shrink-0">
+                            📍 {formatDistance(truck.distance)}
+                          </span>
+                        )}
+                      </div>
 
                       {truck.isOpen && truck.locationUpdatedAt && (
                         <p className="text-xs text-green-600 font-medium mb-3">
-                          📍 Updated {getRelativeTime(truck.locationUpdatedAt)}
+                          Updated {getRelativeTime(truck.locationUpdatedAt)}
                         </p>
                       )}
 
