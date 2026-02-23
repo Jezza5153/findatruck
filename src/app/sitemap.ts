@@ -40,6 +40,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
+    // Hire / commercial intent pages
+    const hireSlugs = ['', '/weddings', '/corporate', '/events'];
+    const hirePages: MetadataRoute.Sitemap = hireSlugs.map((s) => ({
+        url: `${BASE_URL}/hire-food-truck${s}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+    }));
+
+    // Blog pages
+    const blogSlugs = ['', '/best-food-trucks-adelaide-2026', '/food-truck-permits-south-australia', '/food-trucks-fork-on-the-road-2026'];
+    const blogPages: MetadataRoute.Sitemap = blogSlugs.map((s) => ({
+        url: `${BASE_URL}/blog${s}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: s === '' ? 0.7 : 0.6,
+    }));
+
     // Dynamic truck pages
     let truckPages: MetadataRoute.Sitemap = [];
     try {
@@ -58,5 +76,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // DB may not be available during build
     }
 
-    return [...staticPages, ...locationPages, ...cuisinePages, ...truckPages];
+    return [...staticPages, ...locationPages, ...cuisinePages, ...hirePages, ...blogPages, ...truckPages];
 }
