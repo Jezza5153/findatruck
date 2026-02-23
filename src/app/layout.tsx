@@ -46,12 +46,13 @@ export const metadata: Metadata = {
     locale: 'en_AU',
     url: 'https://foodtrucknext2me.com',
     siteName: 'Food Truck Next 2 Me',
-    images: ['/logo.png'],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Food Truck Next 2 Me — Find Street Food in Adelaide' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Food Truck Next 2 Me — Adelaide Food Truck Finder',
     description: 'Find the best food trucks near you in Adelaide & South Australia. Live tracking, menus, and reviews.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
