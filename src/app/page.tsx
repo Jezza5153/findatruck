@@ -1,16 +1,42 @@
 import type { Metadata } from 'next';
 import HomeContent from '@/components/HomeContent';
 
+const FAQ_ITEMS = [
+  { q: 'How do I find food trucks near me in Adelaide?', a: 'Open Food Truck Next 2 Me and allow location access. Our live map will show you all nearby food trucks in Adelaide and across South Australia, with real-time status updates so you know which ones are serving right now.' },
+  { q: 'How do I list my food truck on Food Truck Next 2 Me?', a: 'Click "Register Your Truck" to create a free owner account. You can add your truck name, cuisine, photos, menu, and social media links. Once set up, you can go live and start attracting customers across Adelaide and South Australia.' },
+  { q: 'Is Food Truck Next 2 Me free?', a: 'Yes! Basic listings are completely free for food truck owners. Customers can browse, search, and discover trucks at no cost. Premium plans are available for owners who want extra visibility and features.' },
+  { q: 'What areas does Food Truck Next 2 Me cover?', a: 'We focus on Adelaide and the wider South Australia region, including the Adelaide Hills, Barossa Valley, Fleurieu Peninsula, McLaren Vale, and regional SA. Any food truck operating in South Australia can list with us.' },
+];
+
 export const metadata: Metadata = {
   title: 'Food Truck Next 2 Me — Find Food Trucks in Adelaide & South Australia',
   description: 'Find the best food trucks near you in Adelaide and South Australia. Live locations, menus, reviews, and real-time tracking. Your next favourite meal on wheels is just a tap away!',
-  alternates: { canonical: 'https://foodtrucknext2me.com' },
+  alternates: {
+    canonical: 'https://foodtrucknext2me.com',
+    languages: { 'en-AU': 'https://foodtrucknext2me.com' },
+  },
 };
 
 export default function HomePage() {
   return (
     <>
       <HomeContent />
+
+      {/* FAQ structured data for Google rich snippets */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQ_ITEMS.map((item) => ({
+              '@type': 'Question',
+              name: item.q,
+              acceptedAnswer: { '@type': 'Answer', text: item.a },
+            })),
+          }),
+        }}
+      />
 
       {/* Server-rendered SEO content — indexable by Google */}
       <section className="bg-gradient-to-b from-amber-50 to-orange-50 px-4 py-16 border-t border-orange-100">

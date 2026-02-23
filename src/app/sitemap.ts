@@ -11,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
         { url: `${BASE_URL}/map`, lastModified: new Date(), changeFrequency: 'always', priority: 0.9 },
         { url: `${BASE_URL}/featured`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
+        { url: `${BASE_URL}/food-trucks`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
         { url: `${BASE_URL}/how-it-works`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
         { url: `${BASE_URL}/pricing`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
         { url: `${BASE_URL}/login`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
@@ -20,6 +21,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${BASE_URL}/terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
         { url: `${BASE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
     ];
+
+    // Location landing pages
+    const locations = ['adelaide-cbd', 'glenelg', 'henley-beach', 'adelaide-hills', 'mclaren-vale', 'barossa-valley', 'port-adelaide', 'norwood'];
+    const locationPages: MetadataRoute.Sitemap = locations.map((loc) => ({
+        url: `${BASE_URL}/food-trucks/${loc}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }));
+
+    // Cuisine landing pages
+    const cuisines = ['mexican', 'italian', 'greek', 'asian', 'bbq', 'desserts', 'coffee', 'vegan'];
+    const cuisinePages: MetadataRoute.Sitemap = cuisines.map((c) => ({
+        url: `${BASE_URL}/food-trucks/cuisine/${c}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }));
 
     // Dynamic truck pages
     let truckPages: MetadataRoute.Sitemap = [];
@@ -39,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // DB may not be available during build
     }
 
-    return [...staticPages, ...truckPages];
+    return [...staticPages, ...locationPages, ...cuisinePages, ...truckPages];
 }

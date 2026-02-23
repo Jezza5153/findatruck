@@ -75,7 +75,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en-AU" dir="ltr">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="hsl(210 40% 98%)" media="(prefers-color-scheme: light)" />
