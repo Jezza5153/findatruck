@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { db } from '@/lib/db';
+import { trucks } from '@/lib/db/schema';
+import { eq, count } from 'drizzle-orm';
 
 export const metadata: Metadata = {
     title: 'Find Food Trucks by Location — Adelaide & South Australia',
@@ -29,17 +32,36 @@ const CUISINES = [
     { slug: 'vegan', name: 'Vegan & Plant-Based', emoji: '🥗' },
 ];
 
-export default function FoodTrucksPage() {
+async function getTruckCount() {
+    try {
+        const [result] = await db
+            .select({ value: count() })
+            .from(trucks)
+            .where(eq(trucks.isVisible, true));
+        return result?.value || 0;
+    } catch {
+        return 0;
+    }
+}
+
+export default async function FoodTrucksPage() {
+    const truckCount = await getTruckCount();
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50">
             <div className="container mx-auto px-4 py-12 max-w-5xl">
                 <h1 className="text-4xl font-extrabold text-slate-800 mb-3 text-center">
                     Find Food Trucks in Adelaide & South Australia
                 </h1>
-                <p className="text-lg text-slate-600 mb-12 text-center max-w-2xl mx-auto">
+                <p className="text-lg text-slate-600 mb-2 text-center max-w-2xl mx-auto">
                     Browse food trucks by location or cuisine. Whether you&apos;re in the CBD or the wine regions,
                     we&apos;ll help you find your next favourite meal on wheels.
                 </p>
+                {truckCount > 0 && (
+                    <p className="text-center text-orange-600 font-bold mb-12">
+                        {truckCount} food truck{truckCount !== 1 ? 's' : ''} listed across South Australia
+                    </p>
+                )}
 
                 <h2 className="text-2xl font-bold text-slate-800 mb-6">📍 By Location</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
