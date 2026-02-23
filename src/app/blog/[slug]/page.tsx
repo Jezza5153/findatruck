@@ -33,25 +33,27 @@ The easiest way to find food trucks in Adelaide is with **Food Truck Next 2 Me**
 
 ## Top Cuisines to Try
 
-- **Wood-Fired Pizza** — Nothing beats a Neapolitan pizza cooked in a mobile wood-fired oven. Several Adelaide food trucks specialise in this craft.
-- **Gourmet Burgers** — From smash burgers to loaded wagyu creations, Adelaide's burger trucks are next level.
-- **Mexican Street Food** — Authentic tacos, burritos, and elote from trucks that take Mexican cuisine seriously.
-- **Greek Souvlaki** — Adelaide has a strong Greek food tradition, and the souvlaki trucks here are some of the best in Australia.
-- **Dessert Trucks** — Gelato, churros, loukoumades, and artisan doughnuts — the perfect way to end any food truck crawl.
+- **[Wood-Fired Pizza](/food-trucks/cuisine/italian)** — Nothing beats a Neapolitan pizza cooked in a mobile wood-fired oven. Several Adelaide food trucks specialise in this craft.
+- **[Gourmet Burgers](/food-trucks/cuisine/bbq)** — From smash burgers to loaded wagyu creations, Adelaide's burger trucks are next level.
+- **[Mexican Street Food](/food-trucks/cuisine/mexican)** — Authentic tacos, burritos, and elote from trucks that take Mexican cuisine seriously.
+- **[Greek Souvlaki](/food-trucks/cuisine/greek)** — Adelaide has a strong Greek food tradition, and the souvlaki trucks here are some of the best in Australia.
+- **[Dessert Trucks](/food-trucks/cuisine/desserts)** — Gelato, churros, loukoumades, and artisan doughnuts — the perfect way to end any food truck crawl.
 
 ## Where to Find Them
 
 Food trucks in Adelaide pop up everywhere from the CBD to beachside locations:
 
-- **Adelaide CBD** — Rundle Mall, Victoria Square, and the Central Market precinct
-- **Glenelg** — Along the foreshore and Jetty Road
-- **Henley Beach** — Henley Square is a food truck hotspot, especially at sunset
-- **Adelaide Hills** — Stirling, Hahndorf, and Mount Lofty attract food trucks on weekends
-- **Wine Regions** — McLaren Vale and Barossa Valley wineries frequently host food trucks
+- **[Adelaide CBD](/food-trucks/adelaide-cbd)** — Rundle Mall, Victoria Square, and the Central Market precinct
+- **[Glenelg](/food-trucks/glenelg)** — Along the foreshore and Jetty Road
+- **[Henley Beach](/food-trucks/henley-beach)** — Henley Square is a food truck hotspot, especially at sunset
+- **[Adelaide Hills](/food-trucks/adelaide-hills)** — Stirling, Hahndorf, and Mount Lofty attract food trucks on weekends
+- **Wine Regions** — [McLaren Vale](/food-trucks/mclaren-vale) and [Barossa Valley](/food-trucks/barossa-valley) wineries frequently host food trucks
 
 ## Find Your Next Meal
 
 Ready to explore? Head to the [live map](/map) to see what's open right now, or browse food trucks [by location](/food-trucks) or [by cuisine](/food-trucks).
+
+Planning a private event? [Hire a food truck](/hire-food-truck) for your next [wedding](/hire-food-truck/weddings), [corporate event](/hire-food-truck/corporate), or [festival](/hire-food-truck/events).
 
 Food truck owners can [register for free](/owner/signup) to get listed and start reaching hungry customers across Adelaide.
     `.trim(),
@@ -186,7 +188,9 @@ Besides Fork on the Road, keep an eye out for:
 
 ## Track Food Trucks Year-Round
 
-Don't wait for festivals — use [Food Truck Next 2 Me](/map) to find open food trucks any day of the week. Our live map shows you what's serving right now across Adelaide and South Australia.
+Don't wait for festivals — use [Food Truck Next 2 Me](/map) to find open food trucks any day of the week. Our live map shows you what's serving right now across Adelaide and South Australia. Browse trucks [by location](/food-trucks) or check out [Adelaide CBD](/food-trucks/adelaide-cbd), [Glenelg](/food-trucks/glenelg), or [the Adelaide Hills](/food-trucks/adelaide-hills).
+
+Need food trucks for your own event? [Submit a free enquiry](/hire-food-truck) and we'll match you with available vendors.
 
 Food truck owners can [register for free](/owner/signup) to stay visible between events and build a loyal customer base.
     `.trim(),
