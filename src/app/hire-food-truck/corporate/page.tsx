@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import EnquiryForm from '@/components/EnquiryForm';
 
 export const metadata: Metadata = {
     title: 'Corporate Food Truck Catering Adelaide — Office Lunches & Team Events',
@@ -48,16 +49,7 @@ export default function CorporateFoodTrucksPage() {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 rounded-3xl p-8 shadow-2xl shadow-orange-500/20 text-center">
-                    <h2 className="text-3xl font-bold text-white mb-3">Get a Corporate Quote</h2>
-                    <p className="text-white/90 mb-6">Tell us about your event — guest count, date, and preferences — and we&apos;ll recommend the best food truck options.</p>
-                    <a
-                        href="mailto:info@foodtrucknext2me.com?subject=Corporate%20Food%20Truck%20Enquiry"
-                        className="inline-flex items-center px-8 py-4 bg-white text-orange-600 font-bold rounded-full shadow-xl hover:bg-orange-50 transition-colors text-lg"
-                    >
-                        🏢 Get Corporate Quote
-                    </a>
-                </div>
+                <EnquiryForm eventType="corporate" />
             </div>
         </div>
     );
