@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
     IconMessageSquare, IconStar, IconReply, IconLoader2, IconChevronDown, IconChevronUp,
-    IconSend, AlertCircle
+    IconSend, IconAlertCircle
 } from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -133,7 +133,7 @@ export default function OwnerReviewsPage() {
                             <div className="text-4xl font-bold text-yellow-400">{averageRating}</div>
                             <div className="flex items-center gap-0.5 mt-1">
                                 {Array.from({ length: 5 }).map((_, idx) => (
-                                    <Star
+                                    <IconStar
                                         key={idx}
                                         className={cn(
                                             "w-4 h-4",
@@ -219,7 +219,7 @@ export default function OwnerReviewsPage() {
 
                                     <div className="flex items-center gap-0.5">
                                         {Array.from({ length: 5 }).map((_, idx) => (
-                                            <Star
+                                            <IconStar
                                                 key={idx}
                                                 className={cn(
                                                     "w-4 h-4",

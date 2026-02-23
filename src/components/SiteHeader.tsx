@@ -7,7 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconMenu, IconX, IconMapPin, IconStar, IconUser, IconLogIn, IconLogOut,
-  IconChefHat, IconLayoutDashboard, IconUtensils, IconSettings, IconBell
+  IconChefHat, IconLayoutDashboard, IconUtensils, IconSettings, IconBell, IconBookOpen
 } from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ const navLinks = [
   { href: '/map', label: 'Find Trucks', icon: IconMapPin },
   { href: '/featured', label: 'Featured', icon: IconStar },
   { href: '/hire-food-truck', label: 'Hire', icon: IconChefHat },
-  { href: '/blog', label: 'Blog', icon: IconUtensils },
+  { href: '/blog', label: 'Blog', icon: IconBookOpen },
 ];
 
 export function SiteHeader() {

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
   IconUtensils, IconPlus, IconTrash2, IconEdit2, IconGripVertical,
-  IconDollarSign, IconImage as ImageIcon, IconSave, IconLoader2, X, IconUpload
+  IconDollarSign, IconImage, IconSave, IconLoader2, IconX, IconUpload
 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 

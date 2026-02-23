@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
-  IconShoppingBag, IconClock, IconCheck, X, IconChefHat,
+  IconShoppingBag, IconClock, IconCheck, IconX, IconChefHat,
   IconDollarSign, IconUser, IconLoader2
 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
