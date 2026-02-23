@@ -134,18 +134,15 @@ export default function HomeContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50">
-      {/* Hero Section - Bright & Vibrant */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-400">
-        {/* Fun background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 text-8xl">🌮</div>
-          <div className="absolute top-20 right-20 text-6xl">🍔</div>
-          <div className="absolute bottom-10 left-1/4 text-7xl">🍕</div>
-          <div className="absolute bottom-20 right-10 text-5xl">🌭</div>
-          <div className="absolute top-1/3 left-1/2 text-6xl">🍟</div>
+      {/* Hero Section - Clean & Premium */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900">
+        {/* Subtle geometric accent — no emoji clutter */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="container mx-auto px-4 py-10 relative z-10">
+        <div className="container mx-auto px-4 py-14 sm:py-20 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -156,29 +153,34 @@ export default function HomeContent() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="mb-6"
+              className="mb-8"
             >
-              <div className="inline-block bg-white rounded-3xl p-4 shadow-2xl shadow-orange-500/30">
+              <div className="inline-block bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/20 shadow-2xl">
                 <Image
                   src="/logo.png"
                   alt="Food Truck Next 2 Me"
                   width={180}
                   height={120}
-                  className="h-24 w-auto"
+                  className="h-20 w-auto"
                   priority
                 />
               </div>
             </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 drop-shadow-lg">
-              <span className="text-slate-800">Find Your</span>{' '}
-              <span className="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">Perfect</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4">
+              Find Your Next{' '}
+              <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+                Favourite Meal
+              </span>
               <br />
-              <span className="text-slate-800">Street Food!</span>
+              <span className="text-white/90">On Wheels</span>
             </h1>
 
-            <p className="text-xl text-slate-700 mb-8 max-w-2xl mx-auto font-medium">
-              🚚 {openTruckCount} trucks serving now • Discover amazing local eats near you!
+            <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto font-medium">
+              {openTruckCount > 0 && (
+                <span className="text-orange-400 font-bold">{openTruckCount} truck{openTruckCount !== 1 ? 's' : ''} serving now · </span>
+              )}
+              Discover amazing street food across Adelaide & South Australia
             </p>
 
             {/* CTA Buttons */}
@@ -193,7 +195,7 @@ export default function HomeContent() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-2 border-white bg-white/20 text-slate-800 hover:bg-white/40 backdrop-blur-sm font-semibold px-8 py-6 rounded-full shadow-lg"
+                    className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm font-semibold px-8 py-6 rounded-full shadow-lg"
                   >
                     <IconLogIn className="w-5 h-5 mr-2" />
                     Sign In
@@ -202,7 +204,7 @@ export default function HomeContent() {
                 <Link href="/signup">
                   <Button
                     size="lg"
-                    className="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-8 py-6 rounded-full shadow-xl"
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-8 py-6 rounded-full shadow-xl shadow-orange-500/30"
                   >
                     <IconUser className="w-5 h-5 mr-2" />
                     Join Free
@@ -213,12 +215,8 @@ export default function HomeContent() {
           </motion.div>
         </div>
 
-        {/* Wave divider */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" className="w-full h-16 fill-amber-50">
-            <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z" />
-          </svg>
-        </div>
+        {/* Clean divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-50 to-transparent" />
       </div>
 
       <div className="container mx-auto px-4 py-6 pb-24">
