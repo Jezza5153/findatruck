@@ -87,11 +87,11 @@ export default function OwnerProfilePage() {
       });
 
       const data = await res.json();
-      if (data.success && data.url) {
+      if (data.success && data.data?.url) {
         if (type === 'logo') {
-          setProfile(prev => prev ? { ...prev, logoUrl: data.url } : null);
+          setProfile(prev => prev ? { ...prev, logoUrl: data.data.url } : null);
         } else {
-          setProfile(prev => prev ? { ...prev, imageUrl: data.url } : null);
+          setProfile(prev => prev ? { ...prev, imageUrl: data.data.url } : null);
         }
         toast({ title: `${type === 'logo' ? 'Logo' : 'Cover image'} uploaded!` });
       } else {

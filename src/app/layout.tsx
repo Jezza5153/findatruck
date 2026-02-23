@@ -16,23 +16,46 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'FindATruck - Find Your Next Favorite Food Truck!',
-  description: 'Connect with mobile food vendors in real time. Find food trucks, see menus, and place orders.',
+  metadataBase: new URL('https://foodtrucknext2me.com'),
+  title: {
+    default: 'Food Truck Next 2 Me — Find Food Trucks in Adelaide & South Australia',
+    template: '%s | Food Truck Next 2 Me',
+  },
+  description: 'Find the best food trucks near you in Adelaide and South Australia. Live locations, menus, reviews, and real-time tracking. Your next favourite meal on wheels is just a tap away!',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
   },
   keywords: [
-    'food trucks', 'mobile food', 'local food', 'street food', 'find food',
-    'food near me', 'FindATruck', 'truck tracker'
+    'food trucks Adelaide', 'food trucks South Australia', 'Adelaide street food',
+    'food truck near me', 'food truck finder Adelaide', 'SA food trucks',
+    'food truck tracker', 'mobile food Adelaide', 'food vans South Australia',
+    'Adelaide food events', 'street food SA', 'best food trucks Adelaide',
+    'food truck map Adelaide', 'food truck next to me', 'foodtrucknext2me',
+    'food truck catering Adelaide', 'Adelaide food vendors', 'local food trucks',
   ],
-  authors: [{ name: 'FindATruck' }],
+  authors: [{ name: 'Food Truck Next 2 Me' }],
+  alternates: {
+    canonical: 'https://foodtrucknext2me.com',
+  },
   openGraph: {
-    title: 'FindATruck - Find Your Next Favorite Food Truck!',
-    description: 'Discover and connect with local food trucks.',
+    title: 'Food Truck Next 2 Me — Find Food Trucks in Adelaide & SA',
+    description: 'Discover and track the best food trucks across Adelaide and South Australia. Live locations, menus, and more.',
     type: 'website',
+    locale: 'en_AU',
+    url: 'https://foodtrucknext2me.com',
+    siteName: 'Food Truck Next 2 Me',
     images: ['/logo.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Food Truck Next 2 Me — Adelaide Food Truck Finder',
+    description: 'Find the best food trucks near you in Adelaide & South Australia. Live tracking, menus, and reviews.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -60,6 +83,43 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="geo.region" content="AU-SA" />
+        <meta name="geo.placename" content="Adelaide" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Food Truck Next 2 Me',
+              url: 'https://foodtrucknext2me.com',
+              description: 'Find the best food trucks near you in Adelaide and South Australia.',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://foodtrucknext2me.com/?search={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Food Truck Next 2 Me',
+              url: 'https://foodtrucknext2me.com',
+              logo: 'https://foodtrucknext2me.com/logo.png',
+              areaServed: {
+                '@type': 'State',
+                name: 'South Australia',
+                containedInPlace: { '@type': 'Country', name: 'Australia' },
+              },
+              sameAs: [],
+            }),
+          }}
+        />
       </head>
       <body
         className={cn(
