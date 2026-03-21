@@ -53,7 +53,7 @@ export default function MapPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [filter, setFilter] = useState<FilterType>('all');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
@@ -350,17 +350,20 @@ export default function MapPage() {
                         />
                       ) : (
                         <div className="text-center">
-                          <div className="text-4xl mb-1">🚚</div>
-                          <span className="text-orange-400 font-medium text-sm">Food Truck</span>
+                          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-1">
+                            {truck.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-orange-500 font-semibold text-sm">{truck.cuisine}</span>
                         </div>
                       )}
 
-                      {truck.isOpen !== undefined && (
-                        <div className={cn(
-                          "absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg",
-                          truck.isOpen ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'
-                        )}>
-                          {truck.isOpen ? '🟢 Open Now' : 'Closed'}
+                      {truck.isOpen ? (
+                        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg bg-green-500 text-white">
+                          🟢 Open Now
+                        </div>
+                      ) : (
+                        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm bg-white/90 text-slate-700 backdrop-blur-sm">
+                          {truck.cuisine}
                         </div>
                       )}
 

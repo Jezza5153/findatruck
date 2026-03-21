@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { trucks, menuItems, reviews as reviewsTable, users } from '@/lib/db/schema';
+import { trucks, menuItems, reviews as reviewsTable, users, festivalSightings, festivalEvents } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -43,6 +43,28 @@ async function getReviews(truckId: string) {
     .where(eq(reviewsTable.truckId, truckId))
     .orderBy(desc(reviewsTable.createdAt))
     .limit(20);
+}
+
+async function getEventSightings(truckId: string) {
+  const sightings = await db
+    .select({
+      eventName: festivalEvents.name,
+      eventSlug: festivalEvents.slug,
+      eventLocation: festivalEvents.location,
+      year: festivalSightings.year,
+    })
+    .from(festivalSightings)
+    .innerJoin(festivalEvents, eq(festivalSightings.eventId, festivalEvents.id))
+    .where(eq(festivalSightings.truckId, truckId))
+    .orderBy(festivalEvents.name);
+
+  // Deduplicate by event name
+  const seen = new Set<string>();
+  return sightings.filter(s => {
+    if (seen.has(s.eventName)) return false;
+    seen.add(s.eventName);
+    return true;
+  });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -89,16 +111,19 @@ export default async function TruckDetailPage({ params }: Props) {
   let truck: Awaited<ReturnType<typeof getTruck>> | null = null;
   let menu: MenuItemRow[] = [];
   let truckReviews: ReviewRow[] = [];
+  let eventSightings: Awaited<ReturnType<typeof getEventSightings>> = [];
   try {
-    [truck, menu, truckReviews] = await Promise.all([
+    [truck, menu, truckReviews, eventSightings] = await Promise.all([
       getTruck(id),
       getMenuItems(id),
       getReviews(id),
+      getEventSightings(id),
     ]);
   } catch {
     truck = null;
     menu = [];
     truckReviews = [];
+    eventSightings = [];
   }
 
   if (!truck) return notFound();
@@ -202,9 +227,15 @@ export default async function TruckDetailPage({ params }: Props) {
 
           {truck.isOpen !== undefined && (
             <div className="absolute top-4 right-4">
-              <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${truck.isOpen ? 'bg-amber-300 text-slate-950' : 'bg-slate-500 text-white'}`}>
-                {truck.isOpen ? 'Open Now' : 'Closed'}
-              </span>
+              {truck.isOpen ? (
+                <span className="rounded-full px-3 py-1.5 text-sm font-bold bg-amber-300 text-slate-950">
+                  Open Now
+                </span>
+              ) : (
+                <span className="rounded-full px-3 py-1.5 text-sm font-bold bg-white/90 text-slate-700 shadow-sm backdrop-blur-sm">
+                  {truck.cuisine}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -320,6 +351,27 @@ export default async function TruckDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+
+          {/* Seen At — Festival Sightings */}
+          {eventSightings.length > 0 && (
+            <div className="section-frame mb-6 p-6 shadow-none">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4">Seen At</h2>
+              <p className="text-sm text-slate-500 mb-4">
+                {truck.name} has been spotted at these Adelaide events and festivals
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {eventSightings.map((sighting) => (
+                  <Link
+                    key={sighting.eventSlug}
+                    href={`/events/${sighting.eventSlug}`}
+                    className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-colors"
+                  >
+                    🎪 {sighting.eventName}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Menu — SSR crawlable content */}
           <div className="section-frame mb-6 p-6 shadow-none">

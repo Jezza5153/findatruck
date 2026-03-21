@@ -67,6 +67,7 @@ function formatDistance(km: number): string {
 }
 
 type FilterType = 'all' | 'open';
+type CuisineFilter = string | null;
 
 const EXPERIENCE_PILLARS = [
   {
@@ -95,6 +96,7 @@ export default function HomeContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [filter, setFilter] = useState<FilterType>('all');
+  const [cuisineFilter, setCuisineFilter] = useState<CuisineFilter>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
 
@@ -159,9 +161,22 @@ export default function HomeContent() {
     return { ...truck, distance };
   });
 
+  // Build unique cuisine list with counts
+  const cuisineCounts = trucks.reduce((acc, t) => {
+    acc[t.cuisine] = (acc[t.cuisine] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const cuisineList = Object.entries(cuisineCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }));
+
   const filteredTrucks = trucksWithDistance
     .filter(truck => {
       if (filter === 'open') return truck.isOpen;
+      return true;
+    })
+    .filter(truck => {
+      if (cuisineFilter) return truck.cuisine === cuisineFilter;
       return true;
     })
     .filter(truck =>
@@ -188,11 +203,10 @@ export default function HomeContent() {
       .slice(0, 5)
     : [];
 
-  const openTruckCount = trucks.filter(t => t.isOpen).length;
   const heroStats = [
-    { label: 'Open right now', value: `${openTruckCount}+` },
-    { label: 'Nearby picks', value: nearbyTrucks.length > 0 ? `${nearbyTrucks.length}` : 'Live' },
-    { label: 'Coverage', value: 'Adelaide + SA' },
+    { label: 'Food Trucks', value: `${trucks.length}` },
+    { label: 'Events & Festivals', value: '12' },
+    { label: 'Cuisines', value: `${cuisineList.length}` },
   ];
 
   return (
@@ -363,11 +377,11 @@ export default function HomeContent() {
                     <button
                       key={f.value}
                       type="button"
-                      onClick={() => setFilter(f.value as FilterType)}
-                      aria-pressed={filter === f.value}
+                      onClick={() => { setFilter(f.value as FilterType); setCuisineFilter(null); }}
+                      aria-pressed={filter === f.value && !cuisineFilter}
                       className={cn(
                         "inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all",
-                        filter === f.value
+                        filter === f.value && !cuisineFilter
                           ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25"
                           : "bg-orange-50 text-slate-700 hover:bg-orange-100"
                       )}
@@ -377,12 +391,13 @@ export default function HomeContent() {
                     </button>
                   ))}
 
-                  {(searchTerm || filter !== 'all') && (
+                  {(searchTerm || filter !== 'all' || cuisineFilter) && (
                     <button
                       type="button"
                       onClick={() => {
                         setSearchTerm('');
                         setFilter('all');
+                        setCuisineFilter(null);
                       }}
                       className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                     >
@@ -390,22 +405,34 @@ export default function HomeContent() {
                     </button>
                   )}
                 </div>
-              </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {EXPERIENCE_PILLARS.map((pillar) => (
-                  <div key={pillar.title} className="rounded-[24px] border border-orange-100 bg-orange-50/65 p-4">
-                    <div className="mb-3 inline-flex rounded-2xl bg-white p-3 text-orange-600 shadow-sm">
-                      <pillar.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-display text-lg font-bold text-slate-900">
-                      {pillar.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {pillar.description}
-                    </p>
-                  </div>
-                ))}
+                {/* Cuisine Filter Chips */}
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                  {cuisineList.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => {
+                        setCuisineFilter(cuisineFilter === c.name ? null : c.name);
+                        setFilter('all');
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all border",
+                        cuisineFilter === c.name
+                          ? "bg-slate-900 text-white border-slate-900 shadow-lg"
+                          : "bg-white text-slate-600 border-orange-200 hover:border-orange-400 hover:text-orange-700"
+                      )}
+                    >
+                      {c.name}
+                      <span className={cn(
+                        "text-xs rounded-full px-1.5 py-0.5",
+                        cuisineFilter === c.name
+                          ? "bg-white/20 text-white/80"
+                          : "bg-orange-100 text-orange-600"
+                      )}>{c.count}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -557,48 +584,49 @@ export default function HomeContent() {
                         </div>
                       )}
 
-                      {/* Status badge */}
-                      {truck.isOpen !== undefined && (
-                        <div className={cn(
-                          "absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg",
-                          truck.isOpen
-                            ? 'bg-amber-300 text-slate-950'
-                            : 'bg-slate-500 text-white'
-                        )}>
-                          {truck.isOpen ? 'Open Now' : 'Closed'}
+                      {/* Status badge — only show Open for owner-managed trucks, else show cuisine */}
+                      {truck.isOpen ? (
+                        <div className="absolute left-4 top-4 rounded-full bg-amber-300 px-3 py-1.5 text-xs font-bold text-slate-950 shadow-lg">
+                          Open Now
+                        </div>
+                      ) : (
+                        <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm backdrop-blur-sm">
+                          {truck.cuisine}
                         </div>
                       )}
                     </div>
 
                     <CardContent className="p-5">
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2">
                         <div className="min-w-0">
                           <h3 className="font-bold text-lg text-slate-800 group-hover:text-orange-600 transition-colors truncate">
                             {truck.name}
                           </h3>
                           <p className="text-sm text-slate-500 font-medium">{truck.cuisine}</p>
                         </div>
-                        {truck.rating && (
+                        {truck.rating ? (
                           <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
                             <IconStar className="w-4 h-4 fill-current" />
                             <span className="text-sm font-bold">{truck.rating}</span>
                           </div>
-                        )}
+                        ) : null}
                       </div>
 
-                      <div className="flex items-center justify-between mb-3">
-                        {truck.address && (
-                          <p className="text-sm text-slate-400 flex items-center gap-1.5 min-w-0">
-                            <IconMapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                            <span className="truncate">{truck.address}</span>
-                          </p>
-                        )}
-                        {truck.distance !== null && (
-                          <span className="ml-2 flex-shrink-0 whitespace-nowrap rounded-full bg-orange-100 px-2 py-1 text-xs font-bold text-orange-600">
-                            {formatDistance(truck.distance)}
+                      {/* Description snippet */}
+                      {truck.description && (
+                        <p className="text-sm text-slate-500 leading-snug mb-3 line-clamp-2">
+                          {truck.description}
+                        </p>
+                      )}
+
+                      {truck.distance !== null && (
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <IconMapPin className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                          <span className="text-xs font-bold text-orange-600">
+                            {formatDistance(truck.distance)} away
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {truck.isOpen && truck.locationUpdatedAt && (
                         <p className="text-xs text-green-600 font-medium mb-3">
@@ -608,7 +636,7 @@ export default function HomeContent() {
 
                       <div className="border-t border-orange-100 pt-3">
                         <span className="flex items-center justify-center gap-2 text-sm font-bold text-orange-600 group-hover:text-orange-500">
-                          View Menu & Check In
+                          View Profile
                           <IconArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </div>

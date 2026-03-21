@@ -16,15 +16,10 @@ export async function GET(request: NextRequest) {
         const radius = searchParams.get('radius'); // in km
 
         // Pagination with hard caps (anti-scraping + performance)
-        const MAX_LIMIT = 50;
-        const requestedLimit = parseInt(searchParams.get('limit') || '20', 10);
+        const MAX_LIMIT = 100;
+        const requestedLimit = parseInt(searchParams.get('limit') || '100', 10);
         const limit = Math.min(Math.max(1, requestedLimit), MAX_LIMIT);
         const offset = Math.max(0, parseInt(searchParams.get('offset') || '0', 10));
-
-        let query = db
-            .select()
-            .from(trucks)
-            .where(eq(trucks.isVisible, true));
 
         // Apply filters
         const conditions = [eq(trucks.isVisible, true)];
@@ -38,7 +33,8 @@ export async function GET(request: NextRequest) {
                 or(
                     ilike(trucks.name, `%${search}%`),
                     ilike(trucks.cuisine, `%${search}%`),
-                    ilike(trucks.description, `%${search}%`)
+                    ilike(trucks.description, `%${search}%`),
+                    sql`EXISTS (SELECT 1 FROM unnest(${trucks.tags}) AS t(tag) WHERE t.tag ILIKE ${'%' + search + '%'})`
                 )!
             );
         }
