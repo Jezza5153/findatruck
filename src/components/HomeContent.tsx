@@ -32,6 +32,15 @@ interface TruckData {
   locationUpdatedAt?: string;
 }
 
+interface EventData {
+  id: string;
+  name: string;
+  slug: string;
+  location: string;
+  description?: string;
+  truckCount: number;
+}
+
 // Default fallback location (Adelaide CBD, South Australia)
 const DEFAULT_LOCATION = { lat: -34.9285, lng: 138.6007 };
 
@@ -92,6 +101,7 @@ export default function HomeContent() {
   const router = useRouter();
 
   const [trucks, setTrucks] = useState<TruckData[]>([]);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -114,6 +124,7 @@ export default function HomeContent() {
 
   useEffect(() => {
     fetchTrucks();
+    fetchEvents();
     getUserLocation();
   }, []);
 
@@ -128,6 +139,18 @@ export default function HomeContent() {
       console.error('Error fetching trucks:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      if (data.success) {
+        setEvents(data.data.slice(0, 6));
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
   };
 
@@ -668,6 +691,54 @@ export default function HomeContent() {
           </Card>
         )}
         </section>
+
+        {/* Events & Festivals Section */}
+        {events.length > 0 && (
+          <section className="mb-10">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                  Events & Festivals
+                </p>
+                <h2 className="font-display text-3xl font-bold text-slate-950">
+                  Where the trucks gather
+                </h2>
+              </div>
+              <Link href="/events" className="text-sm font-bold text-orange-600 hover:text-orange-500 flex items-center gap-1">
+                View all events <IconArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {events.map((event) => (
+                <Link key={event.id} href={`/events/${event.slug}`}>
+                  <div className="group h-full rounded-[24px] border border-orange-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg">
+                    <h3 className="font-display text-lg font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
+                      {event.name}
+                    </h3>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+                      <IconMapPin className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" />
+                      <span className="truncate">{event.location}</span>
+                    </div>
+                    {event.description && (
+                      <p className="mt-2 text-sm text-slate-500 line-clamp-2 leading-snug">
+                        {event.description}
+                      </p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+                        <IconTruck className="h-3.5 w-3.5" />
+                        {event.truckCount} trucks
+                      </span>
+                      <span className="text-xs font-bold text-orange-600 group-hover:text-orange-500 flex items-center gap-0.5">
+                        Explore <IconArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mb-10 grid gap-4 lg:grid-cols-3">
           {EXPERIENCE_PILLARS.map((pillar) => (
