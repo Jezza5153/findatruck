@@ -683,3 +683,38 @@ export type NewCheckInKey = typeof checkInKeys.$inferInsert;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+
+// =====================
+// FESTIVAL / COMMUNITY EVENTS (for "Seen at Gluttony" badges)
+// =====================
+
+export const festivalEvents = pgTable('festival_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+  location: text('location'),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  websiteUrl: text('website_url'),
+  startDate: timestamp('start_date', { mode: 'date' }),
+  endDate: timestamp('end_date', { mode: 'date' }),
+  isRecurring: boolean('is_recurring').default(false),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const festivalSightings = pgTable('festival_sightings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  truckId: uuid('truck_id').notNull().references(() => trucks.id, { onDelete: 'cascade' }),
+  eventId: uuid('event_id').notNull().references(() => festivalEvents.id, { onDelete: 'cascade' }),
+  year: integer('year'), // e.g. 2026
+  note: text('note'), // e.g. "Served at the main stage area"
+  confirmed: boolean('confirmed').default(true),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export type FestivalEvent = typeof festivalEvents.$inferSelect;
+export type NewFestivalEvent = typeof festivalEvents.$inferInsert;
+export type FestivalSighting = typeof festivalSightings.$inferSelect;
+export type NewFestivalSighting = typeof festivalSightings.$inferInsert;
+
