@@ -178,7 +178,12 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-body), system-ui, sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(255, 128, 43, 0.18), transparent 24%),
+      radial-gradient(circle at 82% 7%, rgba(255, 199, 0, 0.16), transparent 18%),
+      linear-gradient(180deg, #fff7ed 0%, #fffaf5 42%, #fffdf9 100%);
+    position: relative;
   }
 
   h1,
@@ -188,7 +193,23 @@
   h5,
   h6 {
     @apply font-semibold;
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.03em;
   }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(120, 61, 9, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 61, 9, 0.045) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3), transparent 72%);
+  opacity: 0.35;
+  z-index: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -196,6 +217,82 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .ambient-shell {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ambient-shell::before {
+    content: '';
+    position: absolute;
+    inset: -12% -8% auto;
+    height: 26rem;
+    background:
+      radial-gradient(circle at 12% 24%, rgba(255, 106, 0, 0.2), transparent 36%),
+      radial-gradient(circle at 85% 10%, rgba(255, 199, 0, 0.16), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 100%);
+    filter: blur(12px);
+    opacity: 0.95;
+    z-index: -1;
+  }
+
+  .eyebrow-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm backdrop-blur;
+  }
+
+  .surface-panel {
+    @apply rounded-[28px] border border-white/70 bg-white/85 shadow-soft backdrop-blur-xl;
+  }
+
+  .surface-panel-dark {
+    background:
+      radial-gradient(circle at top right, rgba(255, 199, 0, 0.16), transparent 26%),
+      linear-gradient(180deg, rgba(28, 23, 19, 0.98) 0%, rgba(15, 17, 21, 0.98) 100%);
+    @apply rounded-[30px] border border-white/10 text-white shadow-glow;
+  }
+
+  .section-frame {
+    @apply rounded-[32px] border border-orange-200/70 bg-white/80 shadow-soft backdrop-blur-xl;
+  }
+
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    background-size: 74px 74px;
+  }
+
+  .brand-gradient-text {
+    background: linear-gradient(135deg, #ff6a00 0%, #ff8d2c 38%, #7b3f16 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .cta-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 25%, rgba(255, 255, 255, 0.35) 50%, transparent 75%);
+    transform: translateX(-140%);
+    animation: sheen 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgba(255, 145, 43, 0.16),
+      0 18px 42px rgba(255, 106, 0, 0.16);
+  }
 
   /* Brand Orange Variants */
   .bg-brand-orange {
@@ -308,6 +405,36 @@
   /* Ghost button hover */
   .bg-ghost-hover {
     background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(-140%);
+  }
+  30%,
+  100% {
+    transform: translateX(140%);
   }
 }
 

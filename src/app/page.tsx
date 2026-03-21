@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import HomeContent from '@/components/HomeContent';
+import { toJsonLd } from '@/lib/json-ld';
 
 const FAQ_ITEMS = [
   { q: 'How do I find food trucks near me in Adelaide?', a: 'Open Food Truck Next 2 Me and allow location access. Our live map will show you all nearby food trucks in Adelaide and across South Australia, with real-time status updates so you know which ones are serving right now.' },
@@ -26,7 +28,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: toJsonLd({
             '@context': 'https://schema.org',
             '@type': 'FAQPage',
             mainEntity: FAQ_ITEMS.map((item) => ({
@@ -39,21 +41,49 @@ export default function HomePage() {
       />
 
       {/* Server-rendered SEO content — indexable by Google */}
-      <section className="bg-gradient-to-b from-amber-50 to-orange-50 px-4 py-16 border-t border-orange-100">
+      <section className="px-4 py-20">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold text-slate-800 mb-6 text-center">
-            Adelaide&apos;s Food Truck Finder
-          </h2>
-          <div className="prose prose-slate max-w-none text-slate-600 space-y-4">
+          <div className="section-frame p-8 sm:p-10">
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                Adelaide&apos;s Food Truck Finder
+              </p>
+              <h2 className="mt-3 font-display text-4xl font-bold text-slate-950">
+                Built to turn hungry searches into real visits
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-balance text-base leading-7 text-slate-600 sm:text-lg">
+                Food Truck Next 2 Me helps customers discover what is open now, compare menus quickly, and find the best trucks for a casual lunch, beach sunset, market night, or private event.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <Link href="/map" className="rounded-[24px] border border-orange-100 bg-orange-50/70 p-5 transition-transform hover:-translate-y-1">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Live Map</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">See what&apos;s open now</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Open the real-time map and spot nearby trucks before the queue builds.</p>
+              </Link>
+              <Link href="/food-trucks" className="rounded-[24px] border border-orange-100 bg-white p-5 transition-transform hover:-translate-y-1">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Local SEO Pages</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">Browse by suburb or cuisine</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Jump into Adelaide CBD, Glenelg, pizza, coffee, vegan and more discovery pages.</p>
+              </Link>
+              <Link href="/hire-food-truck" className="rounded-[24px] border border-orange-100 bg-white p-5 transition-transform hover:-translate-y-1">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Event Bookings</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">Hire a truck for your next event</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">From weddings to corporate catering, connect with trucks built for high-intent enquiries.</p>
+              </Link>
+            </div>
+
+            <div className="prose prose-slate mt-10 max-w-none text-slate-600">
             <p>
               <strong>Food Truck Next 2 Me</strong> is Adelaide and South Australia&apos;s go-to platform
               for discovering food trucks near you. Whether you&apos;re craving tacos in the CBD, gelato in
-              Glenelg, or wood-fired pizza in the Adelaide Hills, our real-time food truck map shows you
+              Glenelg, or wood-fired pizza in the Adelaide Hills, our <Link href="/map">real-time food truck map</Link> shows you
               exactly where your next meal on wheels is.
             </p>
             <p>
               We help food truck lovers across South Australia find open trucks, browse full menus,
-              read reviews, and check in to earn loyalty rewards. From Port Adelaide to McLaren Vale,
+              read reviews, and check in to earn loyalty rewards. From <Link href="/food-trucks/port-adelaide">Port Adelaide</Link> to <Link href="/food-trucks/mclaren-vale">McLaren Vale</Link>,
               Norwood to Henley Beach — if there&apos;s a food truck rolling, we&apos;ll help you find it.
             </p>
 
@@ -61,7 +91,7 @@ export default function HomePage() {
               For Food Truck Owners in South Australia
             </h3>
             <p>
-              Own a food truck in Adelaide? List your truck on Food Truck Next 2 Me for free and reach
+              Own a food truck in Adelaide? <Link href="/owner/signup">List your truck on Food Truck Next 2 Me for free</Link> and reach
               thousands of hungry customers. Our owner dashboard lets you update your location in real-time,
               manage your menu, track reviews, and grow your following. Whether you&apos;re at the Royal Adelaide
               Show, Fork on the Road, or serving lunch at a local winery — we put your truck on the map.
@@ -70,7 +100,7 @@ export default function HomePage() {
             <h3 className="text-xl font-bold text-slate-700 mt-8">
               Frequently Asked Questions
             </h3>
-            <details className="border border-orange-200 rounded-xl p-4 bg-white">
+            <details className="rounded-2xl border border-orange-200 bg-white p-4">
               <summary className="font-semibold text-slate-700 cursor-pointer">
                 How do I find food trucks near me in Adelaide?
               </summary>
@@ -80,7 +110,7 @@ export default function HomePage() {
                 know which ones are serving right now.
               </p>
             </details>
-            <details className="border border-orange-200 rounded-xl p-4 bg-white">
+            <details className="rounded-2xl border border-orange-200 bg-white p-4">
               <summary className="font-semibold text-slate-700 cursor-pointer">
                 How do I list my food truck on Food Truck Next 2 Me?
               </summary>
@@ -90,7 +120,7 @@ export default function HomePage() {
                 attracting customers across Adelaide and South Australia.
               </p>
             </details>
-            <details className="border border-orange-200 rounded-xl p-4 bg-white">
+            <details className="rounded-2xl border border-orange-200 bg-white p-4">
               <summary className="font-semibold text-slate-700 cursor-pointer">
                 Is Food Truck Next 2 Me free?
               </summary>
@@ -100,7 +130,7 @@ export default function HomePage() {
                 extra visibility and features.
               </p>
             </details>
-            <details className="border border-orange-200 rounded-xl p-4 bg-white">
+            <details className="rounded-2xl border border-orange-200 bg-white p-4">
               <summary className="font-semibold text-slate-700 cursor-pointer">
                 What areas does Food Truck Next 2 Me cover?
               </summary>
@@ -110,6 +140,7 @@ export default function HomePage() {
                 operating in South Australia can list with us.
               </p>
             </details>
+            </div>
           </div>
         </div>
       </section>

@@ -13,7 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TruckMap } from '@/components/truck-map';
 import {
   IconMapPin, IconStar, IconSearch, IconTruck, IconMap, IconList,
-  IconNavigation, IconCheckCircle, IconLogIn, IconChefHat, IconArrowRight, IconUser
+  IconNavigation, IconCheckCircle, IconLogIn, IconArrowRight, IconUser,
+  IconGift, IconBell, IconSparkles
 } from '@/components/ui/branded-icons';
 import { cn } from '@/lib/utils';
 
@@ -66,6 +67,24 @@ function formatDistance(km: number): string {
 }
 
 type FilterType = 'all' | 'open';
+
+const EXPERIENCE_PILLARS = [
+  {
+    icon: IconMapPin,
+    title: 'Live Adelaide Map',
+    description: 'Track what is open now, spot nearby trucks fast, and jump straight into directions.',
+  },
+  {
+    icon: IconGift,
+    title: 'Check-In Rewards',
+    description: 'Give regulars a reason to come back with loyalty-friendly discovery and repeat visits.',
+  },
+  {
+    icon: IconBell,
+    title: 'Fewer Missed Meals',
+    description: 'Customers can stay close to favourites instead of guessing who is serving today.',
+  },
+];
 
 export default function HomeContent() {
   const { data: session, status } = useSession();
@@ -170,192 +189,251 @@ export default function HomeContent() {
     : [];
 
   const openTruckCount = trucks.filter(t => t.isOpen).length;
+  const heroStats = [
+    { label: 'Open right now', value: `${openTruckCount}+` },
+    { label: 'Nearby picks', value: nearbyTrucks.length > 0 ? `${nearbyTrucks.length}` : 'Live' },
+    { label: 'Coverage', value: 'Adelaide + SA' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50">
-      {/* Hero Section - Clean & Premium */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900">
-        {/* Subtle geometric accent — no emoji clutter */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="container mx-auto px-4 py-14 sm:py-20 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            {/* Logo */}
+    <div className="ambient-shell min-h-screen">
+      <section className="relative overflow-hidden px-4 pb-8 pt-6 sm:pb-10 sm:pt-8">
+        <div className="absolute inset-0 hero-grid opacity-60" />
+        <div className="container relative z-10 mx-auto">
+          <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="mb-8"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-3xl"
             >
-              <div className="inline-block bg-white/10 backdrop-blur-md rounded-3xl p-4 border border-white/20 shadow-2xl">
+              <div className="eyebrow-chip">
+                <IconSparkles className="h-4 w-4 text-orange-500" />
+                Live Food Truck Finder for Adelaide & South Australia
+              </div>
+
+              <div className="mt-6 inline-flex rounded-[30px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur">
                 <Image
                   src="/logo.png"
                   alt="Food Truck Next 2 Me"
                   width={180}
                   height={120}
-                  className="h-20 w-auto"
+                  className="h-16 w-auto sm:h-20"
                   priority
                 />
               </div>
+
+              <h1 className="mt-6 max-w-4xl text-balance font-display text-5xl font-bold leading-[0.95] text-slate-950 sm:text-6xl lg:text-7xl">
+                Find the food truck
+                <span className="brand-gradient-text"> everyone wishes they found first.</span>
+              </h1>
+
+              <p className="mt-5 max-w-2xl text-balance text-lg leading-8 text-slate-600 sm:text-xl">
+                Track what is open now, browse menus before you commit, and get from craving to curbside faster across Adelaide and South Australia.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-7 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
+                >
+                  <Link href="/map">
+                    Open Live Map
+                    <IconArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
+
+                {status !== 'authenticated' ? (
+                  <>
+                    <Button
+                      asChild
+                      size="lg"
+                      variant="outline"
+                      className="rounded-full border-orange-200 bg-white/88 px-7 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50"
+                    >
+                      <Link href="/login">
+                        <IconLogIn className="h-5 w-5" />
+                        Sign In
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="lg"
+                      className="rounded-full bg-slate-900 px-7 py-6 text-base font-semibold text-white hover:bg-slate-800"
+                    >
+                      <Link href="/signup">
+                        <IconUser className="h-5 w-5" />
+                        Join Free
+                      </Link>
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                {heroStats.map((stat) => (
+                  <div key={stat.label} className="section-frame px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                      {stat.label}
+                    </p>
+                    <p className="mt-2 font-display text-3xl font-bold text-slate-950">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </motion.div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4">
-              Find Your Next{' '}
-              <span className="bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
-                Favourite Meal
-              </span>
-              <br />
-              <span className="text-white/90">On Wheels</span>
-            </h1>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="surface-panel overflow-hidden p-5 sm:p-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-100 pb-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                    Start with what matters
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">
+                    Search, filter, and switch views instantly
+                  </h2>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-700">
+                  <IconTruck className="h-4 w-4" />
+                  {sortedTrucks.length} results
+                </div>
+              </div>
 
-            <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto font-medium">
-              {openTruckCount > 0 && (
-                <span className="text-orange-400 font-bold">{openTruckCount} truck{openTruckCount !== 1 ? 's' : ''} serving now · </span>
-              )}
-              Discover amazing street food across Adelaide & South Australia
-            </p>
+              {/* Search and Filters */}
+              <div className="mt-5 space-y-4">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <label htmlFor="home-truck-search" className="sr-only">
+                      Search food trucks by name or cuisine
+                    </label>
+                    <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Input
+                      id="home-truck-search"
+                      placeholder="Search trucks by name or cuisine..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="rounded-full border-2 border-orange-100 bg-white py-6 pl-12 text-slate-800 placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-400"
+                    />
+                  </div>
+                  <div className="flex gap-1 rounded-full border-2 border-orange-100 bg-orange-50/80 p-1.5 shadow-sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      aria-label="Show truck list"
+                      aria-pressed={viewMode === 'list'}
+                      title="Show truck list"
+                      className={cn(
+                        "rounded-full px-4",
+                        viewMode === 'list' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-slate-500 hover:bg-white hover:text-orange-700'
+                      )}
+                    >
+                      <IconList className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="button"
+                      onClick={() => setViewMode('map')}
+                      aria-label="Show truck map"
+                      aria-pressed={viewMode === 'map'}
+                      title="Show truck map"
+                      className={cn(
+                        "rounded-full px-4",
+                        viewMode === 'map' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-slate-500 hover:bg-white hover:text-orange-700'
+                      )}
+                    >
+                      <IconMap className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
 
-            {/* CTA Buttons */}
-            {status !== 'authenticated' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-wrap items-center justify-center gap-4"
-              >
-                <Link href="/login">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm font-semibold px-8 py-6 rounded-full shadow-lg"
-                  >
-                    <IconLogIn className="w-5 h-5 mr-2" />
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-8 py-6 rounded-full shadow-xl shadow-orange-500/30"
-                  >
-                    <IconUser className="w-5 h-5 mr-2" />
-                    Join Free
-                  </Button>
-                </Link>
-              </motion.div>
-            )}
-          </motion.div>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { value: 'all', label: 'All Trucks', icon: IconTruck },
+                    { value: 'open', label: 'Open Now', icon: IconCheckCircle },
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      type="button"
+                      onClick={() => setFilter(f.value as FilterType)}
+                      aria-pressed={filter === f.value}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all",
+                        filter === f.value
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25"
+                          : "bg-orange-50 text-slate-700 hover:bg-orange-100"
+                      )}
+                    >
+                      <f.icon className="h-4 w-4" />
+                      {f.label}
+                    </button>
+                  ))}
+
+                  {(searchTerm || filter !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilter('all');
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                    >
+                      Reset filters
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                {EXPERIENCE_PILLARS.map((pillar) => (
+                  <div key={pillar.title} className="rounded-[24px] border border-orange-100 bg-orange-50/65 p-4">
+                    <div className="mb-3 inline-flex rounded-2xl bg-white p-3 text-orange-600 shadow-sm">
+                      <pillar.icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-slate-900">
+                      {pillar.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {pillar.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
+      </section>
 
-        {/* Clean divider */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-50 to-transparent" />
-      </div>
-
-      <div className="container mx-auto px-4 py-6 pb-24">
-        {/* Location denied banner */}
+      <div className="container mx-auto px-4 pb-24">
         {locationDenied && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-4 bg-amber-100 border-2 border-amber-300 rounded-2xl flex items-center gap-3 shadow-sm"
+            className="section-frame mb-5 flex items-center gap-3 px-4 py-4"
           >
-            <IconNavigation className="w-6 h-6 text-amber-600 flex-shrink-0" />
-            <p className="text-amber-800 font-medium">
-              Enable location for better results!
+            <div className="rounded-2xl bg-orange-100 p-3 text-orange-600">
+              <IconNavigation className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium text-slate-700 sm:text-base">
+              Enable location for sharper nearby results.
               <button
+                type="button"
                 onClick={getUserLocation}
-                className="ml-2 underline hover:text-amber-600 font-bold"
+                className="ml-2 font-semibold text-orange-700 underline decoration-orange-300 underline-offset-4 hover:text-orange-500"
               >
-                Allow location
+                Try location again
               </button>
             </p>
           </motion.div>
         )}
-
-        {/* Search and Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-4 mb-8"
-        >
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input
-                placeholder="Search trucks by name or cuisine..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 bg-white border-2 border-orange-200 text-slate-800 placeholder:text-slate-400 rounded-full py-6 shadow-sm focus:border-orange-400 focus:ring-orange-400"
-              />
-            </div>
-            <div className="flex gap-1 bg-white rounded-full p-1.5 border-2 border-orange-200 shadow-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={cn(
-                  "rounded-full px-4",
-                  viewMode === 'list' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:bg-orange-100'
-                )}
-              >
-                <IconList className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('map')}
-                className={cn(
-                  "rounded-full px-4",
-                  viewMode === 'map' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:bg-orange-100'
-                )}
-              >
-                <IconMap className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Filter pills */}
-          <div className="flex gap-3 overflow-x-auto pb-2 items-center">
-            {[
-              { value: 'all', label: 'All Trucks', icon: IconTruck, emoji: '🚚' },
-              { value: 'open', label: 'Open Now', icon: IconCheckCircle, emoji: '✅' },
-            ].map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value as FilterType)}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm",
-                  filter === f.value
-                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30 scale-105"
-                    : "bg-white text-slate-600 hover:bg-orange-100 border-2 border-orange-200"
-                )}
-              >
-                <span>{f.emoji}</span>
-                {f.label}
-              </button>
-            ))}
-
-            {(searchTerm || filter !== 'all') && (
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilter('all');
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold bg-red-100 text-red-600 border-2 border-red-200 hover:bg-red-200 transition-all whitespace-nowrap"
-              >
-                ✕ Reset
-              </button>
-            )}
-          </div>
-        </motion.div>
 
         {/* Near You Section */}
         {nearbyTrucks.length > 0 && !searchTerm && filter === 'all' && (
@@ -363,23 +441,30 @@ export default function HomeContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mb-8"
+            className="section-frame mb-8 overflow-hidden p-5 sm:p-6"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
-                <IconNavigation className="w-5 h-5 text-white" />
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-lg shadow-orange-500/20">
+                  <IconNavigation className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                    Near You
+                  </p>
+                  <h2 className="font-display text-2xl font-bold text-slate-950">Open trucks closest to your location</h2>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">Near You</h2>
-                <p className="text-sm text-slate-500">Open trucks closest to your location</p>
-              </div>
+              <Link href="/map" className="text-sm font-semibold text-orange-700 hover:text-orange-500">
+                View on the live map
+              </Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {nearbyTrucks.map((truck) => (
                 <Link key={truck.id} href={`/trucks/${truck.id}`}>
-                  <div className="bg-white rounded-2xl border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all p-4 cursor-pointer group">
+                  <div className="group h-full rounded-[24px] border border-orange-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-soft">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-orange-100 to-amber-100">
                         {truck.imageUrl ? (
                           <img src={truck.imageUrl} alt={truck.name} className="w-full h-full object-cover" />
                         ) : (
@@ -387,15 +472,15 @@ export default function HomeContent() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-bold text-sm text-slate-800 truncate group-hover:text-green-600 transition-colors">{truck.name}</h3>
+                        <h3 className="truncate font-display text-base font-bold text-slate-900 transition-colors group-hover:text-orange-600">{truck.name}</h3>
                         <p className="text-xs text-slate-500 truncate">{truck.cuisine}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">🟢 Open</span>
+                      <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Open Now</span>
                       {truck.distance !== null && (
-                        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
-                          📍 {formatDistance(truck.distance)}
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
+                          {formatDistance(truck.distance)}
                         </span>
                       )}
                     </div>
@@ -406,6 +491,22 @@ export default function HomeContent() {
           </motion.div>
         )}
 
+        <section className="mb-8">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                Browse trucks
+              </p>
+              <h2 className="font-display text-3xl font-bold text-slate-950">
+                {filter === 'open' ? 'Serving right now' : 'Ready to explore'}
+              </h2>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+              <IconTruck className="h-4 w-4 text-orange-500" />
+              {sortedTrucks.length} truck{sortedTrucks.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+
         {/* Content */}
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -414,7 +515,7 @@ export default function HomeContent() {
             ))}
           </div>
         ) : viewMode === 'map' ? (
-          <div className="h-[500px] rounded-3xl overflow-hidden border-4 border-orange-200 shadow-xl">
+          <div className="section-frame h-[560px] overflow-hidden p-2">
             <TruckMap
               trucks={sortedTrucks}
               center={userLocation || undefined}
@@ -439,8 +540,8 @@ export default function HomeContent() {
                 }}
               >
                 <Link href={`/trucks/${truck.id}`}>
-                  <Card className="bg-white border-2 border-orange-100 hover:border-orange-300 hover:shadow-xl transition-all hover:scale-[1.02] overflow-hidden cursor-pointer h-full group rounded-3xl shadow-md">
-                    <div className="h-40 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center relative overflow-hidden">
+                  <Card className="group h-full cursor-pointer overflow-hidden rounded-[28px] border border-orange-100 bg-white/96 shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-soft">
+                    <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-orange-100 to-amber-100">
                       {truck.imageUrl ? (
                         <img
                           src={truck.imageUrl}
@@ -457,12 +558,12 @@ export default function HomeContent() {
                       {/* Status badge */}
                       {truck.isOpen !== undefined && (
                         <div className={cn(
-                          "absolute top-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg",
+                          "absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg",
                           truck.isOpen
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-amber-300 text-slate-950'
                             : 'bg-slate-500 text-white'
                         )}>
-                          {truck.isOpen ? '🟢 Open Now' : 'Closed'}
+                          {truck.isOpen ? 'Open Now' : 'Closed'}
                         </div>
                       )}
                     </div>
@@ -491,8 +592,8 @@ export default function HomeContent() {
                           </p>
                         )}
                         {truck.distance !== null && (
-                          <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-full whitespace-nowrap ml-2 flex-shrink-0">
-                            📍 {formatDistance(truck.distance)}
+                          <span className="ml-2 flex-shrink-0 whitespace-nowrap rounded-full bg-orange-100 px-2 py-1 text-xs font-bold text-orange-600">
+                            {formatDistance(truck.distance)}
                           </span>
                         )}
                       </div>
@@ -503,8 +604,8 @@ export default function HomeContent() {
                         </p>
                       )}
 
-                      <div className="pt-3 border-t border-orange-100">
-                        <span className="text-sm text-orange-600 font-bold flex items-center justify-center gap-2 group-hover:text-orange-500">
+                      <div className="border-t border-orange-100 pt-3">
+                        <span className="flex items-center justify-center gap-2 text-sm font-bold text-orange-600 group-hover:text-orange-500">
                           View Menu & Check In
                           <IconArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
@@ -516,7 +617,7 @@ export default function HomeContent() {
             ))}
           </motion.div>
         ) : (
-          <Card className="bg-white border-2 border-orange-100 rounded-3xl shadow-lg">
+          <Card className="section-frame rounded-[28px] border-none shadow-none">
             <CardContent className="p-16 text-center">
               <div className="text-6xl mb-4">🚚</div>
               <h3 className="text-2xl font-bold text-slate-700 mb-2">
@@ -536,6 +637,23 @@ export default function HomeContent() {
             </CardContent>
           </Card>
         )}
+        </section>
+
+        <section className="mb-10 grid gap-4 lg:grid-cols-3">
+          {EXPERIENCE_PILLARS.map((pillar) => (
+            <div key={pillar.title} className="section-frame p-5 sm:p-6">
+              <div className="mb-4 inline-flex rounded-2xl bg-orange-100 p-3 text-orange-600">
+                <pillar.icon className="h-5 w-5" />
+              </div>
+              <h3 className="font-display text-2xl font-bold text-slate-950">
+                {pillar.title}
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
+                {pillar.description}
+              </p>
+            </div>
+          ))}
+        </section>
 
         {/* Owner CTA - Bottom */}
         {status !== 'authenticated' && (
@@ -543,27 +661,33 @@ export default function HomeContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 p-8 rounded-3xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 shadow-2xl shadow-orange-500/30"
+            className="surface-panel-dark mt-12 overflow-hidden p-8 sm:p-10"
           >
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-5">
-                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl">
-                  👨‍🍳
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-2xl shadow-lg">
+                  <IconTruck className="h-8 w-8 text-brand-yellow" />
                 </div>
                 <div className="text-white">
-                  <h3 className="text-xl font-bold">Own a food truck?</h3>
-                  <p className="text-white/80">List your truck and reach hungry customers today!</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+                    For owners
+                  </p>
+                  <h3 className="mt-2 font-display text-3xl font-bold">Own a food truck?</h3>
+                  <p className="mt-2 max-w-xl text-white/75">
+                    List your truck, update your live location, and show up when hungry customers are deciding where to go.
+                  </p>
                 </div>
               </div>
-              <Link href="/owner/signup">
-                <Button
-                  size="lg"
-                  className="bg-white text-orange-600 hover:bg-orange-50 font-bold px-8 py-6 rounded-full shadow-xl"
-                >
+              <Button
+                asChild
+                size="lg"
+                className="cta-sheen rounded-full bg-white px-8 py-6 font-bold text-slate-950 shadow-xl hover:bg-orange-50"
+              >
+                <Link href="/owner/signup">
                   Register Your Truck
                   <IconArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </motion.div>
         )}

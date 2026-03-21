@@ -70,27 +70,35 @@ const config = {
           ring: 'hsl(var(--sidebar-ring))'
         }
   		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
-  		},
-  		keyframes: {
-  			'accordion-down': {
-  				from: { height: "0" },
-  				to: { height: 'var(--radix-accordion-content-height)' }
-  			},
-  			'accordion-up': {
-  				from: { height: 'var(--radix-accordion-content-height)' },
-  				to: { height: "0" }
-  			}
-  		},
-  		animation: {
-  			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		},
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)'
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: "0" },
+          to: { height: 'var(--radix-accordion-content-height)' }
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: "0" }
+        }
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        'float-slow': 'float-slow 7s ease-in-out infinite',
+        'pulse-soft': 'pulse-soft 5s ease-in-out infinite',
+        sheen: 'sheen 1.8s ease-in-out infinite'
+      },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        soft: '0 18px 45px rgba(120, 61, 9, 0.08)',
+        glow: '0 24px 60px rgba(255, 106, 0, 0.18)',
       },
   	}
   },

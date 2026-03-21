@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TruckMap } from '@/components/truck-map';
 import {
   IconMapPin, IconStar, IconSearch, IconTruck, IconList, IconMap as IconMapIcon,
-  IconHeart, IconNavigation, IconCheckCircle, IconArrowRight
+  IconHeart, IconNavigation, IconCheckCircle, IconSparkles
 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,7 @@ interface TruckData {
   locationUpdatedAt?: string;
 }
 
-const DEFAULT_LOCATION = { lat: 52.3676, lng: 4.9041 };
+const DEFAULT_LOCATION = { lat: -34.9285, lng: 138.6007 };
 
 function getRelativeTime(dateString?: string): string | null {
   if (!dateString) return null;
@@ -166,36 +166,45 @@ export default function MapPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50 pb-24">
+    <div className="ambient-shell min-h-screen pb-24">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="surface-panel mb-6 p-6 sm:p-8"
         >
-          <h1 className="text-3xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+          <div className="eyebrow-chip">
+            <IconSparkles className="h-4 w-4 text-orange-500" />
+            Real-time discovery
+          </div>
+          <h1 className="mt-5 flex items-center gap-3 text-3xl font-bold text-slate-800 font-display sm:text-4xl">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500">
               <IconMapPin className="w-6 h-6 text-white" />
             </div>
             Find Food Trucks
           </h1>
-          <p className="text-slate-600">
-            🚚 {sortedTrucks.filter(t => t.isOpen).length} trucks open now
+          <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            See what&apos;s open, narrow the field fast, and switch between list and map views without losing context.
           </p>
-        </motion.div>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-semibold text-slate-700">
+            <IconTruck className="h-4 w-4 text-orange-500" />
+            {sortedTrucks.filter(t => t.isOpen).length} trucks open now
+          </div>
+        </motion.section>
 
         {/* Location denied banner */}
         {locationDenied && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-2xl flex items-center gap-3"
+            className="section-frame mb-4 flex items-center gap-3 p-4"
           >
             <IconNavigation className="w-5 h-5 text-amber-600 flex-shrink-0" />
             <p className="text-sm text-amber-700">
-              Location access denied. Showing trucks near Amsterdam.
+              Location access denied. Showing trucks near Adelaide and South Australia.
               <button
+                type="button"
                 onClick={getUserLocation}
                 className="ml-2 underline hover:text-amber-900 font-medium"
               >
@@ -210,12 +219,16 @@ export default function MapPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="space-y-4 mb-6"
+          className="section-frame mb-6 space-y-4 p-5"
         >
           <div className="flex gap-3">
             <div className="relative flex-1">
+              <label htmlFor="map-truck-search" className="sr-only">
+                Search food trucks by name or cuisine
+              </label>
               <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
+                id="map-truck-search"
                 placeholder="Search by name or cuisine..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -226,7 +239,11 @@ export default function MapPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                type="button"
                 onClick={() => setViewMode('list')}
+                aria-label="Show truck list"
+                aria-pressed={viewMode === 'list'}
+                title="Show truck list"
                 className={cn(
                   "rounded-xl",
                   viewMode === 'list' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:text-orange-600'
@@ -237,7 +254,11 @@ export default function MapPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                type="button"
                 onClick={() => setViewMode('map')}
+                aria-label="Show truck map"
+                aria-pressed={viewMode === 'map'}
+                title="Show truck map"
                 className={cn(
                   "rounded-xl",
                   viewMode === 'map' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'text-slate-500 hover:text-orange-600'
@@ -251,13 +272,15 @@ export default function MapPage() {
           {/* Filter pills */}
           <div className="flex gap-2 overflow-x-auto pb-2 items-center">
             {[
-              { value: 'all', label: 'All Trucks', icon: IconTruck, emoji: '🚚' },
-              { value: 'open', label: 'Open Now', icon: IconCheckCircle, emoji: '✅' },
-              { value: 'favorites', label: 'Favorites', icon: IconHeart, emoji: '❤️' },
+              { value: 'all', label: 'All Trucks', icon: IconTruck },
+              { value: 'open', label: 'Open Now', icon: IconCheckCircle },
+              ...(session?.user ? [{ value: 'favorites', label: 'Favorites', icon: IconHeart }] : []),
             ].map((f) => (
               <button
                 key={f.value}
+                type="button"
                 onClick={() => setFilter(f.value as FilterType)}
+                aria-pressed={filter === f.value}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all",
                   filter === f.value
@@ -265,21 +288,21 @@ export default function MapPage() {
                     : "bg-white text-slate-600 hover:text-orange-600 border-2 border-orange-200 hover:border-orange-400"
                 )}
               >
-                <span>{f.emoji}</span>
+                <f.icon className="h-4 w-4" />
                 {f.label}
               </button>
             ))}
 
             {(searchTerm || filter !== 'all') && (
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm('');
                   setFilter('all');
                 }}
                 className="flex items-center gap-1 px-3 py-2 rounded-full text-sm font-bold bg-red-100 text-red-600 border-2 border-red-200 hover:bg-red-200 transition-colors whitespace-nowrap"
               >
-                <span>✕</span>
-                Reset
+                Reset filters
               </button>
             )}
           </div>
@@ -297,7 +320,6 @@ export default function MapPage() {
             <TruckMap
               trucks={sortedTrucks}
               center={userLocation || undefined}
-              onTruckSelect={(truck) => console.log('Selected:', truck.name)}
             />
           </div>
         ) : sortedTrucks.length > 0 ? (
@@ -344,7 +366,10 @@ export default function MapPage() {
 
                       {session?.user && (
                         <button
+                          type="button"
                           onClick={(e) => toggleFavorite(truck.id, e)}
+                          aria-label={favorites.has(truck.id) ? `Remove ${truck.name} from favorites` : `Add ${truck.name} to favorites`}
+                          aria-pressed={favorites.has(truck.id)}
                           className={cn(
                             "absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg",
                             favorites.has(truck.id)
@@ -391,6 +416,7 @@ export default function MapPage() {
 
                       <div className="flex gap-2 pt-3 border-t border-orange-100">
                         <button
+                          type="button"
                           onClick={(e) => openDirections(truck, e)}
                           className="flex-1 py-2.5 text-sm text-slate-600 hover:text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors flex items-center justify-center gap-2 font-medium"
                         >
@@ -417,10 +443,10 @@ export default function MapPage() {
             <CardContent className="p-16 text-center">
               {filter === 'favorites' ? (
                 <>
-                  <div className="text-6xl mb-4">❤️</div>
-                  <h3 className="text-2xl font-bold text-slate-700 mb-2">No favorites yet</h3>
-                  <p className="text-slate-500 mb-4">
-                    Tap the heart icon on trucks you love
+              <div className="text-6xl mb-4">❤️</div>
+              <h3 className="text-2xl font-bold text-slate-700 mb-2">No favorites yet</h3>
+              <p className="text-slate-500 mb-4">
+                Tap the heart icon on trucks you love
                   </p>
                   <Button onClick={() => setFilter('all')} className="bg-orange-500 hover:bg-orange-600 text-white rounded-full">
                     View All Trucks

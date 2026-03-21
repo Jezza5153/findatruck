@@ -34,7 +34,7 @@ const mapContainerStyle = {
     height: '100%',
 };
 
-const defaultCenter = { lat: 52.3676, lng: 4.9041 }; // Amsterdam
+const defaultCenter = { lat: -34.9285, lng: 138.6007 }; // Adelaide CBD
 
 const mapOptions = {
     disableDefaultUI: false,

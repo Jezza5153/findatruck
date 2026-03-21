@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { toJsonLd } from '@/lib/json-ld';
 
 interface BlogPost {
     slug: string;
@@ -298,7 +299,7 @@ export default async function BlogPostPage({ params }: Props) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
+                    __html: toJsonLd({
                         '@context': 'https://schema.org',
                         '@type': 'Article',
                         headline: post.title,

@@ -1,6 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import {
+    IconArrowRight,
+    IconCalendarDays,
+    IconCheckCircle,
+    IconMail,
+    IconSparkles,
+    IconUsers,
+} from '@/components/ui/branded-icons';
 
 interface EnquiryFormProps {
     eventType?: string;
@@ -48,22 +56,42 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
 
     if (submitted) {
         return (
-            <div className="bg-green-50 border-2 border-green-200 rounded-3xl p-8 text-center">
-                <div className="text-5xl mb-4">✅</div>
-                <h3 className="text-2xl font-bold text-green-800 mb-2">Enquiry Sent!</h3>
-                <p className="text-green-700">
-                    Thanks for your interest! We&apos;ll match you with available food trucks and get back to you within 24 hours.
+            <div className="section-frame p-8 text-center">
+                <div className="mx-auto mb-4 inline-flex rounded-3xl bg-emerald-100 p-4 text-emerald-700">
+                    <IconCheckCircle className="h-10 w-10" />
+                </div>
+                <h3 className="font-display text-3xl font-bold text-slate-950 mb-2">Enquiry Sent</h3>
+                <p className="mx-auto max-w-xl text-base leading-7 text-slate-600">
+                    Thanks for your interest. We&apos;ll match you with available food trucks and get back to you within 24 hours with the next best options.
                 </p>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-3xl border-2 border-orange-100 p-6 sm:p-8 shadow-md space-y-5">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Get a Free Quote</h2>
-            <p className="text-slate-500 text-sm mb-4">
-                Tell us about your event and we&apos;ll connect you with the best food trucks in Adelaide.
-            </p>
+        <form onSubmit={handleSubmit} className="surface-panel space-y-5 p-6 sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-orange-100 pb-5">
+                <div>
+                    <div className="eyebrow-chip">
+                        <IconSparkles className="h-4 w-4 text-orange-500" />
+                        Free quote request
+                    </div>
+                    <h2 className="mt-4 font-display text-3xl font-bold text-slate-950">Get a sharper food truck shortlist</h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                        Share the essentials and we&apos;ll help connect your event with Adelaide food trucks that actually fit the guest count, vibe, and service style you need.
+                    </p>
+                </div>
+                <div className="grid gap-2 sm:min-w-[210px]">
+                    <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-slate-700">
+                        <IconCalendarDays className="mr-2 inline h-4 w-4 text-orange-500" />
+                        Fast enquiry routing
+                    </div>
+                    <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-slate-700">
+                        <IconUsers className="mr-2 inline h-4 w-4 text-orange-500" />
+                        Better event matching
+                    </div>
+                </div>
+            </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -74,7 +102,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         required
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                         placeholder="Jane Smith"
                     />
                 </div>
@@ -86,7 +114,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         required
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                         placeholder="jane@example.com"
                     />
                 </div>
@@ -100,7 +128,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         type="tel"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                         placeholder="0412 345 678"
                     />
                 </div>
@@ -111,7 +139,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         required
                         value={form.eventType}
                         onChange={(e) => setForm({ ...form, eventType: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800 bg-white"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                     >
                         <option value="wedding">Wedding</option>
                         <option value="corporate">Corporate / Office Event</option>
@@ -132,7 +160,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         required
                         value={form.eventDate}
                         onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                     />
                 </div>
                 <div>
@@ -142,7 +170,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         required
                         value={form.guestCount}
                         onChange={(e) => setForm({ ...form, guestCount: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800 bg-white"
+                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                     >
                         <option value="">Select guest count</option>
                         <option value="20-50">20–50 guests</option>
@@ -161,7 +189,7 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                     type="text"
                     value={form.venue}
                     onChange={(e) => setForm({ ...form, venue: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800"
+                    className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                     placeholder="e.g. McLaren Vale winery, Glenelg foreshore"
                 />
             </div>
@@ -173,22 +201,29 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                     rows={4}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400 focus:outline-none text-slate-800 resize-none"
+                    className="w-full resize-none rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
                     placeholder="Any cuisine preferences, dietary requirements, budget, or other details..."
                 />
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
             )}
 
-            <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-full shadow-xl shadow-orange-500/20 transition-all disabled:opacity-50 text-lg"
-            >
-                {submitting ? 'Sending...' : '📧 Send Enquiry — It\'s Free'}
-            </button>
+            <div className="flex flex-col gap-4 border-t border-orange-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm leading-6 text-slate-500">
+                    <IconMail className="mr-2 inline h-4 w-4 text-orange-500" />
+                    No cost to enquire. No payment required.
+                </div>
+                <button
+                    type="submit"
+                    disabled={submitting}
+                    className="cta-sheen inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-4 text-lg font-bold text-white shadow-glow transition-all hover:from-orange-600 hover:to-amber-500 disabled:opacity-50 sm:w-auto"
+                >
+                    {submitting ? 'Sending...' : 'Send Enquiry'}
+                    {!submitting && <IconArrowRight className="h-5 w-5" />}
+                </button>
+            </div>
         </form>
     );
 }

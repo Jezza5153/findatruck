@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { DM_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -8,9 +8,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { SessionProvider } from '@/components/SessionProvider';
 import CustomerBottomNav from '@/components/CustomerBottomNav';
 import { cn } from '@/lib/utils';
+import { toJsonLd } from '@/lib/json-ld';
 
-const inter = Inter({
-  variable: '--font-inter',
+const bodyFont = DM_Sans({
+  variable: '--font-body',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+const displayFont = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
   display: 'swap',
 });
@@ -22,6 +29,7 @@ export const metadata: Metadata = {
     template: '%s | Food Truck Next 2 Me',
   },
   description: 'Find the best food trucks near you in Adelaide and South Australia. Live locations, menus, reviews, and real-time tracking. Your next favourite meal on wheels is just a tap away!',
+  applicationName: 'Food Truck Next 2 Me',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
@@ -36,6 +44,8 @@ export const metadata: Metadata = {
     'food truck catering Adelaide', 'Adelaide food vendors', 'local food trucks',
   ],
   authors: [{ name: 'Food Truck Next 2 Me' }],
+  creator: 'Food Truck Next 2 Me',
+  publisher: 'Food Truck Next 2 Me',
   alternates: {
     canonical: 'https://foodtrucknext2me.com',
   },
@@ -58,6 +68,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  category: 'food',
 };
 
 export const viewport: Viewport = {
@@ -67,7 +78,6 @@ export const viewport: Viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 };
 
 type RootLayoutProps = {
@@ -83,13 +93,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="theme-color" content="hsl(210 40% 10%)" media="(prefers-color-scheme: dark)" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="geo.region" content="AU-SA" />
         <meta name="geo.placename" content="Adelaide" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+            __html: toJsonLd({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
               name: 'Food Truck Next 2 Me',
@@ -106,7 +116,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: toJsonLd({
               '@context': 'https://schema.org',
               '@type': 'Organization',
               name: 'Food Truck Next 2 Me',
@@ -124,8 +134,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          inter.variable
+          "min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-primary-foreground",
+          bodyFont.variable,
+          displayFont.variable
         )}
       >
         <SessionProvider>

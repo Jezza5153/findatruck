@@ -7,7 +7,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconMenu, IconX, IconMapPin, IconStar, IconUser, IconLogIn, IconLogOut,
-  IconChefHat, IconLayoutDashboard, IconUtensils, IconSettings, IconBell, IconBookOpen
+  IconChefHat, IconLayoutDashboard, IconUtensils, IconSettings, IconBell, IconBookOpen,
+  IconArrowRight, IconSparkles
 } from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,33 +54,42 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-lg border-b border-orange-100 shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-orange-200/60 bg-white/70 backdrop-blur-2xl">
+      <div className="container mx-auto px-4 py-3">
+        <div className="surface-panel flex min-h-[72px] items-center justify-between gap-3 px-4 py-3 sm:px-5">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-white rounded-xl p-1 shadow-sm">
+          <Link href="/" className="flex min-w-0 items-center gap-3 group">
+            <div className="rounded-2xl border border-orange-200/80 bg-white p-1.5 shadow-sm">
               <img
                 src="/logo.png"
                 alt="Food Truck Next 2 Me"
-                className="h-10 w-auto group-hover:scale-105 transition-transform"
+                className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
               />
+            </div>
+            <div className="hidden min-w-0 sm:block">
+              <p className="font-display text-lg font-bold leading-none text-slate-900">
+                Food Truck Next 2 Me
+              </p>
+              <p className="mt-1 truncate text-xs font-medium uppercase tracking-[0.18em] text-orange-700/80">
+                Adelaide Live Truck Radar
+              </p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden items-center gap-1.5 lg:flex">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors",
+                    "flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300",
                     isActive
-                      ? "bg-orange-500 text-white"
-                      : "text-slate-600 hover:text-orange-600 hover:bg-orange-50"
+                      ? "bg-slate-900 text-white shadow-lg shadow-orange-200/70"
+                      : "text-slate-600 hover:bg-orange-50 hover:text-orange-700"
                   )}
                 >
                   <link.icon className="w-4 h-4" />
@@ -90,7 +100,7 @@ export function SiteHeader() {
           </nav>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-orange-200 animate-pulse" />
             ) : isAuthenticated ? (
@@ -99,7 +109,7 @@ export function SiteHeader() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-slate-500 hover:text-orange-600 hover:bg-orange-50 hidden sm:flex"
+                  className="hidden text-slate-500 hover:bg-orange-50 hover:text-orange-700 sm:flex"
                 >
                   <IconBell className="w-5 h-5" />
                 </Button>
@@ -179,20 +189,35 @@ export function SiteHeader() {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/login">
-                  <Button
-                    variant="ghost"
-                    className="text-slate-600 hover:text-orange-600 hover:bg-orange-50"
-                  >
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-slate-600 hover:text-orange-600 hover:bg-orange-50"
+                >
+                  <Link href="/login">
                     <IconLogIn className="w-4 h-4 mr-2" />
                     Sign in
-                  </Button>
-                </Link>
-                <Link href="/signup" className="hidden sm:block">
-                  <Button className="bg-gradient-to-r from-primary to-yellow-500 hover:from-primary/90 hover:to-yellow-500/90 text-white">
-                    Get Started
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="hidden border-orange-200 bg-white/90 text-slate-800 hover:bg-orange-50 lg:inline-flex"
+                >
+                  <Link href="/owner/signup">
+                    <IconChefHat className="h-4 w-4" />
+                    List Your Truck
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  className="cta-sheen hidden sm:inline-flex bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
+                >
+                  <Link href="/signup">
+                    Join Free
+                    <IconArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
             )}
 
@@ -200,7 +225,11 @@ export function SiteHeader() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-slate-400 hover:text-white"
+              type="button"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-site-nav"
+              className="lg:hidden text-slate-600 hover:bg-orange-50 hover:text-orange-700"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <IconX className="w-5 h-5" /> : <IconMenu className="w-5 h-5" />}
@@ -217,9 +246,16 @@ export function SiteHeader() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-slate-900/95 border-t border-slate-700/50"
+            id="mobile-site-nav"
+            className="overflow-hidden lg:hidden"
           >
-            <nav className="container mx-auto px-4 py-4 space-y-2">
+            <div className="container mx-auto px-4 pb-3">
+              <div className="surface-panel space-y-3 px-4 py-4">
+                <div className="flex items-center gap-2 rounded-full bg-orange-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">
+                  <IconSparkles className="h-4 w-4" />
+                  Built for Adelaide food lovers
+                </div>
+                <nav className="space-y-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -227,11 +263,12 @@ export function SiteHeader() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-white/10 text-white"
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-orange-50 hover:text-orange-700"
                     )}
                   >
                     <link.icon className="w-5 h-5" />
@@ -239,15 +276,16 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
+                </nav>
 
               {isAuthenticated && (
                 <>
-                  <div className="border-t border-slate-700/50 my-2 pt-2" />
+                  <div className="my-2 border-t border-orange-100 pt-2" />
                   {isOwner ? (
                     <Link
                       href="/owner/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-orange-50 hover:text-orange-700"
                     >
                       <IconLayoutDashboard className="w-5 h-5" />
                       Dashboard
@@ -256,7 +294,7 @@ export function SiteHeader() {
                     <Link
                       href="/customer/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5"
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-orange-50 hover:text-orange-700"
                     >
                       <IconUser className="w-5 h-5" />
                       My Account
@@ -264,7 +302,24 @@ export function SiteHeader() {
                   )}
                 </>
               )}
-            </nav>
+                {!isAuthenticated && (
+                  <div className="grid gap-2 border-t border-orange-100 pt-3 sm:grid-cols-2">
+                    <Button asChild className="cta-sheen bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-500">
+                      <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                        Join Free
+                        <IconArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="border-orange-200 bg-white text-slate-800 hover:bg-orange-50">
+                      <Link href="/owner/signup" onClick={() => setMobileMenuOpen(false)}>
+                        <IconChefHat className="h-4 w-4" />
+                        List Your Truck
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

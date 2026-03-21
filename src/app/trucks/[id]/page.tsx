@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import TruckInteractive from '@/components/TruckInteractive';
+import { IconGlobe, IconMapPin, IconPhone } from '@/components/ui/branded-icons';
+import { toJsonLd } from '@/lib/json-ld';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -62,6 +64,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${truck.name} — ${truck.cuisine} Food Truck`,
         description,
         type: 'website',
+        url: `https://foodtrucknext2me.com/trucks/${id}`,
+        siteName: 'Food Truck Next 2 Me',
+        ...(truck.imageUrl ? { images: [truck.imageUrl] } : {}),
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${truck.name} — ${truck.cuisine} Food Truck`,
+        description,
         ...(truck.imageUrl ? { images: [truck.imageUrl] } : {}),
       },
     };
@@ -110,7 +120,7 @@ export default async function TruckDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: toJsonLd({
             '@context': 'https://schema.org',
             '@type': 'FoodEstablishment',
             name: truck.name,
@@ -168,9 +178,10 @@ export default async function TruckDetailPage({ params }: Props) {
         }}
       />
 
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50 pb-24">
+      <div className="ambient-shell min-h-screen px-4 py-10 pb-24">
         {/* Hero Image */}
-        <div className="relative h-64 sm:h-80 bg-gradient-to-br from-orange-200 to-amber-200 overflow-hidden">
+        <div className="container mx-auto max-w-5xl">
+        <div className="surface-panel relative h-64 overflow-hidden rounded-[32px] sm:h-80">
           {truck.imageUrl && (
             <img
               src={truck.imageUrl}
@@ -183,7 +194,7 @@ export default async function TruckDetailPage({ params }: Props) {
           <div className="absolute top-4 left-4">
             <Link
               href="/map"
-              className="inline-flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm hover:bg-white text-slate-800 rounded-lg shadow-md text-sm font-medium transition-colors"
+              className="inline-flex items-center rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-md backdrop-blur-sm transition-colors hover:bg-white"
             >
               ← Back to Map
             </Link>
@@ -191,19 +202,19 @@ export default async function TruckDetailPage({ params }: Props) {
 
           {truck.isOpen !== undefined && (
             <div className="absolute top-4 right-4">
-              <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${truck.isOpen ? 'bg-green-500 text-white' : 'bg-slate-500 text-white'}`}>
-                {truck.isOpen ? '● Open Now' : 'Closed'}
+              <span className={`rounded-full px-3 py-1.5 text-sm font-bold ${truck.isOpen ? 'bg-amber-300 text-slate-950' : 'bg-slate-500 text-white'}`}>
+                {truck.isOpen ? 'Open Now' : 'Closed'}
               </span>
             </div>
           )}
         </div>
 
-        <div className="container mx-auto max-w-4xl px-4 -mt-16 relative z-10">
+        <div className="relative z-10 mx-auto max-w-4xl -mt-16 px-4">
           {/* Main Info — SSR crawlable content */}
-          <div className="bg-white border-2 border-orange-100 mb-6 shadow-xl rounded-3xl p-6">
+          <div className="section-frame mb-6 p-6 shadow-none">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800 mb-1">
+                <h1 className="mb-1 font-display text-4xl font-bold text-slate-950">
                   {truck.name}
                 </h1>
                 <p className="text-lg text-slate-500">
@@ -224,7 +235,7 @@ export default async function TruckDetailPage({ params }: Props) {
             {/* Rating */}
             {avgRating > 0 && (
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1 text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full">
+                <div className="flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-yellow-600">
                   <span className="text-lg">★</span>
                   <span className="font-bold">{avgRating.toFixed(1)}</span>
                 </div>
@@ -259,7 +270,8 @@ export default async function TruckDetailPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-slate-600 hover:text-orange-600 transition-colors"
                 >
-                  📍 <span>{truck.address}</span>
+                  <IconMapPin className="h-4 w-4 text-orange-500" />
+                  <span>{truck.address}</span>
                 </a>
               )}
               {(truck.ctaPhoneNumber || truck.phone) && (
@@ -267,7 +279,8 @@ export default async function TruckDetailPage({ params }: Props) {
                   href={`tel:${truck.ctaPhoneNumber || truck.phone}`}
                   className="flex items-center gap-2 text-slate-600 hover:text-green-600 transition-colors"
                 >
-                  📞 <span>{truck.ctaPhoneNumber || truck.phone}</span>
+                  <IconPhone className="h-4 w-4 text-green-600" />
+                  <span>{truck.ctaPhoneNumber || truck.phone}</span>
                 </a>
               )}
               {truck.websiteUrl && (
@@ -277,7 +290,8 @@ export default async function TruckDetailPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-slate-600 hover:text-purple-600 transition-colors"
                 >
-                  🌐 <span>Visit Website</span>
+                  <IconGlobe className="h-4 w-4 text-orange-500" />
+                  <span>Visit Website</span>
                 </a>
               )}
             </div>
@@ -308,7 +322,7 @@ export default async function TruckDetailPage({ params }: Props) {
           </div>
 
           {/* Menu — SSR crawlable content */}
-          <div className="bg-white border-2 border-orange-100 rounded-3xl shadow-md mb-6 p-6">
+          <div className="section-frame mb-6 p-6 shadow-none">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">Menu</h2>
             {menu.length > 0 ? (
               <div className="space-y-6">
@@ -319,7 +333,7 @@ export default async function TruckDetailPage({ params }: Props) {
                     )}
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-orange-50 hover:bg-orange-100 transition-colors">
+                        <div key={item.id} className="flex items-center gap-4 rounded-2xl border border-orange-100 bg-white p-3 transition-colors hover:bg-orange-50">
                           {item.imageUrl && (
                             <img
                               src={item.imageUrl}
@@ -348,14 +362,14 @@ export default async function TruckDetailPage({ params }: Props) {
           </div>
 
           {/* Reviews — SSR crawlable content */}
-          <div className="bg-white border-2 border-orange-100 rounded-3xl shadow-md mb-6 p-6">
+          <div className="section-frame mb-6 p-6 shadow-none">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">
               Reviews {ratingCount > 0 && <span className="text-lg font-normal text-slate-400">({ratingCount})</span>}
             </h2>
             {truckReviews.length > 0 ? (
               <div className="space-y-4">
                 {truckReviews.map((review) => (
-                  <div key={review.id} className="p-4 rounded-2xl bg-orange-50">
+                  <div key={review.id} className="rounded-2xl border border-orange-100 bg-white p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-sm text-orange-700 font-semibold">
@@ -387,7 +401,7 @@ export default async function TruckDetailPage({ params }: Props) {
 
           {/* Features */}
           {truck.features && truck.features.length > 0 && (
-            <div className="bg-white border-2 border-orange-100 rounded-3xl shadow-md mb-6 p-6">
+            <div className="section-frame mb-6 p-6 shadow-none">
               <h2 className="text-2xl font-bold text-slate-800 mb-4">Features</h2>
               <div className="flex flex-wrap gap-2">
                 {truck.features.map((feature) => (
@@ -407,6 +421,7 @@ export default async function TruckDetailPage({ params }: Props) {
             <span className="mx-2">›</span>
             <span className="text-slate-600">{truck.name}</span>
           </nav>
+        </div>
         </div>
       </div>
     </>
