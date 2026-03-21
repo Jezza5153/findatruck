@@ -30,6 +30,12 @@ interface TruckData {
   lat?: number;
   lng?: number;
   locationUpdatedAt?: string;
+  contactEmail?: string;
+  websiteUrl?: string;
+  instagramHandle?: string;
+  facebookHandle?: string;
+  phone?: string;
+  ctaPhoneNumber?: string;
 }
 
 interface EventData {
@@ -657,12 +663,72 @@ export default function HomeContent() {
                         </p>
                       )}
 
-                      <div className="border-t border-orange-100 pt-3">
-                        <span className="flex items-center justify-center gap-2 text-sm font-bold text-orange-600 group-hover:text-orange-500">
+                      <div className="border-t border-orange-100 pt-3 flex items-center gap-2">
+                        <span className="flex items-center justify-center gap-2 text-sm font-bold text-orange-600 group-hover:text-orange-500 flex-1">
                           View Profile
                           <IconArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </div>
+                      {/* Quick Contact CTA */}
+                      {(() => {
+                        const email = truck.contactEmail;
+                        const phone = truck.ctaPhoneNumber || truck.phone;
+                        const ig = truck.instagramHandle;
+                        const fb = truck.facebookHandle;
+                        const web = truck.websiteUrl;
+                        if (email) return (
+                          <a
+                            href={`mailto:${email}?subject=${encodeURIComponent(`Enquiry via FindATruck – ${truck.name}`)}&body=${encodeURIComponent(`Hi ${truck.name},\n\nI found you on FindATruck (foodtrucknext2me.com) and would love to know more about your services!\n\nCheers`)}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-teal-50 border border-teal-200 px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-100 transition-colors"
+                          >
+                            ✉ Email {truck.name.split(' ')[0]}
+                          </a>
+                        );
+                        if (phone) return (
+                          <a
+                            href={`tel:${phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2 text-xs font-bold text-green-700 hover:bg-green-100 transition-colors"
+                          >
+                            📞 Call {truck.name.split(' ')[0]}
+                          </a>
+                        );
+                        if (ig) return (
+                          <a
+                            href={`https://instagram.com/${ig}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-pink-50 border border-pink-200 px-3 py-2 text-xs font-bold text-pink-700 hover:bg-pink-100 transition-colors"
+                          >
+                            📸 @{ig}
+                          </a>
+                        );
+                        if (fb) return (
+                          <a
+                            href={`https://facebook.com/${fb}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                          >
+                            f Facebook
+                          </a>
+                        );
+                        if (web) return (
+                          <a
+                            href={web}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-orange-50 border border-orange-200 px-3 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100 transition-colors"
+                          >
+                            🌐 Website
+                          </a>
+                        );
+                        return null;
+                      })()}
                     </CardContent>
                   </Card>
                 </Link>
