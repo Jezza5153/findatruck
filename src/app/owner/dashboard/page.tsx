@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,9 +15,11 @@ import { useToast } from '@/hooks/use-toast';
 import {
   IconTruck, IconUtensils, IconShoppingBag, IconDollarSign,
   IconMapPin, IconSettings, IconChevronRight,
-  IconTrendingUp, IconClock, IconUsers, IconNavigation, IconLoader2, IconCalendar, IconCheckCircle
+  IconTrendingUp, IconClock, IconUsers, IconNavigation, IconLoader2, IconCalendar, IconCheckCircle,
+  IconArrowRight
 } from '@/components/ui/branded-icons';
 import { motion } from 'framer-motion';
+import { getProfileCompleteness } from '@/lib/profile-completeness';
 
 interface TruckData {
   id: string;
@@ -27,6 +29,16 @@ interface TruckData {
   isVisible?: boolean;
   address?: string;
   rating?: number;
+  imageUrl?: string;
+  description?: string;
+  phone?: string;
+  ctaPhoneNumber?: string;
+  instagramHandle?: string;
+  facebookHandle?: string;
+  tiktokHandle?: string;
+  websiteUrl?: string;
+  regularHours?: unknown;
+  operatingHoursSummary?: string;
   currentLocation?: {
     lat?: number;
     lng?: number;
@@ -52,6 +64,7 @@ export default function OwnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [menuItemCount, setMenuItemCount] = useState(0);
   const [stats] = useState<DashboardStats>({
     todayOrders: 0,
     todayRevenue: 0,
@@ -66,6 +79,12 @@ export default function OwnerDashboardPage() {
   const [closingTime, setClosingTime] = useState('');
   const [openingTime, setOpeningTime] = useState('');
 
+  // Profile completeness
+  const completeness = useMemo(() => {
+    if (!truck) return null;
+    return getProfileCompleteness(truck, menuItemCount);
+  }, [truck, menuItemCount]);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/owner/login');
@@ -77,19 +96,28 @@ export default function OwnerDashboardPage() {
       try {
         const truckId = (session?.user as any)?.truckId;
         if (truckId) {
-          const res = await fetch(`/api/trucks/${truckId}`);
-          const data = await res.json();
-          if (data.success) {
-            setTruck(data.data);
-            setIsOpen(data.data.isOpen || false);
-            setIsVisible(data.data.isVisible !== false);
-            if (data.data.currentLocation?.address) {
-              setAddressInput(data.data.currentLocation.address);
-            } else if (data.data.address) {
-              setAddressInput(data.data.address);
+          const [truckRes, menuRes] = await Promise.all([
+            fetch(`/api/trucks/${truckId}`),
+            fetch(`/api/trucks/${truckId}/menu`).catch(() => null),
+          ]);
+          const truckData = await truckRes.json();
+          if (truckData.success) {
+            setTruck(truckData.data);
+            setIsOpen(truckData.data.isOpen || false);
+            setIsVisible(truckData.data.isVisible !== false);
+            if (truckData.data.currentLocation?.address) {
+              setAddressInput(truckData.data.currentLocation.address);
+            } else if (truckData.data.address) {
+              setAddressInput(truckData.data.address);
             }
-            if (data.data.currentLocation?.note) {
-              setLocationNote(data.data.currentLocation.note);
+            if (truckData.data.currentLocation?.note) {
+              setLocationNote(truckData.data.currentLocation.note);
+            }
+          }
+          if (menuRes) {
+            const menuData = await menuRes.json();
+            if (menuData.success && Array.isArray(menuData.data)) {
+              setMenuItemCount(menuData.data.length);
             }
           }
         }
@@ -234,6 +262,69 @@ export default function OwnerDashboardPage() {
             <p className="text-slate-400">Manage your food truck operations</p>
           </div>
         </motion.div>
+
+        {/* Profile Completeness Banner */}
+        {completeness && completeness.score < 80 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="bg-gradient-to-r from-orange-950/60 to-amber-950/60 border-orange-800/50 shadow-xl">
+              <CardContent className="p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-orange-200">
+                      🚀 Complete your profile to attract more customers
+                    </h3>
+                    <p className="text-sm text-orange-300/70 mt-1">
+                      Trucks with complete profiles get 3× more views
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-bold text-orange-400">
+                      {completeness.score}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-3 rounded-full bg-slate-800 overflow-hidden mb-4">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completeness.score}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
+                  />
+                </div>
+
+                {/* Missing items */}
+                {completeness.missing.length > 0 && (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {completeness.missing
+                      .sort((a, b) => b.points - a.points)
+                      .slice(0, 3)
+                      .map((item) => (
+                        <Link
+                          key={item.key}
+                          href={item.href}
+                          className="flex items-center gap-3 rounded-xl bg-slate-900/60 border border-orange-900/30 px-4 py-3 text-sm hover:bg-slate-800/80 transition-colors group"
+                        >
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs font-bold">
+                            +{item.points}
+                          </span>
+                          <span className="text-slate-300 group-hover:text-white transition-colors">
+                            {item.label}
+                          </span>
+                          <IconArrowRight className="w-4 h-4 text-slate-600 ml-auto group-hover:text-orange-400 transition-colors" />
+                        </Link>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Location & Status Card - Main Focus */}
         <motion.div

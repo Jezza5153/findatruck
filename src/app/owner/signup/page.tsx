@@ -144,7 +144,7 @@ export default function OwnerSignupPage() {
         description: 'Your account and truck have been created.',
       });
 
-      router.push('/owner/dashboard');
+      router.push('/owner/profile');
       router.refresh();
     } catch (error: any) {
       console.error('Signup error:', error);

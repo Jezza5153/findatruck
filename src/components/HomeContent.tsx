@@ -468,7 +468,7 @@ export default function HomeContent() {
                         {truck.imageUrl ? (
                           <img src={truck.imageUrl} alt={truck.name} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-2xl">🚚</span>
+                          <span className="text-xl font-bold text-orange-600">{truck.name.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
                       <div className="min-w-0">
@@ -550,8 +550,10 @@ export default function HomeContent() {
                         />
                       ) : (
                         <div className="text-center">
-                          <div className="text-5xl mb-2">🚚</div>
-                          <span className="text-orange-400 font-medium text-sm">Food Truck</span>
+                          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-2">
+                            {truck.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-orange-500 font-semibold text-sm">{truck.cuisine}</span>
                         </div>
                       )}
 
