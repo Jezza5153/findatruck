@@ -398,6 +398,19 @@ export default async function TruckDetailPage({ params }: Props) {
                   <span className="ml-auto text-green-400 group-hover:translate-x-1 transition-transform">→</span>
                 </a>
               )}
+              {truck.contactEmail && (
+                <a
+                  href={`mailto:${truck.contactEmail}`}
+                  className="flex items-center gap-3 rounded-2xl border-2 border-teal-200 bg-teal-50 p-4 text-teal-700 hover:bg-teal-100 hover:border-teal-300 transition-all group"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-200 text-teal-700 text-lg font-bold">✉</div>
+                  <div>
+                    <div className="font-bold">Email</div>
+                    <div className="text-sm text-teal-600/70">{truck.contactEmail}</div>
+                  </div>
+                  <span className="ml-auto text-teal-400 group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+              )}
               {truck.address && (
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truck.address)}`}
