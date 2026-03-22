@@ -678,7 +678,7 @@ export default function HomeContent() {
                         const web = truck.websiteUrl;
                         if (email) return (
                           <a
-                            href={`mailto:${email}?subject=${encodeURIComponent(`Enquiry via FindATruck – ${truck.name}`)}&body=${encodeURIComponent(`Hi ${truck.name},\n\nI found you on FindATruck (foodtrucknext2me.com) and would love to know more about your services!\n\nCheers`)}`}
+                            href={`mailto:${email}?subject=${encodeURIComponent(`Enquiry via foodtrucknext2me.com – ${truck.name}`)}&body=${encodeURIComponent(`Hi ${truck.name},\n\nI found you on foodtrucknext2me.com and would love to know more about your services!\n\nCheers`)}`}
                             onClick={(e) => e.stopPropagation()}
                             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-teal-50 border border-teal-200 px-3 py-2 text-xs font-bold text-teal-700 hover:bg-teal-100 transition-colors"
                           >
