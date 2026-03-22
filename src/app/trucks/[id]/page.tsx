@@ -326,121 +326,129 @@ export default async function TruckDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Contact & Links Card */}
-          <div className="section-frame mb-6 p-6 shadow-none">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Contact & Links</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {truck.websiteUrl && (
-                <a
-                  href={truck.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 border-orange-200 bg-orange-50 p-4 text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-200 text-orange-700">
-                    <IconGlobe className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold">Official Website</div>
-                    <div className="text-sm text-orange-600/70 truncate max-w-[200px]">{truck.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</div>
-                  </div>
-                  <span className="ml-auto text-orange-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
-              {truck.instagramHandle && (
-                <a
-                  href={`https://instagram.com/${truck.instagramHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 border-pink-200 bg-pink-50 p-4 text-pink-700 hover:bg-pink-100 hover:border-pink-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-200 text-pink-700 text-lg font-bold">📸</div>
-                  <div>
-                    <div className="font-bold">Instagram</div>
-                    <div className="text-sm text-pink-600/70">@{truck.instagramHandle}</div>
-                  </div>
-                  <span className="ml-auto text-pink-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
-              {truck.facebookHandle && (
-                <a
-                  href={`https://facebook.com/${truck.facebookHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-200 text-blue-700 text-lg font-bold">f</div>
-                  <div>
-                    <div className="font-bold">Facebook</div>
-                    <div className="text-sm text-blue-600/70">/{truck.facebookHandle}</div>
-                  </div>
-                  <span className="ml-auto text-blue-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
-              {truck.tiktokHandle && (
-                <a
-                  href={`https://tiktok.com/@${truck.tiktokHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 text-slate-700 text-lg font-bold">♪</div>
-                  <div>
-                    <div className="font-bold">TikTok</div>
-                    <div className="text-sm text-slate-600/70">@{truck.tiktokHandle}</div>
-                  </div>
-                  <span className="ml-auto text-slate-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
-              {(truck.ctaPhoneNumber || truck.phone) && (
-                <a
-                  href={`tel:${truck.ctaPhoneNumber || truck.phone}`}
-                  className="flex items-center gap-3 rounded-2xl border-2 border-green-200 bg-green-50 p-4 text-green-700 hover:bg-green-100 hover:border-green-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-200 text-green-700">
-                    <IconPhone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold">Call</div>
-                    <div className="text-sm text-green-600/70">{truck.ctaPhoneNumber || truck.phone}</div>
-                  </div>
-                  <span className="ml-auto text-green-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
-              {truck.contactEmail && (
-                <EnquiryButton
-                  truckId={truck.id}
-                  truckName={truck.name}
-                  contactEmail={truck.contactEmail}
-                  variant="card"
-                />
-              )}
-              {!truck.contactEmail && (
-                <EnquiryButton
-                  truckId={truck.id}
-                  truckName={truck.name}
-                  variant="card"
-                />
-              )}
-              {truck.address && (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truck.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200 text-amber-700">
-                    <IconMapPin className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold">Directions</div>
-                    <div className="text-sm text-amber-600/70 truncate max-w-[200px]">{truck.address}</div>
-                  </div>
-                  <span className="ml-auto text-amber-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
-              )}
+          {/* Primary CTA — Send Enquiry */}
+          <div className="section-frame mb-6 p-6 shadow-none bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex-1 text-center sm:text-left">
+                <h2 className="text-xl font-bold text-slate-900">Interested in {truck.name}?</h2>
+                <p className="mt-1 text-sm text-slate-500">Send a free enquiry — no account needed, no commitment.</p>
+              </div>
+              <EnquiryButton
+                truckId={truck.id}
+                truckName={truck.name}
+                contactEmail={truck.contactEmail || undefined}
+                variant="cta"
+              />
             </div>
           </div>
+
+          {/* Contact Details — Collapsible Accordion */}
+          {(truck.websiteUrl || truck.instagramHandle || truck.facebookHandle || truck.tiktokHandle || truck.ctaPhoneNumber || truck.phone || truck.contactEmail || truck.address) && (
+            <div className="section-frame mb-6 p-6 shadow-none">
+              <details className="group">
+                <summary className="cursor-pointer list-none flex items-center justify-between text-lg font-bold text-slate-700 hover:text-orange-600 transition-colors">
+                  <span>You can also contact them directly</span>
+                  <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="mt-4 grid sm:grid-cols-2 gap-4">
+                  {truck.websiteUrl && (
+                    <a
+                      href={truck.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border-2 border-orange-200 bg-orange-50 p-4 text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-200 text-orange-700">
+                        <IconGlobe className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-bold">Official Website</div>
+                        <div className="text-sm text-orange-600/70 truncate max-w-[200px]">{truck.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</div>
+                      </div>
+                      <span className="ml-auto text-orange-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                  {truck.instagramHandle && (
+                    <a
+                      href={`https://instagram.com/${truck.instagramHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border-2 border-pink-200 bg-pink-50 p-4 text-pink-700 hover:bg-pink-100 hover:border-pink-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-200 text-pink-700 text-lg font-bold">📸</div>
+                      <div>
+                        <div className="font-bold">Instagram</div>
+                        <div className="text-sm text-pink-600/70">@{truck.instagramHandle}</div>
+                      </div>
+                      <span className="ml-auto text-pink-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                  {truck.facebookHandle && (
+                    <a
+                      href={`https://facebook.com/${truck.facebookHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-200 text-blue-700 text-lg font-bold">f</div>
+                      <div>
+                        <div className="font-bold">Facebook</div>
+                        <div className="text-sm text-blue-600/70">/{truck.facebookHandle}</div>
+                      </div>
+                      <span className="ml-auto text-blue-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                  {truck.tiktokHandle && (
+                    <a
+                      href={`https://tiktok.com/@${truck.tiktokHandle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 text-slate-700 text-lg font-bold">♪</div>
+                      <div>
+                        <div className="font-bold">TikTok</div>
+                        <div className="text-sm text-slate-600/70">@{truck.tiktokHandle}</div>
+                      </div>
+                      <span className="ml-auto text-slate-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                  {(truck.ctaPhoneNumber || truck.phone) && (
+                    <a
+                      href={`tel:${truck.ctaPhoneNumber || truck.phone}`}
+                      className="flex items-center gap-3 rounded-2xl border-2 border-green-200 bg-green-50 p-4 text-green-700 hover:bg-green-100 hover:border-green-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-200 text-green-700">
+                        <IconPhone className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-bold">Call</div>
+                        <div className="text-sm text-green-600/70">{truck.ctaPhoneNumber || truck.phone}</div>
+                      </div>
+                      <span className="ml-auto text-green-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                  {truck.address && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(truck.address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all group/link"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200 text-amber-700">
+                        <IconMapPin className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-bold">Directions</div>
+                        <div className="text-sm text-amber-600/70 truncate max-w-[200px]">{truck.address}</div>
+                      </div>
+                      <span className="ml-auto text-amber-400 group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+                  )}
+                </div>
+              </details>
+            </div>
+          )}
 
           {/* Seen At — Festival Sightings */}
           {eventSightings.length > 0 && (

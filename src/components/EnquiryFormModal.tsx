@@ -35,6 +35,7 @@ export default function EnquiryFormModal({
   truckId,
   truckName,
 }: EnquiryFormModalProps) {
+  const isEventMode = !truckId || truckId === '';
   const [step, setStep] = useState<'form' | 'success' | 'error'>('form');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -77,15 +78,15 @@ export default function EnquiryFormModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          truckId,
+          truckId: isEventMode ? undefined : truckId,
           customerName: name,
           customerEmail: email,
           customerPhone: phone || undefined,
-          eventType,
+          eventType: isEventMode ? (eventType === 'other' ? 'other' : eventType) : eventType,
           eventDate: eventDate || undefined,
           guestCount: guestCount || undefined,
           message,
-          source: 'profile',
+          source: isEventMode ? 'event-homepage' : 'profile',
         }),
       });
 
@@ -115,12 +116,20 @@ export default function EnquiryFormModal({
               Enquiry via foodtrucknext2me.com
             </div>
             <DialogTitle className="font-display text-2xl font-bold text-slate-950">
-              {step === 'success' ? 'Enquiry Sent!' : `Contact ${truckName}`}
+              {step === 'success'
+                ? 'Enquiry Sent!'
+                : isEventMode
+                  ? 'Find Trucks for Your Event'
+                  : `Get a Quote from ${truckName}`}
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-500">
               {step === 'success'
-                ? `${truckName} will receive your enquiry and get back to you directly.`
-                : 'Fill in your details and we\'ll pass your enquiry directly to the truck owner.'}
+                ? isEventMode
+                  ? 'Your event enquiry has been sent to matching trucks. Expect responses within 24 hours.'
+                  : `${truckName} will receive your enquiry and get back to you directly.`
+                : isEventMode
+                  ? 'Tell us about your event and we\'ll connect you with the right food trucks.'
+                  : 'Fill in your details and we\'ll pass your enquiry directly to the truck owner.'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -134,7 +143,9 @@ export default function EnquiryFormModal({
             <div>
               <p className="font-display text-xl font-bold text-slate-950">You're all set!</p>
               <p className="mt-2 text-sm text-slate-500">
-                Your enquiry has been sent to <strong>{truckName}</strong>. They'll reply to <strong>{email}</strong> directly.
+                {isEventMode
+                  ? <>Your event enquiry has been sent to matching trucks. Expect responses at <strong>{email}</strong> within 24 hours.</>
+                  : <>Your enquiry has been sent to <strong>{truckName}</strong>. They'll reply to <strong>{email}</strong> directly.</>}
               </p>
             </div>
             <Button
@@ -280,7 +291,7 @@ export default function EnquiryFormModal({
                 required
                 minLength={10}
                 rows={3}
-                placeholder={`Hi ${truckName}, I'd love to enquire about booking you for...`}
+                placeholder={isEventMode ? 'Tell us about your event — date, location, cuisine preferences, budget...' : `Hi ${truckName}, I'd love to enquire about booking you for...`}
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 className="w-full rounded-xl border border-orange-100 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30 resize-none"
@@ -290,7 +301,7 @@ export default function EnquiryFormModal({
             {/* Submit */}
             <div className="flex items-center justify-between gap-3 border-t border-orange-50 pt-4">
               <p className="text-xs text-slate-400">
-                Your details go directly to {truckName} — we don't spam.
+                {isEventMode ? 'Your details will be shared with matching trucks — we don\'t spam.' : `Your details go directly to ${truckName} — we don't spam.`}
               </p>
               <Button
                 type="submit"

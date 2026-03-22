@@ -728,7 +728,7 @@ export type NewFestivalSighting = typeof festivalSightings.$inferInsert;
  */
 export const enquiries = pgTable('enquiries', {
   id: uuid('id').primaryKey().defaultRandom(),
-  truckId: uuid('truck_id').notNull().references(() => trucks.id, { onDelete: 'cascade' }),
+  truckId: uuid('truck_id').references(() => trucks.id, { onDelete: 'set null' }),
 
   // Customer details (no auth required)
   customerName: text('customer_name').notNull(),

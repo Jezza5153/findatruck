@@ -24,9 +24,6 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation
-    if (!truckId || typeof truckId !== 'string') {
-      return NextResponse.json({ error: 'truckId is required' }, { status: 400 });
-    }
     if (!customerName || typeof customerName !== 'string' || customerName.trim().length < 2) {
       return NextResponse.json({ error: 'Name must be at least 2 characters' }, { status: 400 });
     }
@@ -39,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     const validEventTypes = ['wedding', 'corporate', 'market', 'festival', 'private', 'school', 'other'];
     const safeEventType = validEventTypes.includes(eventType) ? eventType : 'other';
+    const isEventEnquiry = !truckId;
 
     // Rate limiting: max 5 per email per hour
     const oneHourAgo = new Date(Date.now() - 3600000);
@@ -59,22 +57,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the truck exists
-    const [truck] = await db
-      .select({ id: trucks.id, name: trucks.name, contactEmail: trucks.contactEmail })
-      .from(trucks)
-      .where(eq(trucks.id, truckId))
-      .limit(1);
+    // For single-truck enquiries, verify the truck exists
+    let truck: { id: string; name: string; contactEmail: string | null } | null = null;
+    if (truckId) {
+      const [found] = await db
+        .select({ id: trucks.id, name: trucks.name, contactEmail: trucks.contactEmail })
+        .from(trucks)
+        .where(eq(trucks.id, truckId))
+        .limit(1);
 
-    if (!truck) {
-      return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
+      if (!found) {
+        return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
+      }
+      truck = found;
     }
 
     // Create enquiry
     const [enquiry] = await db
       .insert(enquiries)
       .values({
-        truckId,
+        truckId: truck?.id || null,
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim().toLowerCase(),
         customerPhone: customerPhone?.trim() || null,
@@ -82,19 +84,20 @@ export async function POST(request: NextRequest) {
         eventDate: eventDate ? new Date(eventDate) : null,
         guestCount: guestCount ? parseInt(guestCount, 10) : null,
         message: message.trim(),
-        source: source || 'profile',
+        source: source || (isEventEnquiry ? 'event-homepage' : 'profile'),
       })
       .returning();
 
-    // TODO: Send email notification to truck owner
-    // For now, the enquiry is captured in the database.
-    // This will be wired to an email service (Resend/SendGrid) in the next phase.
+    // TODO: Send email notification to truck owner(s)
+    // For single-truck: email to truck.contactEmail
+    // For event enquiries: email to matching trucks by cuisine preference
 
     return NextResponse.json({
       success: true,
       data: {
         id: enquiry.id,
-        truckName: truck.name,
+        truckName: truck?.name || 'Event Enquiry',
+        isEventEnquiry,
       },
     }, { status: 201 });
 
