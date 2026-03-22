@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import {
   Dialog,
   DialogContent,
@@ -62,11 +63,22 @@ export default function EnquiryFormModal({
 
   const handleClose = (open: boolean) => {
     if (!open) {
+      // Track abandonment if they had started filling the form
+      if (step === 'form' && (name || email)) {
+        trackEvent('enquiry_modal_closed', { truckId, isEventMode, hadFieldsFilled: true });
+      }
       // Delay reset so animation completes
       setTimeout(resetForm, 300);
     }
     onOpenChange(open);
   };
+
+  // Track modal open
+  useEffect(() => {
+    if (open) {
+      trackEvent('enquiry_modal_opened', { truckId, truckName, isEventMode });
+    }
+  }, [open, truckId, truckName, isEventMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +105,11 @@ export default function EnquiryFormModal({
       const data = await res.json();
 
       if (res.ok && data.success) {
+        trackEvent('enquiry_submitted', {
+          truckId, isEventMode, eventType,
+          hasDate: !!eventDate, hasGuests: !!guestCount,
+          hasMessage: !!message, hasPhone: !!phone,
+        });
         setStep('success');
       } else {
         setErrorMessage(data.error || 'Something went wrong. Please try again.');

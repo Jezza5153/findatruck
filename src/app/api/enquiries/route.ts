@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { enquiries, trucks } from '@/lib/db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
+import { sendCustomerConfirmation, sendOwnerNotification } from '@/lib/email/send-enquiry-email';
 
 /**
  * POST /api/enquiries — create a new enquiry (no auth required).
@@ -86,9 +87,36 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // TODO: Send email notification to truck owner(s)
-    // For single-truck: email to truck.contactEmail
-    // For event enquiries: email to matching trucks by cuisine preference
+    // Send emails (non-blocking — enquiry is already saved)
+    try {
+      await sendCustomerConfirmation({
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim().toLowerCase(),
+        truckName: truck?.name || null,
+        eventType: safeEventType,
+        eventDate: eventDate || null,
+        guestCount: guestCount ? parseInt(guestCount, 10) : null,
+        message: message?.trim() || '',
+        isEventEnquiry,
+      });
+
+      // If single-truck and truck has contactEmail, notify the owner
+      if (truck?.contactEmail) {
+        await sendOwnerNotification({
+          customerName: customerName.trim(),
+          customerEmail: customerEmail.trim().toLowerCase(),
+          truckName: truck.name,
+          eventType: safeEventType,
+          eventDate: eventDate || null,
+          guestCount: guestCount ? parseInt(guestCount, 10) : null,
+          message: message?.trim() || '',
+          isEventEnquiry,
+          ownerEmail: truck.contactEmail,
+        });
+      }
+    } catch (emailError) {
+      console.error('[POST /api/enquiries] Email send failed (enquiry still saved):', emailError);
+    }
 
     return NextResponse.json({
       success: true,
