@@ -12,7 +12,7 @@ import bcrypt from 'bcryptjs';
 
 const ADMIN_EMAIL = 'admin@foodtrucknext2me.com';
 const ADMIN_NAME = 'Jezza';
-const ADMIN_PASSWORD = 'COOKS';
+const ADMIN_PASSWORD = 'COOKS!';
 
 async function createAdmin() {
   const dbUrl = process.env.DATABASE_URL;
