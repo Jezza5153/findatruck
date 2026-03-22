@@ -5,16 +5,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    IconUsers, IconSearch, IconMoreVertical, IconShield, IconBan, IconLoader2, IconMail, IconTruck
+    IconUsers, IconSearch, IconLoader2, IconMail, IconTruck, IconTrash2, IconAlertTriangle,
 } from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -34,6 +28,7 @@ export default function AdminUsersPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
     useEffect(() => {
         if (authStatus === 'unauthenticated') {
@@ -42,7 +37,7 @@ export default function AdminUsersPage() {
         }
 
         if (authStatus === 'authenticated') {
-            if (session?.user?.role !== 'admin') {
+            if ((session?.user as any)?.role !== 'admin') {
                 router.replace('/');
                 return;
             }
@@ -64,14 +59,26 @@ export default function AdminUsersPage() {
         }
     };
 
-    const updateUser = async (id: string, updates: { role?: string; banned?: boolean }) => {
+    const updateRole = async (id: string, newRole: string) => {
         try {
-            await fetch(`/api/admin/users/${id}`, {
+            const res = await fetch(`/api/admin/users/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
+                body: JSON.stringify({ role: newRole }),
             });
-            fetchUsers();
+            if (res.ok) fetchUsers();
+        } catch {
+            // Handle error
+        }
+    };
+
+    const deleteUser = async (id: string) => {
+        try {
+            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== id));
+                setDeleteConfirm(null);
+            }
         } catch {
             // Handle error
         }
@@ -86,8 +93,8 @@ export default function AdminUsersPage() {
 
     if (authStatus === 'loading' || isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="flex items-center justify-center py-24">
+                <IconLoader2 className="w-8 h-8 text-orange-400 animate-spin" />
             </div>
         );
     }
@@ -100,10 +107,10 @@ export default function AdminUsersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white pb-24">
+        <div className="text-white pb-24">
             {/* Header */}
             <div className="pt-8 pb-6 px-4">
-                <div className="container mx-auto max-w-4xl">
+                <div className="container mx-auto max-w-5xl">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center">
                             <IconUsers className="w-5 h-5 text-white" />
@@ -115,8 +122,8 @@ export default function AdminUsersPage() {
                     </div>
 
                     {/* Search & Filter */}
-                    <div className="flex gap-3">
-                        <div className="flex-1 relative">
+                    <div className="flex gap-3 flex-wrap">
+                        <div className="flex-1 min-w-[200px] relative">
                             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <Input
                                 placeholder="Search by email or name..."
@@ -143,7 +150,7 @@ export default function AdminUsersPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-4xl px-4">
+            <div className="container mx-auto max-w-5xl px-4">
                 <div className="space-y-2">
                     {filteredUsers.map((user, i) => (
                         <motion.div
@@ -161,7 +168,7 @@ export default function AdminUsersPage() {
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium truncate">{user.name || user.email.split('@')[0]}</span>
                                         <span className={cn(
-                                            "px-1.5 py-0.5 text-[10px] rounded capitalize",
+                                            "px-1.5 py-0.5 text-[10px] rounded capitalize font-bold",
                                             user.role === 'admin' ? "bg-purple-500/20 text-purple-400" :
                                                 user.role === 'owner' ? "bg-yellow-500/20 text-yellow-400" :
                                                     "bg-slate-700 text-slate-400"
@@ -182,36 +189,67 @@ export default function AdminUsersPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs text-slate-500">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="text-xs text-slate-500 hidden sm:inline">
                                     {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
                                 </span>
 
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                            <IconMoreVertical className="w-4 h-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                                        {user.role !== 'admin' && (
-                                            <DropdownMenuItem
-                                                onClick={() => updateUser(user.id, { role: 'admin' })}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <IconShield className="w-4 h-4" />
-                                                Make Admin
-                                            </DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuItem
-                                            onClick={() => updateUser(user.id, { banned: true })}
-                                            className="text-red-400 flex items-center gap-2"
+                                {/* Role toggle — only for non-admin users */}
+                                {user.role !== 'admin' && (
+                                    <div className="flex gap-1 bg-slate-900 rounded-lg p-0.5 border border-slate-700">
+                                        <button
+                                            onClick={() => updateRole(user.id, 'customer')}
+                                            className={cn(
+                                                "px-2 py-1 text-[11px] rounded-md transition-colors",
+                                                user.role === 'customer' ? "bg-slate-700 text-white" : "text-slate-500 hover:text-white"
+                                            )}
                                         >
-                                            <IconBan className="w-4 h-4" />
-                                            Ban User
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                            Customer
+                                        </button>
+                                        <button
+                                            onClick={() => updateRole(user.id, 'owner')}
+                                            className={cn(
+                                                "px-2 py-1 text-[11px] rounded-md transition-colors",
+                                                user.role === 'owner' ? "bg-yellow-600/30 text-yellow-400" : "text-slate-500 hover:text-white"
+                                            )}
+                                        >
+                                            Owner
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Delete — only for non-admin users */}
+                                {user.role !== 'admin' && (
+                                    deleteConfirm === user.id ? (
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => deleteUser(user.id)}
+                                                className="h-8 px-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                            >
+                                                Confirm
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setDeleteConfirm(null)}
+                                                className="h-8 px-2 text-xs text-slate-400"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setDeleteConfirm(user.id)}
+                                            className="h-8 w-8 p-0 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                                        >
+                                            <IconTrash2 className="w-4 h-4" />
+                                        </Button>
+                                    )
+                                )}
                             </div>
                         </motion.div>
                     ))}
