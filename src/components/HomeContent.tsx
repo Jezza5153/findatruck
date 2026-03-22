@@ -330,12 +330,7 @@ export default function HomeContent() {
                           </div>
                         )}
 
-                        {/* Verified badge */}
-                        {truck.isVerified && (
-                          <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
-                            <IconCheckCircle className="w-3 h-3" /> Verified
-                          </div>
-                        )}
+                        {/* Verified badge removed — profiles are manually seeded, not owner-verified */}
                       </div>
                     </Link>
 

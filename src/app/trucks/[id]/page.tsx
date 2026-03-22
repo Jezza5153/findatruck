@@ -260,11 +260,7 @@ export default async function TruckDetailPage({ params }: Props) {
                   <p className="text-lg text-slate-500">
                     {truck.cuisine} food truck · Adelaide, South Australia
                   </p>
-                  {truck.isVerified && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-600">
-                      ✓ Verified Listing
-                    </span>
-                  )}
+                  {/* Verified badge removed — profiles are manually seeded */}
                 </div>
               </div>
               {/* Client interactive buttons */}
