@@ -256,9 +256,16 @@ export default async function TruckDetailPage({ params }: Props) {
                 <h1 className="mb-1 font-display text-4xl font-bold text-slate-950 sm:text-5xl">
                   {truck.name}
                 </h1>
-                <p className="text-lg text-slate-500">
-                  {truck.cuisine} food truck · Adelaide, South Australia
-                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-lg text-slate-500">
+                    {truck.cuisine} food truck · Adelaide, South Australia
+                  </p>
+                  {truck.isVerified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-600">
+                      ✓ Verified Listing
+                    </span>
+                  )}
+                </div>
               </div>
               {/* Client interactive buttons */}
               <TruckInteractive

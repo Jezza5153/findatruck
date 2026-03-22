@@ -154,6 +154,33 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // Role-based protection: Scout internal API routes
+    if (pathname.startsWith('/api/internal/scout')) {
+        // Allow Vercel Cron with CRON_SECRET
+        const authHeader = request.headers.get('authorization')?.replace('Bearer ', '');
+        const isValidCron = authHeader && process.env.CRON_SECRET && authHeader === process.env.CRON_SECRET;
+
+        // Allow webhook endpoint without admin session (it has its own HMAC auth)
+        const isWebhookEndpoint = pathname.startsWith('/api/internal/scout/webhooks/');
+
+        if (!isValidCron && !isWebhookEndpoint) {
+            const session = await auth();
+            if (!session?.user || (session.user as any).role !== 'admin') {
+                return NextResponse.json({ error: 'Admin access required', code: 'FORBIDDEN' }, { status: 403 });
+            }
+        }
+    }
+
+    // Page protection: Scout internal dashboard
+    if (pathname.startsWith('/internal/scout')) {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'admin') {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+    }
+
     // Role-based API protection: Owner routes + rate limiting
     if (pathname.startsWith('/api/trucks/my')) {
         const session = await auth();
@@ -192,7 +219,9 @@ export const config = {
         '/api/auth/register',
         '/api/auth/callback/credentials',
         '/api/check-in',
+        '/api/internal/scout/:path*',
         '/owner/:path*',
         '/admin/:path*',
+        '/internal/scout/:path*',
     ],
 };

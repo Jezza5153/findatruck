@@ -39,6 +39,8 @@ interface TruckData {
   facebookHandle?: string;
   phone?: string;
   ctaPhoneNumber?: string;
+  isVerified?: boolean;
+  isFeatured?: boolean;
 }
 
 interface EventData {
@@ -285,36 +287,22 @@ export default function HomeContent() {
                   className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-7 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
                 >
                   <Link href="/map">
-                    Open Live Map
-                    <IconArrowRight className="h-5 w-5" />
+                    <IconMapPin className="h-5 w-5" />
+                    Find a Truck Near You
                   </Link>
                 </Button>
 
-                {status !== 'authenticated' ? (
-                  <>
-                    <Button
-                      asChild
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full border-orange-200 bg-white/88 px-7 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50"
-                    >
-                      <Link href="/login">
-                        <IconLogIn className="h-5 w-5" />
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      size="lg"
-                      className="rounded-full bg-slate-900 px-7 py-6 text-base font-semibold text-white hover:bg-slate-800"
-                    >
-                      <Link href="/signup">
-                        <IconUser className="h-5 w-5" />
-                        Join Free
-                      </Link>
-                    </Button>
-                  </>
-                ) : null}
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-orange-200 bg-white/88 px-7 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50"
+                >
+                  <Link href="/hire-food-truck">
+                    Hire for an Event
+                    <IconArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
               </div>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -632,10 +620,16 @@ export default function HomeContent() {
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between mb-2">
                         <div className="min-w-0">
-                          <h3 className="font-bold text-lg text-slate-800 group-hover:text-orange-600 transition-colors truncate">
-                            {truck.name}
-                          </h3>
-                          <p className="text-sm text-slate-500 font-medium">{truck.cuisine}</p>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-bold text-lg text-slate-800 group-hover:text-orange-600 transition-colors truncate">
+                              {truck.name}
+                            </h3>
+                            {truck.isVerified && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                                <IconCheckCircle className="w-3 h-3" /> Verified
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {truck.rating ? (
                           <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">

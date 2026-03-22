@@ -26,6 +26,11 @@ const envSchema = z.object({
     // Google Maps (optional - map features disabled without)
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
 
+    // Scout / GitHub (optional - scout features disabled without)
+    GITHUB_TOKEN: z.string().optional(),
+    SCOUT_WEBHOOK_SECRET: z.string().optional(),
+    CRON_SECRET: z.string().optional(),
+
     // App URL
     NEXTAUTH_URL: z.string().url().optional(),
 });
@@ -76,6 +81,10 @@ export const featureFlags = {
     get isProduction() {
         return process.env.NODE_ENV === 'production';
     },
+
+    get scoutEnabled() {
+        return !!process.env.GITHUB_TOKEN;
+    },
 };
 
 /**
@@ -88,6 +97,7 @@ export function getEnvSummary(): Record<string, boolean | string> {
         storage: featureFlags.storageEnabled,
         stripe: featureFlags.stripeEnabled,
         maps: featureFlags.mapsEnabled,
+        scout: featureFlags.scoutEnabled,
         nodeEnv: process.env.NODE_ENV || 'development',
     };
 }
