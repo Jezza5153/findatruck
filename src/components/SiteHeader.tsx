@@ -71,7 +71,7 @@ export function SiteHeader() {
                 Food Truck Next 2 Me
               </p>
               <p className="mt-1 truncate text-xs font-medium uppercase tracking-[0.18em] text-orange-700/80">
-                Adelaide Live Truck Radar
+                Adelaide Food Truck Directory
               </p>
             </div>
           </Link>
@@ -191,30 +191,10 @@ export function SiteHeader() {
               <div className="flex items-center gap-2">
                 <Button
                   asChild
-                  variant="ghost"
-                  className="text-slate-600 hover:text-orange-600 hover:bg-orange-50"
+                  className="cta-sheen hidden sm:inline-flex bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 text-white shadow-glow hover:from-orange-600 hover:to-amber-500 rounded-full"
                 >
-                  <Link href="/login">
-                    <IconLogIn className="w-4 h-4 mr-2" />
-                    Sign in
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="hidden border-orange-200 bg-white/90 text-slate-800 hover:bg-orange-50 lg:inline-flex"
-                >
-                  <Link href="/owner/signup">
-                    <IconChefHat className="h-4 w-4" />
-                    List Your Truck
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  className="cta-sheen hidden sm:inline-flex bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
-                >
-                  <Link href="/signup">
-                    Join Free
+                  <Link href="/hire-food-truck">
+                    Hire for an Event
                     <IconArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -303,17 +283,11 @@ export function SiteHeader() {
                 </>
               )}
                 {!isAuthenticated && (
-                  <div className="grid gap-2 border-t border-orange-100 pt-3 sm:grid-cols-2">
-                    <Button asChild className="cta-sheen bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-500">
-                      <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                        Join Free
+                  <div className="border-t border-orange-100 pt-3">
+                    <Button asChild className="w-full cta-sheen bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-500 rounded-full">
+                      <Link href="/hire-food-truck" onClick={() => setMobileMenuOpen(false)}>
+                        Hire for an Event
                         <IconArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="border-orange-200 bg-white text-slate-800 hover:bg-orange-50">
-                      <Link href="/owner/signup" onClick={() => setMobileMenuOpen(false)}>
-                        <IconChefHat className="h-4 w-4" />
-                        List Your Truck
                       </Link>
                     </Button>
                   </div>

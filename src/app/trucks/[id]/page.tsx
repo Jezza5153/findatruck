@@ -573,6 +573,22 @@ export default async function TruckDetailPage({ params }: Props) {
           </nav>
         </div>
         </div>
+
+        {/* Mobile Sticky Enquiry Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-orange-200 bg-white/95 backdrop-blur-xl px-4 py-3 sm:hidden">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 truncate">{truck.name}</p>
+              <p className="text-xs text-slate-500">{truck.cuisine}</p>
+            </div>
+            <EnquiryButton
+              truckId={truck.id}
+              truckName={truck.name}
+              contactEmail={truck.contactEmail || undefined}
+              variant="cta"
+            />
+          </div>
+        </div>
       </div>
     </>
   );
