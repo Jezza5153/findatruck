@@ -114,6 +114,15 @@ export function SiteFooter() {
                     Featured Trucks
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="/events"
+                    className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
+                  >
+                    <IconStar className="mr-1.5 h-4 w-4 text-brand-yellow" />
+                    Events & Festivals
+                  </Link>
+                </li>
               </ul>
             </div>
 
