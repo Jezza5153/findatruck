@@ -7,6 +7,8 @@ import Link from 'next/link';
 import TruckInteractive from '@/components/TruckInteractive';
 import { IconGlobe, IconMapPin, IconPhone } from '@/components/ui/branded-icons';
 import { toJsonLd } from '@/lib/json-ld';
+import { getSafeImageUrl } from '@/lib/image-proxy';
+import EnquiryButton from '@/components/EnquiryButton';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -209,7 +211,7 @@ export default async function TruckDetailPage({ params }: Props) {
         <div className="surface-panel relative h-64 overflow-hidden rounded-[32px] sm:h-80">
           {truck.imageUrl ? (
             <img
-              src={truck.imageUrl}
+              src={getSafeImageUrl(truck.imageUrl) || ''}
               alt={`${truck.name} — ${truck.cuisine} food truck in Adelaide, South Australia`}
               className="w-full h-full object-cover"
             />
@@ -399,17 +401,19 @@ export default async function TruckDetailPage({ params }: Props) {
                 </a>
               )}
               {truck.contactEmail && (
-                <a
-                  href={`mailto:${truck.contactEmail}?subject=${encodeURIComponent(`Enquiry via foodtrucknext2me.com \u2013 ${truck.name}`)}&body=${encodeURIComponent(`Hi ${truck.name},\n\nI found you on foodtrucknext2me.com and would love to know more about your services!\n\nCheers`)}`}
-                  className="flex items-center gap-3 rounded-2xl border-2 border-teal-200 bg-teal-50 p-4 text-teal-700 hover:bg-teal-100 hover:border-teal-300 transition-all group"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-200 text-teal-700 text-lg font-bold">✉</div>
-                  <div>
-                    <div className="font-bold">Email</div>
-                    <div className="text-sm text-teal-600/70">{truck.contactEmail}</div>
-                  </div>
-                  <span className="ml-auto text-teal-400 group-hover:translate-x-1 transition-transform">→</span>
-                </a>
+                <EnquiryButton
+                  truckId={truck.id}
+                  truckName={truck.name}
+                  contactEmail={truck.contactEmail}
+                  variant="card"
+                />
+              )}
+              {!truck.contactEmail && (
+                <EnquiryButton
+                  truckId={truck.id}
+                  truckName={truck.name}
+                  variant="card"
+                />
               )}
               {truck.address && (
                 <a

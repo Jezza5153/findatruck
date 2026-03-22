@@ -718,3 +718,53 @@ export type NewFestivalEvent = typeof festivalEvents.$inferInsert;
 export type FestivalSighting = typeof festivalSightings.$inferSelect;
 export type NewFestivalSighting = typeof festivalSightings.$inferInsert;
 
+// =====================
+// ENQUIRIES (Lead capture)
+// =====================
+
+/**
+ * On-platform enquiry system — captures leads instead of leaking them via mailto.
+ * Every enquiry is associated with a truck and tracked for owner visibility.
+ */
+export const enquiries = pgTable('enquiries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  truckId: uuid('truck_id').notNull().references(() => trucks.id, { onDelete: 'cascade' }),
+
+  // Customer details (no auth required)
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email').notNull(),
+  customerPhone: text('customer_phone'),
+
+  // Event details
+  eventType: text('event_type', {
+    enum: ['wedding', 'corporate', 'market', 'festival', 'private', 'school', 'other']
+  }).notNull().default('other'),
+  eventDate: timestamp('event_date', { mode: 'date' }),
+  guestCount: integer('guest_count'),
+  message: text('message').notNull(),
+
+  // Tracking
+  status: text('status', {
+    enum: ['new', 'read', 'replied', 'closed']
+  }).notNull().default('new'),
+  source: text('source').notNull().default('profile'), // profile | card | hire-page
+
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const enquiriesRelations = relations(enquiries, ({ one }) => ({
+  truck: one(trucks, {
+    fields: [enquiries.truckId],
+    references: [trucks.id],
+  }),
+}));
+
+export type Enquiry = typeof enquiries.$inferSelect;
+export type NewEnquiry = typeof enquiries.$inferInsert;
+
+// =====================
+// SCOUT TABLES (OpenClaw Scout)
+// =====================
+
+export * from './schema/scout';
