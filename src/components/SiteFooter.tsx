@@ -27,22 +27,22 @@ export function SiteFooter() {
                 Made for Adelaide food discovery
               </div>
               <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-                Find trucks faster. Book smarter. Keep people coming back.
+                Looking for a food truck?
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:min-w-[250px]">
               <Link
-                href="/map"
+                href="/food-trucks"
                 className="cta-sheen inline-flex items-center justify-center gap-2 rounded-full bg-brand-orange px-5 py-3 font-semibold text-slate-950 transition-transform hover:scale-[1.01]"
               >
-                Open Live Map
+                Browse All Trucks
                 <IconArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/hire-food-truck"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 font-semibold text-white/90 transition-colors hover:bg-white/10"
               >
-                Hire a Food Truck
+                Hire for an Event
               </Link>
             </div>
           </div>
@@ -66,9 +66,9 @@ export function SiteFooter() {
                 Food Truck Next 2 Me helps customers discover live food trucks across Adelaide and South Australia, while helping owners stay visible and book more events.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-white/68">
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Live Map</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Reviews</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Loyalty Rewards</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">51 Trucks</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">12 Cuisines</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Free to Use</span>
               </div>
             </div>
 
@@ -80,29 +80,20 @@ export function SiteFooter() {
               <ul className="space-y-2">
                 <li>
                   <Link
-                    href="/map"
+                    href="/food-trucks"
                     className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
                   >
                     <IconMapPin className="mr-1.5 h-4 w-4 text-brand-yellow" />
-                    Find Trucks
+                    Browse Trucks
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/signup"
+                    href="/hire-food-truck"
                     className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
                   >
-                    <IconUser className="mr-1.5 h-4 w-4 text-brand-yellow" />
-                    Customer Signup
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/login"
-                    className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
-                  >
-                    <IconUser className="mr-1.5 h-4 w-4 text-brand-yellow" />
-                    Login
+                    <IconChefHat className="mr-1.5 h-4 w-4 text-brand-yellow" />
+                    Hire for an Event
                   </Link>
                 </li>
                 <li>
@@ -238,9 +229,9 @@ export function SiteFooter() {
           <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
             <p>© {currentYear} Food Truck Next 2 Me. Serving Adelaide and South Australia.</p>
             <div className="flex flex-wrap gap-4">
-              <Link href="/map" className="transition-colors hover:text-brand-yellow">Live Map</Link>
+              <Link href="/food-trucks" className="transition-colors hover:text-brand-yellow">Browse Trucks</Link>
               <Link href="/featured" className="transition-colors hover:text-brand-yellow">Featured</Link>
-              <Link href="/owner/signup" className="transition-colors hover:text-brand-yellow">Owner Signup</Link>
+              <Link href="/hire-food-truck" className="transition-colors hover:text-brand-yellow">Hire a Truck</Link>
             </div>
           </div>
         </div>
