@@ -30,9 +30,7 @@ export async function POST(request: NextRequest) {
     if (!customerEmail || typeof customerEmail !== 'string' || !customerEmail.includes('@')) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
-    if (!message || typeof message !== 'string' || message.trim().length < 10) {
-      return NextResponse.json({ error: 'Message must be at least 10 characters' }, { status: 400 });
-    }
+    // Message is optional — most intent is captured by event type + date + guest count
 
     const validEventTypes = ['wedding', 'corporate', 'market', 'festival', 'private', 'school', 'other'];
     const safeEventType = validEventTypes.includes(eventType) ? eventType : 'other';
@@ -83,7 +81,7 @@ export async function POST(request: NextRequest) {
         eventType: safeEventType,
         eventDate: eventDate ? new Date(eventDate) : null,
         guestCount: guestCount ? parseInt(guestCount, 10) : null,
-        message: message.trim(),
+        message: message?.trim() || '',
         source: source || (isEventEnquiry ? 'event-homepage' : 'profile'),
       })
       .returning();

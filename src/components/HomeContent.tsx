@@ -414,7 +414,7 @@ export default function HomeContent() {
               Hiring a food truck for your event?
             </h2>
             <p className="mt-3 text-lg text-slate-600">
-              Tell us what you need — wedding, party, corporate, school — and we'll connect you with the right trucks.
+              Tell us what you need and we'll reach out to the best trucks on your behalf.
             </p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -439,7 +439,7 @@ export default function HomeContent() {
                 onClick={() => setEnquiryTruck({ id: '', name: 'Event Enquiry' })}
                 className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-8 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
               >
-                Get Matched with Trucks
+                Send Event Enquiry
                 <IconArrowRight className="h-5 w-5" />
               </Button>
             </div>

@@ -125,10 +125,10 @@ export default function EnquiryFormModal({
             <DialogDescription className="text-sm text-slate-500">
               {step === 'success'
                 ? isEventMode
-                  ? 'Your event enquiry has been sent to matching trucks. Expect responses within 24 hours.'
+                  ? 'Your event enquiry has been received. We\'ll email matching trucks on your behalf.'
                   : `${truckName} will receive your enquiry and get back to you directly.`
                 : isEventMode
-                  ? 'Tell us about your event and we\'ll connect you with the right food trucks.'
+                  ? 'Tell us about your event and we\'ll reach out to suitable trucks for you.'
                   : 'Fill in your details and we\'ll pass your enquiry directly to the truck owner.'}
             </DialogDescription>
           </DialogHeader>
@@ -136,24 +136,51 @@ export default function EnquiryFormModal({
 
         {/* Success State */}
         {step === 'success' && (
-          <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
+          <div className="flex flex-col items-center gap-5 px-6 py-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <IconCheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <p className="font-display text-xl font-bold text-slate-950">You're all set!</p>
-              <p className="mt-2 text-sm text-slate-500">
-                {isEventMode
-                  ? <>Your event enquiry has been sent to matching trucks. Expect responses at <strong>{email}</strong> within 24 hours.</>
-                  : <>Your enquiry has been sent to <strong>{truckName}</strong>. They'll reply to <strong>{email}</strong> directly.</>}
+              <p className="font-display text-xl font-bold text-slate-950">
+                {isEventMode ? 'Event enquiry received!' : `Enquiry sent to ${truckName}!`}
               </p>
             </div>
-            <Button
-              onClick={() => handleClose(false)}
-              className="mt-2 rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-800"
-            >
-              Close
-            </Button>
+
+            {/* What happens next */}
+            <div className="w-full rounded-2xl bg-slate-50 border border-slate-100 p-4 text-left text-sm space-y-2">
+              <p className="font-semibold text-slate-700">What happens next:</p>
+              <ol className="list-decimal list-inside space-y-1 text-slate-500">
+                {isEventMode ? (
+                  <>
+                    <li>We&apos;ll review your event details</li>
+                    <li>Suitable trucks will be contacted on your behalf</li>
+                    <li>Expect responses at <strong className="text-slate-700">{email}</strong> within 48 hours</li>
+                  </>
+                ) : (
+                  <>
+                    <li>{truckName} receives your enquiry now</li>
+                    <li>Expect a reply at <strong className="text-slate-700">{email}</strong> within 24 hours</li>
+                    <li>If they don&apos;t respond, we&apos;ll follow up for you</li>
+                  </>
+                )}
+              </ol>
+            </div>
+
+            <div className="flex gap-3 w-full">
+              <Button
+                onClick={() => handleClose(false)}
+                variant="outline"
+                className="flex-1 rounded-full border-orange-200 text-slate-700 hover:bg-orange-50"
+              >
+                Browse More Trucks
+              </Button>
+              <Button
+                onClick={() => { resetForm(); }}
+                className="flex-1 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+              >
+                Send Another Enquiry
+              </Button>
+            </div>
           </div>
         )}
 
@@ -281,17 +308,15 @@ export default function EnquiryFormModal({
               </div>
             </div>
 
-            {/* Message */}
+            {/* Message (optional) */}
             <div>
               <label htmlFor="enq-message" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Your message *
+                Anything else? <span className="text-slate-400">(optional)</span>
               </label>
               <textarea
                 id="enq-message"
-                required
-                minLength={10}
                 rows={3}
-                placeholder={isEventMode ? 'Tell us about your event — date, location, cuisine preferences, budget...' : `Hi ${truckName}, I'd love to enquire about booking you for...`}
+                placeholder={isEventMode ? 'Location, cuisine preferences, budget, or anything else...' : 'Any details about your event, dietary needs, or questions...'}
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 className="w-full rounded-xl border border-orange-100 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30 resize-none"
@@ -299,18 +324,21 @@ export default function EnquiryFormModal({
             </div>
 
             {/* Submit */}
-            <div className="flex items-center justify-between gap-3 border-t border-orange-50 pt-4">
-              <p className="text-xs text-slate-400">
-                {isEventMode ? 'Your details will be shared with matching trucks — we don\'t spam.' : `Your details go directly to ${truckName} — we don't spam.`}
-              </p>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-3 font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500 disabled:opacity-50"
-              >
-                {submitting ? 'Sending...' : 'Send Enquiry'}
-                {!submitting && <IconArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
+            <div className="border-t border-orange-50 pt-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs text-slate-400 space-y-0.5">
+                  <p className="font-medium text-slate-500">Free · No commitment · Expect a reply within 24 hours</p>
+                  <p>{isEventMode ? 'Your details will be shared with matching trucks — we don\'t spam.' : `Your details go directly to ${truckName} — we don't spam.`}</p>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="cta-sheen shrink-0 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-3 font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500 disabled:opacity-50"
+                >
+                  {submitting ? 'Sending...' : 'Send Enquiry'}
+                  {!submitting && <IconArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </form>
         )}
