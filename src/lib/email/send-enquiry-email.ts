@@ -2,8 +2,8 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY_FOODTRUCK);
 
-// Use verified domain when available, otherwise Resend dev sender
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Food Truck Next 2 Me <onboarding@resend.dev>';
+const FROM_EMAIL = 'Food Truck Next 2 Me <info@foodtrucknext2me.com>';
+const PLATFORM_CC = 'info@jezzacooks.com';
 
 export interface EnquiryEmailData {
   customerName: string;
@@ -59,12 +59,15 @@ export async function sendCustomerConfirmation(data: EnquiryEmailData) {
     '',
     '---',
     'Sent via FoodTruckNext2Me.com — Adelaide\'s food truck directory.',
+    'Questions? Email us at info@foodtrucknext2me.com',
   ].filter(Boolean).join('\n');
 
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: data.customerEmail,
+      cc: PLATFORM_CC,
+      replyTo: 'info@foodtrucknext2me.com',
       subject,
       text,
     });
@@ -111,7 +114,8 @@ export async function sendOwnerNotification(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: data.ownerEmail,
-      replyTo: data.customerEmail,
+      cc: PLATFORM_CC,
+      replyTo: [data.customerEmail, 'info@foodtrucknext2me.com'],
       subject,
       text,
     });
