@@ -17,6 +17,8 @@ interface AdminStats {
     pendingReviews: number;
     activeSubscriptions: number;
     signupsToday: number;
+    totalEnquiries: number;
+    newEnquiries: number;
 }
 
 export default function AdminDashboardPage() {
@@ -29,6 +31,8 @@ export default function AdminDashboardPage() {
         pendingReviews: 0,
         activeSubscriptions: 0,
         signupsToday: 0,
+        totalEnquiries: 0,
+        newEnquiries: 0,
     });
     const [isLoading, setIsLoading] = useState(true);
 
@@ -70,6 +74,7 @@ export default function AdminDashboardPage() {
     }
 
     const quickLinks = [
+        { href: '/admin/enquiries', label: 'Enquiries', icon: IconMessageSquare, count: stats.totalEnquiries, highlight: stats.newEnquiries > 0, badge: stats.newEnquiries > 0 ? `${stats.newEnquiries} New` : undefined },
         { href: '/admin/trucks', label: 'Manage Trucks', icon: IconTruck, count: stats.totalTrucks },
         { href: '/admin/reviews', label: 'Review Queue', icon: IconMessageSquare, count: stats.pendingReviews, highlight: stats.pendingReviews > 0 },
         { href: '/admin/users', label: 'Users', icon: IconUsers, count: stats.totalUsers },

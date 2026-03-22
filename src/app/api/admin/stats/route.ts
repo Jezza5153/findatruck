@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { trucks, users, reviews, subscriptions } from '@/lib/db/schema';
+import { trucks, users, reviews, subscriptions, enquiries } from '@/lib/db/schema';
 import { eq, sql, and, gte } from 'drizzle-orm';
 
 // GET: Admin stats for dashboard
@@ -57,6 +57,15 @@ export async function GET() {
             .from(users)
             .where(gte(users.createdAt, today));
 
+        const [totalEnquiries] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(enquiries);
+
+        const [newEnquiries] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(enquiries)
+            .where(eq(enquiries.status, 'new'));
+
         return NextResponse.json({
             trucksLive: trucksLive?.count || 0,
             totalTrucks: totalTrucks?.count || 0,
@@ -64,6 +73,8 @@ export async function GET() {
             pendingReviews: pendingReviews?.count || 0,
             activeSubscriptions: activeSubscriptions?.count || 0,
             signupsToday: signupsToday?.count || 0,
+            totalEnquiries: totalEnquiries?.count || 0,
+            newEnquiries: newEnquiries?.count || 0,
         });
     } catch (error) {
         console.error('Admin stats error:', error);
