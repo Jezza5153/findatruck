@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState } from 'react';
 import {
     IconArrowRight,
@@ -64,13 +65,28 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                 <p className="mx-auto max-w-xl text-base leading-7 text-slate-600">
                     Thanks for your interest. We&apos;ll match you with available food trucks and get back to you within 24 hours with the next best options.
                 </p>
+                <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <Link
+                        href="/featured"
+                        className="cta-sheen inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-3 font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
+                    >
+                        Explore Featured Trucks
+                        <IconArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                        href="/map"
+                        className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-6 py-3 font-semibold text-slate-800 transition-colors hover:bg-orange-50"
+                    >
+                        Open Live Map
+                    </Link>
+                </div>
             </div>
         );
     }
 
     return (
         <form onSubmit={handleSubmit} className="surface-panel space-y-5 p-6 sm:p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-orange-100 pb-5">
+            <div className="grid gap-4 border-b border-orange-100 pb-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
                 <div>
                     <div className="eyebrow-chip">
                         <IconSparkles className="h-4 w-4 text-orange-500" />
@@ -81,7 +97,11 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                         Share the essentials and we&apos;ll help connect your event with Adelaide food trucks that actually fit the guest count, vibe, and service style you need.
                     </p>
                 </div>
-                <div className="grid gap-2 sm:min-w-[210px]">
+                <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[210px] lg:grid-cols-1">
+                    <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-slate-700">
+                        <IconCheckCircle className="mr-2 inline h-4 w-4 text-orange-500" />
+                        No-cost enquiry
+                    </div>
                     <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-medium text-slate-700">
                         <IconCalendarDays className="mr-2 inline h-4 w-4 text-orange-500" />
                         Fast enquiry routing
@@ -93,117 +113,135 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
                 </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
                 <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Contact details</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">Tell us who should receive the shortlist and follow-up details.</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
+                        <input
+                            id="name"
+                            type="text"
+                            required
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                            placeholder="Jane Smith"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                        <input
+                            id="email"
+                            type="email"
+                            required
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                            placeholder="jane@example.com"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Event details</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">Give enough context so the first options feel relevant instead of generic.</p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                        <input
+                            id="phone"
+                            type="tel"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                            placeholder="0412 345 678"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="eventType" className="block text-sm font-medium text-slate-700 mb-1">Event Type *</label>
+                        <select
+                            id="eventType"
+                            required
+                            value={form.eventType}
+                            onChange={(e) => setForm({ ...form, eventType: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                        >
+                            <option value="wedding">Wedding</option>
+                            <option value="corporate">Corporate / Office Event</option>
+                            <option value="festival">Festival / Market</option>
+                            <option value="private-party">Private Party / Birthday</option>
+                            <option value="school-fete">School Fete</option>
+                            <option value="other">Other Event</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="eventDate" className="block text-sm font-medium text-slate-700 mb-1">Event Date *</label>
+                        <input
+                            id="eventDate"
+                            type="date"
+                            required
+                            value={form.eventDate}
+                            onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="guestCount" className="block text-sm font-medium text-slate-700 mb-1">Expected Guests *</label>
+                        <select
+                            id="guestCount"
+                            required
+                            value={form.guestCount}
+                            onChange={(e) => setForm({ ...form, guestCount: e.target.value })}
+                            className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                        >
+                            <option value="">Select guest count</option>
+                            <option value="20-50">20–50 guests</option>
+                            <option value="50-100">50–100 guests</option>
+                            <option value="100-200">100–200 guests</option>
+                            <option value="200-500">200–500 guests</option>
+                            <option value="500+">500+ guests</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Event brief</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">Share location details, service expectations, or anything that will shape the match.</p>
+                </div>
+                <div>
+                    <label htmlFor="venue" className="block text-sm font-medium text-slate-700 mb-1">Venue / Location</label>
                     <input
-                        id="name"
+                        id="venue"
                         type="text"
-                        required
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        value={form.venue}
+                        onChange={(e) => setForm({ ...form, venue: e.target.value })}
                         className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                        placeholder="Jane Smith"
+                        placeholder="e.g. McLaren Vale winery, Glenelg foreshore"
                     />
                 </div>
+
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
-                    <input
-                        id="email"
-                        type="email"
-                        required
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                        placeholder="jane@example.com"
+                    <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">Tell us more about your event</label>
+                    <textarea
+                        id="message"
+                        rows={4}
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        className="w-full resize-none rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
+                        placeholder="Any cuisine preferences, dietary requirements, budget, or other details..."
                     />
                 </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                    <input
-                        id="phone"
-                        type="tel"
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                        placeholder="0412 345 678"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="eventType" className="block text-sm font-medium text-slate-700 mb-1">Event Type *</label>
-                    <select
-                        id="eventType"
-                        required
-                        value={form.eventType}
-                        onChange={(e) => setForm({ ...form, eventType: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                    >
-                        <option value="wedding">Wedding</option>
-                        <option value="corporate">Corporate / Office Event</option>
-                        <option value="festival">Festival / Market</option>
-                        <option value="private-party">Private Party / Birthday</option>
-                        <option value="school-fete">School Fete</option>
-                        <option value="other">Other Event</option>
-                    </select>
-                </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label htmlFor="eventDate" className="block text-sm font-medium text-slate-700 mb-1">Event Date *</label>
-                    <input
-                        id="eventDate"
-                        type="date"
-                        required
-                        value={form.eventDate}
-                        onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                    />
-                </div>
-                <div>
-                    <label htmlFor="guestCount" className="block text-sm font-medium text-slate-700 mb-1">Expected Guests *</label>
-                    <select
-                        id="guestCount"
-                        required
-                        value={form.guestCount}
-                        onChange={(e) => setForm({ ...form, guestCount: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                    >
-                        <option value="">Select guest count</option>
-                        <option value="20-50">20–50 guests</option>
-                        <option value="50-100">50–100 guests</option>
-                        <option value="100-200">100–200 guests</option>
-                        <option value="200-500">200–500 guests</option>
-                        <option value="500+">500+ guests</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label htmlFor="venue" className="block text-sm font-medium text-slate-700 mb-1">Venue / Location</label>
-                <input
-                    id="venue"
-                    type="text"
-                    value={form.venue}
-                    onChange={(e) => setForm({ ...form, venue: e.target.value })}
-                    className="w-full rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                    placeholder="e.g. McLaren Vale winery, Glenelg foreshore"
-                />
-            </div>
-
-            <div>
-                <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">Tell us more about your event</label>
-                <textarea
-                    id="message"
-                    rows={4}
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full resize-none rounded-2xl border-2 border-orange-100 bg-white px-4 py-3 text-slate-800 focus:border-orange-400 focus:outline-none focus:ring-orange-400"
-                    placeholder="Any cuisine preferences, dietary requirements, budget, or other details..."
-                />
             </div>
 
             {error && (
