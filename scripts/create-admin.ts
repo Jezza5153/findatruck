@@ -10,9 +10,14 @@ import { users } from '../src/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
-const ADMIN_EMAIL = 'admin@foodtrucknext2me.com';
-const ADMIN_NAME = 'Jezza';
-const ADMIN_PASSWORD = 'COOKS!';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@foodtrucknext2me.com';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin';
+const ADMIN_PASSWORD: string = process.env.ADMIN_PASSWORD!;
+
+if (!ADMIN_PASSWORD) {
+  console.error('❌ ADMIN_PASSWORD env var is required. Set it in .env.local');
+  process.exit(1);
+}
 
 async function createAdmin() {
   const dbUrl = process.env.DATABASE_URL;

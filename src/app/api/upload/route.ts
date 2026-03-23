@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { uploadFile, generateStorageKey, deleteFile, extractKeyFromUrl } from '@/lib/storage';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+
+const FOLDER_BY_TYPE: Record<string, string> = {
+    logo: 'truck-images',
+    cover: 'truck-images',
+    'menu-item': 'menu-items',
+};
+
+async function getUploadContext(userId: string) {
+    const [user] = await db
+        .select({ truckId: users.truckId })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+    return {
+        primaryEntityId: user?.truckId || userId,
+        allowedEntityIds: new Set([userId, user?.truckId].filter(Boolean) as string[]),
+    };
+}
+
+function getUploadFolder(type: FormDataEntryValue | null) {
+    if (typeof type !== 'string') {
+        return 'uploads';
+    }
+
+    return FOLDER_BY_TYPE[type] || 'uploads';
+}
+
+function isOwnedStorageKey(fileKey: string, allowedEntityIds: Set<string>) {
+    const parts = fileKey.split('/');
+    if (parts.length < 3) {
+        return false;
+    }
+
+    return allowedEntityIds.has(parts[1]);
+}
 
 // POST /api/upload - Upload a file
 export async function POST(request: NextRequest) {
@@ -16,8 +55,9 @@ export async function POST(request: NextRequest) {
 
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
-        const folder = formData.get('folder') as string || 'uploads';
-        const entityId = formData.get('entityId') as string || session.user.id;
+        const folder = getUploadFolder(formData.get('type'));
+        const { primaryEntityId } = await getUploadContext(session.user.id);
+        const entityId = primaryEntityId;
 
         if (!file) {
             return NextResponse.json(
@@ -56,6 +96,8 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
+            url: result.url,
+            key: result.key,
             data: {
                 url: result.url,
                 key: result.key,
@@ -92,6 +134,14 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json(
                 { success: false, error: 'No file key or URL provided' },
                 { status: 400 }
+            );
+        }
+
+        const { allowedEntityIds } = await getUploadContext(session.user.id);
+        if (!isOwnedStorageKey(fileKey, allowedEntityIds)) {
+            return NextResponse.json(
+                { success: false, error: 'Forbidden' },
+                { status: 403 }
             );
         }
 

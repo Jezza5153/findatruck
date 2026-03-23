@@ -1,12 +1,24 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { stripeEvents, checkInKeys } from '@/lib/db/schema';
 import { lt, and, eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
 // This can be triggered by a cron job (Vercel Cron, etc.)
 // Cron config: every 24 hours
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '');
+    const isValidCron = cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET;
+
+    if (!isValidCron) {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+    }
+
     const now = new Date();
 
     // Delete processed stripe events older than 30 days

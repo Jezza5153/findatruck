@@ -16,22 +16,70 @@ import { NextRequest, NextResponse } from 'next/server';
 const ALLOWED_DOMAINS = [
   'maps.googleapis.com',
   'lh3.googleusercontent.com',
-  'scontent.fbcdn.net',
-  'scontent-',           // FB CDN subdomains like scontent-ams2-1.xx.fbcdn.net
   'fbcdn.net',
   'cakeboydonuts.com',
   'cheesystreet.com.au',
 ];
 
-function isDomainAllowed(url: string): boolean {
+function isDomainAllowed(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return ALLOWED_DOMAINS.some((domain) =>
+    normalized === domain || normalized.endsWith(`.${domain}`)
+  );
+}
+
+function parseAllowedUrl(url: string): URL | null {
   try {
     const parsed = new URL(url);
-    return ALLOWED_DOMAINS.some(domain =>
-      parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`) || parsed.hostname.includes(domain)
-    );
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return null;
+    }
+    if (parsed.username || parsed.password) {
+      return null;
+    }
+    if (!isDomainAllowed(parsed.hostname)) {
+      return null;
+    }
+    return parsed;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function isRedirect(status: number) {
+  return status >= 300 && status < 400;
+}
+
+async function fetchWithValidatedRedirects(initialUrl: URL, maxRedirects = 3) {
+  let currentUrl = initialUrl;
+
+  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+    const response = await fetch(currentUrl, {
+      headers: {
+        Accept: 'image/*',
+        'User-Agent': 'FoodTruckNext2Me/1.0',
+      },
+      redirect: 'manual',
+    });
+
+    if (!isRedirect(response.status)) {
+      return response;
+    }
+
+    const location = response.headers.get('location');
+    if (!location) {
+      throw new Error('Redirect missing location header');
+    }
+
+    const nextUrl = parseAllowedUrl(new URL(location, currentUrl).toString());
+    if (!nextUrl) {
+      throw new Error('Redirect target not allowed');
+    }
+
+    currentUrl = nextUrl;
+  }
+
+  throw new Error('Too many redirects');
 }
 
 export async function GET(request: NextRequest) {
@@ -42,27 +90,20 @@ export async function GET(request: NextRequest) {
   }
 
   // Decode the URL
-  let decodedUrl: string;
+  let decodedUrl: URL | null;
   try {
-    decodedUrl = decodeURIComponent(url);
+    decodedUrl = parseAllowedUrl(decodeURIComponent(url));
   } catch {
     return NextResponse.json({ error: 'Invalid url parameter' }, { status: 400 });
   }
 
   // Validate domain
-  if (!isDomainAllowed(decodedUrl)) {
+  if (!decodedUrl) {
     return NextResponse.json({ error: 'Domain not allowed' }, { status: 403 });
   }
 
   try {
-    const imageResponse = await fetch(decodedUrl, {
-      headers: {
-        'Accept': 'image/*',
-        'User-Agent': 'FoodTruckNext2Me/1.0',
-      },
-      // Follow redirects (Google Places returns 302 → actual image)
-      redirect: 'follow',
-    });
+    const imageResponse = await fetchWithValidatedRedirects(decodedUrl);
 
     if (!imageResponse.ok) {
       return NextResponse.json(
@@ -72,6 +113,10 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.toLowerCase().startsWith('image/')) {
+      return NextResponse.json({ error: 'Upstream response was not an image' }, { status: 415 });
+    }
+
     const imageBuffer = await imageResponse.arrayBuffer();
 
     return new NextResponse(imageBuffer, {

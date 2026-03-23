@@ -36,10 +36,23 @@ export default function EnquiryForm({ eventType = 'event' }: EnquiryFormProps) {
         setError('');
 
         try {
-            const res = await fetch('/api/enquiry', {
+            const res = await fetch('/api/enquiries', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify({
+                    customerName: form.name,
+                    customerEmail: form.email,
+                    customerPhone: form.phone || undefined,
+                    eventType: form.eventType,
+                    eventDate: form.eventDate || undefined,
+                    guestCount: form.guestCount || undefined,
+                    message: form.message
+                        ? `${form.message}${form.venue ? `\n\nVenue: ${form.venue}` : ''}`
+                        : form.venue
+                            ? `Venue: ${form.venue}`
+                            : '',
+                    source: 'hire-page',
+                }),
             });
 
             if (!res.ok) {

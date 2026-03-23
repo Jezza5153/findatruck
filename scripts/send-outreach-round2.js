@@ -1,6 +1,11 @@
 const { Resend } = require('resend');
 
-const resend = new Resend('re_27eYBwR2_CkoURns3QJhcwE1g9UfQqoQ6');
+const resendKey = process.env.RESEND_API_KEY_FOODTRUCK || process.env.RESEND_API_KEY;
+if (!resendKey) {
+    throw new Error('Missing RESEND_API_KEY_FOODTRUCK or RESEND_API_KEY');
+}
+
+const resend = new Resend(resendKey);
 
 const FROM = 'Jeremy from FoodTruckNext2Me <info@foodtrucknext2me.com>';
 const REPLY_TO = 'info@jezzacooks.com';

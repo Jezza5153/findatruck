@@ -48,7 +48,22 @@ export async function GET(request: NextRequest) {
         }
 
         const result = await db
-            .select()
+            .select({
+                id: trucks.id,
+                name: trucks.name,
+                cuisine: trucks.cuisine,
+                description: trucks.description,
+                imageUrl: trucks.imageUrl,
+                address: trucks.address,
+                lat: trucks.lat,
+                lng: trucks.lng,
+                currentLocation: trucks.currentLocation,
+                updatedAt: trucks.updatedAt,
+                rating: trucks.rating,
+                isOpen: trucks.isOpen,
+                isFeatured: trucks.isFeatured,
+                isVerified: trucks.isVerified,
+            })
             .from(trucks)
             .where(and(...conditions));
 

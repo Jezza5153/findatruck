@@ -10,7 +10,15 @@ interface RouteParams {
 // GET /api/trucks/[id] - Get a single truck with menu
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
+        const session = await auth();
         const { id } = await params;
+
+        if (!session?.user) {
+            return NextResponse.json(
+                { success: false, error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
 
         const [truck] = await db
             .select()
@@ -22,6 +30,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json(
                 { success: false, error: 'Truck not found' },
                 { status: 404 }
+            );
+        }
+
+        const isAdmin = (session.user as any).role === 'admin';
+        if (!isAdmin && truck.ownerUid !== session.user.id) {
+            return NextResponse.json(
+                { success: false, error: 'Forbidden' },
+                { status: 403 }
             );
         }
 
@@ -127,7 +143,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
                 note: z.string().optional(),
             }).optional(),
             todaysMenu: z.any().optional(),
-        }).passthrough();
+        }).strip();
 
         const validation = updateSchema.safeParse(body);
         if (!validation.success) {

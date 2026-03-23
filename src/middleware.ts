@@ -181,6 +181,52 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // Page protection: Admin dashboard
+    if (pathname.startsWith('/admin')) {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'admin') {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+    }
+
+    // Page protection: Owner dashboard
+    if (pathname.startsWith('/owner') && pathname !== '/owner/login' && pathname !== '/owner/signup') {
+        const session = await auth();
+        if (!session?.user) {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        const role = (session.user as any).role;
+        if (role === 'admin') {
+            return NextResponse.redirect(new URL('/admin', request.url));
+        }
+        if (role !== 'owner') {
+            return NextResponse.redirect(new URL('/customer/dashboard', request.url));
+        }
+    }
+
+    // Page protection: Customer dashboard
+    if (pathname.startsWith('/customer')) {
+        const session = await auth();
+        if (!session?.user) {
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
+        }
+
+        const role = (session.user as any).role;
+        if (role === 'owner') {
+            return NextResponse.redirect(new URL('/owner/dashboard', request.url));
+        }
+        if (role === 'admin') {
+            return NextResponse.redirect(new URL('/admin', request.url));
+        }
+    }
+
     // Role-based API protection: Owner routes + rate limiting
     if (pathname.startsWith('/api/trucks/my')) {
         const session = await auth();
@@ -222,6 +268,7 @@ export const config = {
         '/api/internal/scout/:path*',
         '/owner/:path*',
         '/admin/:path*',
+        '/customer/:path*',
         '/internal/scout/:path*',
     ],
 };

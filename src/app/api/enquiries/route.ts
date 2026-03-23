@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { enquiries, trucks } from '@/lib/db/schema';
-import { eq, desc, and, gte } from 'drizzle-orm';
-import { sendCustomerConfirmation, sendOwnerNotification } from '@/lib/email/send-enquiry-email';
+import { desc, eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { EnquiryValidationError, submitEnquiry } from '@/lib/enquiry-service';
 
 /**
  * POST /api/enquiries — create a new enquiry (no auth required).
@@ -11,123 +12,21 @@ import { sendCustomerConfirmation, sendOwnerNotification } from '@/lib/email/sen
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
-    const {
-      truckId,
-      customerName,
-      customerEmail,
-      customerPhone,
-      eventType,
-      eventDate,
-      guestCount,
-      message,
-      source,
-    } = body;
-
-    // Validation
-    if (!customerName || typeof customerName !== 'string' || customerName.trim().length < 2) {
-      return NextResponse.json({ error: 'Name must be at least 2 characters' }, { status: 400 });
-    }
-    if (!customerEmail || typeof customerEmail !== 'string' || !customerEmail.includes('@')) {
-      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
-    }
-    // Message is optional — most intent is captured by event type + date + guest count
-
-    const validEventTypes = ['wedding', 'corporate', 'market', 'festival', 'private', 'school', 'other'];
-    const safeEventType = validEventTypes.includes(eventType) ? eventType : 'other';
-    const isEventEnquiry = !truckId;
-
-    // Rate limiting: max 5 per email per hour
-    const oneHourAgo = new Date(Date.now() - 3600000);
-    const recent = await db
-      .select({ id: enquiries.id })
-      .from(enquiries)
-      .where(
-        and(
-          eq(enquiries.customerEmail, customerEmail.trim().toLowerCase()),
-          gte(enquiries.createdAt, oneHourAgo)
-        )
-      );
-
-    if (recent.length >= 5) {
-      return NextResponse.json(
-        { error: 'Too many enquiries. Please wait before sending more.' },
-        { status: 429 }
-      );
-    }
-
-    // For single-truck enquiries, verify the truck exists
-    let truck: { id: string; name: string; contactEmail: string | null } | null = null;
-    if (truckId) {
-      const [found] = await db
-        .select({ id: trucks.id, name: trucks.name, contactEmail: trucks.contactEmail })
-        .from(trucks)
-        .where(eq(trucks.id, truckId))
-        .limit(1);
-
-      if (!found) {
-        return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
-      }
-      truck = found;
-    }
-
-    // Create enquiry
-    const [enquiry] = await db
-      .insert(enquiries)
-      .values({
-        truckId: truck?.id || null,
-        customerName: customerName.trim(),
-        customerEmail: customerEmail.trim().toLowerCase(),
-        customerPhone: customerPhone?.trim() || null,
-        eventType: safeEventType,
-        eventDate: eventDate ? new Date(eventDate) : null,
-        guestCount: guestCount ? parseInt(guestCount, 10) : null,
-        message: message?.trim() || '',
-        source: source || (isEventEnquiry ? 'event-homepage' : 'profile'),
-      })
-      .returning();
-
-    // Send emails (non-blocking — enquiry is already saved)
-    try {
-      await sendCustomerConfirmation({
-        customerName: customerName.trim(),
-        customerEmail: customerEmail.trim().toLowerCase(),
-        truckName: truck?.name || null,
-        eventType: safeEventType,
-        eventDate: eventDate || null,
-        guestCount: guestCount ? parseInt(guestCount, 10) : null,
-        message: message?.trim() || '',
-        isEventEnquiry,
-      });
-
-      // If single-truck and truck has contactEmail, notify the owner
-      if (truck?.contactEmail) {
-        await sendOwnerNotification({
-          customerName: customerName.trim(),
-          customerEmail: customerEmail.trim().toLowerCase(),
-          truckName: truck.name,
-          eventType: safeEventType,
-          eventDate: eventDate || null,
-          guestCount: guestCount ? parseInt(guestCount, 10) : null,
-          message: message?.trim() || '',
-          isEventEnquiry,
-          ownerEmail: truck.contactEmail,
-        });
-      }
-    } catch (emailError) {
-      console.error('[POST /api/enquiries] Email send failed (enquiry still saved):', emailError);
-    }
+    const result = await submitEnquiry(body);
 
     return NextResponse.json({
       success: true,
       data: {
-        id: enquiry.id,
-        truckName: truck?.name || 'Event Enquiry',
-        isEventEnquiry,
+        id: result.id,
+        truckName: result.truckName,
+        isEventEnquiry: result.isEventEnquiry,
       },
     }, { status: 201 });
 
   } catch (error) {
+    if (error instanceof EnquiryValidationError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error('[POST /api/enquiries] Error:', error);
     return NextResponse.json({ error: 'Failed to submit enquiry' }, { status: 500 });
   }
@@ -144,6 +43,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const [truck] = await db
+      .select({ ownerUid: trucks.ownerUid })
+      .from(trucks)
+      .where(eq(trucks.id, truckId))
+      .limit(1);
+
+    if (!truck) {
+      return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
+    }
+
+    const isAdmin = (session.user as any).role === 'admin';
+    if (!isAdmin && truck.ownerUid !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const results = await db
       .select()
       .from(enquiries)
