@@ -10,6 +10,8 @@ import CustomerBottomNav from '@/components/CustomerBottomNav';
 import { cn } from '@/lib/utils';
 import { toJsonLd } from '@/lib/json-ld';
 
+const SUPPORT_EMAIL = 'info@foodtrucknext2me.com';
+
 const bodyFont = DM_Sans({
   variable: '--font-body',
   subsets: ['latin'],
@@ -107,7 +109,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
               description: 'Find the best food trucks near you in Adelaide and South Australia.',
               potentialAction: {
                 '@type': 'SearchAction',
-                target: 'https://foodtrucknext2me.com/?search={search_term_string}',
+                target: 'https://foodtrucknext2me.com/map?search={search_term_string}',
                 'query-input': 'required name=search_term_string',
               },
             }),
@@ -122,12 +124,22 @@ export default function RootLayout({ children }: RootLayoutProps) {
               name: 'Food Truck Next 2 Me',
               url: 'https://foodtrucknext2me.com',
               logo: 'https://foodtrucknext2me.com/logo.png',
+              description: 'Adelaide and South Australia food truck discovery, event booking, and owner visibility platform.',
+              email: SUPPORT_EMAIL,
               areaServed: {
                 '@type': 'State',
                 name: 'South Australia',
                 containedInPlace: { '@type': 'Country', name: 'Australia' },
               },
-              sameAs: [],
+              contactPoint: [
+                {
+                  '@type': 'ContactPoint',
+                  contactType: 'customer support',
+                  email: SUPPORT_EMAIL,
+                  areaServed: 'AU',
+                  availableLanguage: ['en-AU', 'en'],
+                },
+              ],
             }),
           }}
         />

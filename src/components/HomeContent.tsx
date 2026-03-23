@@ -116,14 +116,12 @@ export default function HomeContent() {
   const [enquiryTruck, setEnquiryTruck] = useState<{ id: string; name: string } | null>(null);
   const [showAllTrucks, setShowAllTrucks] = useState(false);
 
-  // Redirect logged-in owners/admins to their dashboards
+  // Redirect logged-in owners to their dashboard (admins can browse the public site)
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role) {
       const role = session.user.role;
       if (role === 'owner') {
         router.replace('/owner/dashboard');
-      } else if (role === 'admin') {
-        router.replace('/admin');
       }
     }
   }, [session, status, router]);

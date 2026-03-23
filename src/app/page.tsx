@@ -8,6 +8,7 @@ const FAQ_ITEMS = [
   { q: 'How do I list my food truck on Food Truck Next 2 Me?', a: 'Click "Register Your Truck" to create a free owner account. You can add your truck name, cuisine, photos, menu, and social media links. Once set up, you can go live and start attracting customers across Adelaide and South Australia.' },
   { q: 'Is Food Truck Next 2 Me free?', a: 'Yes! Basic listings are completely free for food truck owners. Customers can browse, search, and discover trucks at no cost. Premium plans are available for owners who want extra visibility and features.' },
   { q: 'What areas does Food Truck Next 2 Me cover?', a: 'We focus on Adelaide and the wider South Australia region, including the Adelaide Hills, Barossa Valley, Fleurieu Peninsula, McLaren Vale, and regional SA. Any food truck operating in South Australia can list with us.' },
+  { q: 'Can I explore food truck events in Adelaide too?', a: 'Yes. Browse our Adelaide event and festival pages to see which trucks appear at major food events, then move into the live map or hire flow depending on what you need next.' },
 ];
 
 export const metadata: Metadata = {
@@ -93,6 +94,16 @@ export default function HomePage() {
             </p>
 
             <h3 className="text-xl font-bold text-slate-700 mt-8">
+              For Adelaide Events and Festivals
+            </h3>
+            <p>
+              Adelaide food truck discovery does not only happen on ordinary lunch runs. It also happens around festivals,
+              markets, and big public nights. Explore our <Link href="/events">food truck events and festival pages</Link> to see how trucks show up around
+              Adelaide Fringe, Fork on the Road, and other local favourites, or move straight into the <Link href="/hire-food-truck">hire a truck flow</Link> if you
+              are planning your own event.
+            </p>
+
+            <h3 className="text-xl font-bold text-slate-700 mt-8">
               For Food Truck Owners in South Australia
             </h3>
             <p>
@@ -143,6 +154,15 @@ export default function HomePage() {
                 We focus on Adelaide and the wider South Australia region, including the Adelaide Hills,
                 Barossa Valley, Fleurieu Peninsula, McLaren Vale, and regional SA. Any food truck
                 operating in South Australia can list with us.
+              </p>
+            </details>
+            <details className="rounded-2xl border border-orange-200 bg-white p-4">
+              <summary className="font-semibold text-slate-700 cursor-pointer">
+                Can I explore food truck events in Adelaide too?
+              </summary>
+              <p className="mt-2 text-sm">
+                Yes. Browse our Adelaide event and festival pages to see which trucks appear at major food
+                events, then move into the live map or hire flow depending on what you need next.
               </p>
             </details>
             </div>

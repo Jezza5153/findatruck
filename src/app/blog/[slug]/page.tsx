@@ -299,15 +299,42 @@ export default async function BlogPostPage({ params }: Props) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: toJsonLd({
-                        '@context': 'https://schema.org',
-                        '@type': 'Article',
-                        headline: post.title,
-                        datePublished: post.date,
-                        author: { '@type': 'Organization', name: 'Food Truck Next 2 Me' },
-                        publisher: { '@type': 'Organization', name: 'Food Truck Next 2 Me', url: 'https://foodtrucknext2me.com' },
-                        description: post.metaDescription,
-                    }),
+                    __html: toJsonLd([
+                        {
+                            '@context': 'https://schema.org',
+                            '@type': 'Article',
+                            headline: post.title,
+                            datePublished: post.date,
+                            author: { '@type': 'Organization', name: 'Food Truck Next 2 Me' },
+                            publisher: { '@type': 'Organization', name: 'Food Truck Next 2 Me', url: 'https://foodtrucknext2me.com' },
+                            description: post.metaDescription,
+                            mainEntityOfPage: `https://foodtrucknext2me.com/blog/${post.slug}`,
+                        },
+                        {
+                            '@context': 'https://schema.org',
+                            '@type': 'BreadcrumbList',
+                            itemListElement: [
+                                {
+                                    '@type': 'ListItem',
+                                    position: 1,
+                                    name: 'Home',
+                                    item: 'https://foodtrucknext2me.com',
+                                },
+                                {
+                                    '@type': 'ListItem',
+                                    position: 2,
+                                    name: 'Blog',
+                                    item: 'https://foodtrucknext2me.com/blog',
+                                },
+                                {
+                                    '@type': 'ListItem',
+                                    position: 3,
+                                    name: post.title,
+                                    item: `https://foodtrucknext2me.com/blog/${post.slug}`,
+                                },
+                            ],
+                        },
+                    ]),
                 }}
             />
 
@@ -333,6 +360,26 @@ export default async function BlogPostPage({ params }: Props) {
                         {sections}
                     </div>
                 </article>
+
+                <section className="section-frame mt-8 p-8 sm:p-10">
+                    <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Keep moving</p>
+                            <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">Use the article as context, then go where the action is.</h2>
+                            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+                                The strongest next steps are usually to open the live map, browse the Adelaide directory, or head into the event and hire pages depending on what you need.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                            <Link href="/map" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-slate-800">
+                                Open live map
+                            </Link>
+                            <Link href="/food-trucks" className="inline-flex items-center justify-center gap-2 rounded-full border border-orange-200 bg-white px-6 py-3 font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                                Browse trucks
+                            </Link>
+                        </div>
+                    </div>
+                </section>
 
                 <div className="text-center mt-8">
                     <Link href="/blog" className="text-orange-600 hover:text-orange-500 font-medium">

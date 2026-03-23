@@ -1,10 +1,10 @@
 import { db } from '@/lib/db';
 import { festivalEvents, festivalSightings, trucks } from '@/lib/db/schema';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { IconMapPin, IconTruck, IconArrowRight, IconStar, IconSparkles } from '@/components/ui/branded-icons';
+import { IconMapPin, IconTruck, IconArrowRight } from '@/components/ui/branded-icons';
 import { toJsonLd } from '@/lib/json-ld';
 
 type Props = {
@@ -18,6 +18,18 @@ async function getEvent(slug: string) {
     .where(eq(festivalEvents.slug, slug))
     .limit(1);
   return event || null;
+}
+
+export async function generateStaticParams() {
+  try {
+    const events = await db
+      .select({ slug: festivalEvents.slug })
+      .from(festivalEvents);
+
+    return events.map((event) => ({ slug: event.slug }));
+  } catch {
+    return [];
+  }
 }
 
 async function getEventTrucks(eventId: string) {
@@ -68,6 +80,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `https://foodtrucknext2me.com/events/${slug}`,
+      ...(event.imageUrl ? { images: [event.imageUrl] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(event.imageUrl ? { images: [event.imageUrl] } : {}),
     },
   };
 }
@@ -101,23 +120,63 @@ export default async function EventDetailPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: toJsonLd({
-            '@context': 'https://schema.org',
-            '@type': 'Event',
-            name: event.name,
-            location: {
-              '@type': 'Place',
-              name: event.location,
-              address: {
-                '@type': 'PostalAddress',
-                addressLocality: 'Adelaide',
-                addressRegion: 'SA',
-                addressCountry: 'AU',
+          __html: toJsonLd([
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Event',
+              name: event.name,
+              location: {
+                '@type': 'Place',
+                name: event.location || 'Adelaide',
+                address: {
+                  '@type': 'PostalAddress',
+                  addressLocality: 'Adelaide',
+                  addressRegion: 'SA',
+                  addressCountry: 'AU',
+                },
               },
+              description: event.description || undefined,
+              url: `https://foodtrucknext2me.com/events/${slug}`,
+              image: event.imageUrl || undefined,
+              startDate: event.startDate?.toISOString(),
+              endDate: event.endDate?.toISOString(),
             },
-            description: event.description || undefined,
-            url: `https://foodtrucknext2me.com/events/${slug}`,
-          }),
+            {
+              '@context': 'https://schema.org',
+              '@type': 'ItemList',
+              name: `Food trucks at ${event.name}`,
+              itemListElement: eventTrucks.map((truck, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                name: truck.truckName,
+                url: `https://foodtrucknext2me.com/trucks/${truck.truckId}`,
+              })),
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                {
+                  '@type': 'ListItem',
+                  position: 1,
+                  name: 'Home',
+                  item: 'https://foodtrucknext2me.com',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Events',
+                  item: 'https://foodtrucknext2me.com/events',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: event.name,
+                  item: `https://foodtrucknext2me.com/events/${slug}`,
+                },
+              ],
+            },
+          ]),
         }}
       />
 
@@ -151,6 +210,28 @@ export default async function EventDetailPage({ params }: Props) {
                   <IconTruck className="h-4 w-4" />
                   {eventTrucks.length} food truck{eventTrucks.length !== 1 ? 's' : ''} spotted
                 </span>
+                <Link
+                  href="/map"
+                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-orange-50"
+                >
+                  Open live map
+                </Link>
+                <Link
+                  href="/hire-food-truck/events"
+                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-orange-50"
+                >
+                  Plan an event
+                </Link>
+                {event.websiteUrl && (
+                  <a
+                    href={event.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-orange-50"
+                  >
+                    Official event site
+                  </a>
+                )}
               </div>
             </div>
           </section>
@@ -222,6 +303,37 @@ export default async function EventDetailPage({ params }: Props) {
                   </div>
                 </Link>
               ))}
+            </div>
+          </section>
+
+          <section className="section-frame mt-8 p-6 sm:p-8">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Keep exploring Adelaide trucks</p>
+                <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">Use this event page as a launch point, not a dead end.</h2>
+                <p className="mt-3 text-base leading-7 text-slate-600">
+                  If this event is shaping what you want to eat next, move into the <Link href="/map" className="font-semibold text-orange-700 hover:text-orange-500">live map</Link> for
+                  real-time discovery, browse the broader <Link href="/food-trucks" className="font-semibold text-orange-700 hover:text-orange-500">Adelaide food truck directory</Link>,
+                  or start a <Link href="/hire-food-truck/events" className="font-semibold text-orange-700 hover:text-orange-500">free event enquiry</Link> for your own festival, market, or celebration.
+                </p>
+              </div>
+              <div className="rounded-[28px] border border-orange-100 bg-white p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Best next click</p>
+                <div className="mt-4 space-y-3">
+                  <Link href="/map" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-100">
+                    See what is open right now
+                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                  </Link>
+                  <Link href="/food-trucks" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                    Browse by location and cuisine
+                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                  </Link>
+                  <Link href="/hire-food-truck/events" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                    Hire trucks for your own event
+                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </section>
 

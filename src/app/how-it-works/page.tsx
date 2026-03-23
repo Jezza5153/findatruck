@@ -14,6 +14,7 @@ import {
     IconTrophy,
 } from '@/components/ui/branded-icons';
 import { Button } from '@/components/ui/button';
+import { toJsonLd } from '@/lib/json-ld';
 
 const fadeInUp = {
     initial: { opacity: 0, y: 28 },
@@ -67,10 +68,75 @@ const benefits = [
     },
 ];
 
+const FAQ_ITEMS = [
+    {
+        question: 'How do I use Food Truck Next 2 Me to find food trucks near me?',
+        answer: 'Start with the live map or the location pages, then move into truck profiles when you want more detail on cuisine, availability, or the next step.',
+    },
+    {
+        question: 'Is the platform only for customers?',
+        answer: 'No. It is also built for event planners who want to hire food trucks and for owners who want better visibility across Adelaide and South Australia.',
+    },
+    {
+        question: 'Should I use the map, events pages, or hire flow?',
+        answer: 'Use the map for real-time discovery, event pages for festival and event-specific browsing, and the hire flow when you need food truck catering for your own event.',
+    },
+];
+
 export default function HowItWorksPage() {
     return (
         <div className="ambient-shell min-h-screen px-4 py-10">
             <div className="container mx-auto max-w-6xl">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: toJsonLd([
+                            {
+                                '@context': 'https://schema.org',
+                                '@type': 'HowTo',
+                                name: 'How to use Food Truck Next 2 Me',
+                                description: 'How customers discover food trucks and return to the platform through Food Truck Next 2 Me.',
+                                step: steps.map((step, index) => ({
+                                    '@type': 'HowToStep',
+                                    position: index + 1,
+                                    name: step.title,
+                                    text: step.description,
+                                })),
+                            },
+                            {
+                                '@context': 'https://schema.org',
+                                '@type': 'FAQPage',
+                                mainEntity: FAQ_ITEMS.map((item) => ({
+                                    '@type': 'Question',
+                                    name: item.question,
+                                    acceptedAnswer: {
+                                        '@type': 'Answer',
+                                        text: item.answer,
+                                    },
+                                })),
+                            },
+                            {
+                                '@context': 'https://schema.org',
+                                '@type': 'BreadcrumbList',
+                                itemListElement: [
+                                    {
+                                        '@type': 'ListItem',
+                                        position: 1,
+                                        name: 'Home',
+                                        item: 'https://foodtrucknext2me.com',
+                                    },
+                                    {
+                                        '@type': 'ListItem',
+                                        position: 2,
+                                        name: 'How It Works',
+                                        item: 'https://foodtrucknext2me.com/how-it-works',
+                                    },
+                                ],
+                            },
+                        ]),
+                    }}
+                />
+
                 <section className="surface-panel overflow-hidden p-8 sm:p-10">
                     <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
                         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
@@ -183,6 +249,51 @@ export default function HowItWorksPage() {
                             </motion.div>
                         ))}
                     </div>
+                </section>
+
+                <section className="section-frame mt-8 p-8 sm:p-10">
+                    <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Choose the right path</p>
+                            <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">Different visitors need different first clicks.</h2>
+                            <p className="mt-4 text-base leading-7 text-slate-600">
+                                The map is best when someone is hungry now. The events pages are better when search starts from a festival or public event.
+                                The hire flow is best when the goal is catering, and the owner flow is best when a truck wants to get found more often.
+                            </p>
+                        </div>
+                        <div className="rounded-[28px] border border-orange-100 bg-white p-6">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Best next click</p>
+                            <div className="mt-4 space-y-3">
+                                <Link href="/map" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-orange-50/60 px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-100">
+                                    Find trucks near me
+                                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                                </Link>
+                                <Link href="/events" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                                    Browse Adelaide events
+                                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                                </Link>
+                                <Link href="/hire-food-truck" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                                    Hire a food truck
+                                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                                </Link>
+                                <Link href="/owner/signup" className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-orange-50">
+                                    List your truck
+                                    <IconArrowRight className="h-4 w-4 text-orange-600" />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="mt-8 grid gap-4 md:grid-cols-3">
+                    {FAQ_ITEMS.map((item) => (
+                        <details key={item.question} className="rounded-[24px] border border-orange-100 bg-white p-5 shadow-sm">
+                            <summary className="cursor-pointer font-display text-xl font-bold text-slate-900">
+                                {item.question}
+                            </summary>
+                            <p className="mt-3 text-sm leading-7 text-slate-600">{item.answer}</p>
+                        </details>
+                    ))}
                 </section>
             </div>
         </div>

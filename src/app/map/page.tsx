@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,7 @@ function getRelativeTime(dateString?: string): string | null {
 type FilterType = 'all' | 'open' | 'favorites';
 
 export default function MapPage() {
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [trucks, setTrucks] = useState<TruckData[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -97,12 +99,17 @@ export default function MapPage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
+  const urlSearchTerm = searchParams.get('search')?.trim() ?? '';
 
   useEffect(() => {
     fetchTrucks();
     fetchFavorites();
     getUserLocation();
   }, []);
+
+  useEffect(() => {
+    setSearchTerm(urlSearchTerm);
+  }, [urlSearchTerm]);
 
   const fetchTrucks = async () => {
     try {

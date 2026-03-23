@@ -67,11 +67,11 @@ export function SiteHeader() {
                 className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <div className="hidden min-w-0 sm:block">
-              <p className="font-display text-lg font-bold leading-none text-slate-900">
+            <div className="min-w-0">
+              <p className="font-display text-sm font-bold leading-none text-slate-900 sm:text-lg">
                 Food Truck Next 2 Me
               </p>
-              <p className="mt-1 truncate text-xs font-medium uppercase tracking-[0.18em] text-orange-700/80">
+              <p className="mt-0.5 hidden truncate text-xs font-medium uppercase tracking-[0.18em] text-orange-700/80 sm:block">
                 Adelaide Food Truck Directory
               </p>
             </div>

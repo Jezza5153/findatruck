@@ -188,6 +188,24 @@ export function SiteFooter() {
                 </li>
                 <li>
                   <Link
+                    href="/about"
+                    className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
+                  >
+                    <IconHelpCircle className="mr-1.5 h-4 w-4 text-brand-yellow" />
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
+                  >
+                    <IconHelpCircle className="mr-1.5 h-4 w-4 text-brand-yellow" />
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/food-trucks"
                     className="flex items-center text-white/80 transition-colors hover:text-brand-yellow"
                   >
@@ -241,6 +259,8 @@ export function SiteFooter() {
               <Link href="/food-trucks" className="transition-colors hover:text-brand-yellow">Browse Trucks</Link>
               <Link href="/featured" className="transition-colors hover:text-brand-yellow">Featured</Link>
               <Link href="/hire-food-truck" className="transition-colors hover:text-brand-yellow">Hire a Truck</Link>
+              <Link href="/about" className="transition-colors hover:text-brand-yellow">About</Link>
+              <Link href="/contact" className="transition-colors hover:text-brand-yellow">Contact</Link>
             </div>
           </div>
         </div>
