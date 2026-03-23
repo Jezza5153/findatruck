@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 const navLinks = [
   { href: '/map', label: 'Find Trucks', icon: IconMapPin },
   { href: '/featured', label: 'Featured', icon: IconStar },
-  { href: '/hire-food-truck', label: 'Hire', icon: IconChefHat },
+  { href: '/hire-food-truck', label: 'Hire a Truck', icon: IconChefHat },
   { href: '/blog', label: 'Blog', icon: IconBookOpen },
 ];
 
@@ -43,13 +43,14 @@ export function SiteHeader() {
     await signOut({ callbackUrl: '/' });
   };
 
-  // Don't show header on auth pages
-  const isAuthPage = pathname?.startsWith('/login') ||
+  // Don't show header on auth pages or admin pages (admin has its own nav)
+  const isHiddenPage = pathname?.startsWith('/login') ||
     pathname?.startsWith('/signup') ||
     pathname?.startsWith('/owner/login') ||
-    pathname?.startsWith('/owner/signup');
+    pathname?.startsWith('/owner/signup') ||
+    pathname?.startsWith('/admin');
 
-  if (isAuthPage) {
+  if (isHiddenPage) {
     return null;
   }
 
@@ -191,6 +192,15 @@ export function SiteHeader() {
               <div className="flex items-center gap-2">
                 <Button
                   asChild
+                  variant="outline"
+                  className="hidden border-orange-200 bg-white text-slate-800 hover:bg-orange-50 lg:inline-flex rounded-full"
+                >
+                  <Link href="/owner/signup">
+                    List Your Truck
+                  </Link>
+                </Button>
+                <Button
+                  asChild
                   className="cta-sheen hidden sm:inline-flex bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 text-white shadow-glow hover:from-orange-600 hover:to-amber-500 rounded-full"
                 >
                   <Link href="/hire-food-truck">
@@ -283,7 +293,12 @@ export function SiteHeader() {
                 </>
               )}
                 {!isAuthenticated && (
-                  <div className="border-t border-orange-100 pt-3">
+                  <div className="grid gap-2 border-t border-orange-100 pt-3 sm:grid-cols-2">
+                    <Button asChild variant="outline" className="border-orange-200 bg-white text-slate-800 hover:bg-orange-50 rounded-full">
+                      <Link href="/owner/signup" onClick={() => setMobileMenuOpen(false)}>
+                        List Your Truck
+                      </Link>
+                    </Button>
                     <Button asChild className="w-full cta-sheen bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-500 rounded-full">
                       <Link href="/hire-food-truck" onClick={() => setMobileMenuOpen(false)}>
                         Hire for an Event

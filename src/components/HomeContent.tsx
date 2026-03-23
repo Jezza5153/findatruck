@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   IconSearch, IconTruck, IconArrowRight, IconCheckCircle,
-  IconStar, IconMapPin
+  IconStar, IconMapPin, IconChefHat, IconSparkles
 } from '@/components/ui/branded-icons';
 import { cn } from '@/lib/utils';
 
@@ -69,6 +69,39 @@ const HOW_IT_WORKS = [
     description: 'The truck gets your enquiry and responds within 24 hours.',
     emoji: '📱',
   },
+];
+
+const PATHWAYS = [
+  {
+    title: 'Find trucks fast',
+    description: 'Search the directory, scan cuisines, and get to the right truck without friction.',
+    cta: 'Browse trucks',
+    icon: IconMapPin,
+    accent: 'For hungry customers',
+    action: 'browse' as const,
+  },
+  {
+    title: 'Hire for an event',
+    description: 'Move from “we need catering” to a stronger shortlist for weddings, markets, and corporate events.',
+    cta: 'Plan an event',
+    icon: IconChefHat,
+    accent: 'For planners',
+    href: '/hire-food-truck',
+  },
+  {
+    title: 'List your truck',
+    description: 'Show up where people are deciding, update your menu, and turn discovery into enquiries.',
+    cta: 'List your truck',
+    icon: IconTruck,
+    accent: 'For owners',
+    href: '/owner/signup',
+  },
+];
+
+const OWNER_BENEFITS = [
+  'Show up in front of local customers at the moment they are deciding.',
+  'Manage menus, photos, and live locations from one cleaner owner workspace.',
+  'Turn event interest and everyday discovery into more enquiries.',
 ];
 
 export default function HomeContent() {
@@ -169,7 +202,7 @@ export default function HomeContent() {
             </h1>
 
             <p className="mx-auto mt-4 max-w-xl text-balance text-lg leading-7 text-slate-600">
-              Browse {trucks.length || '50+'} trucks by cuisine. Enquire in 60 seconds. No account needed.
+              Find trucks fast, hire for events, or list your truck and get discovered across Adelaide and South Australia.
             </p>
 
             {/* Inline search bar */}
@@ -200,7 +233,7 @@ export default function HomeContent() {
                 className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-8 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500 w-full sm:w-auto"
               >
                 <IconTruck className="h-5 w-5" />
-                Browse All Trucks
+                Find Trucks Now
               </Button>
 
               <Button
@@ -209,13 +242,81 @@ export default function HomeContent() {
                 variant="outline"
                 className="rounded-full border-orange-200 bg-white/88 px-8 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50 w-full sm:w-auto"
               >
-                <Link href="#event-hire">
+                <Link href="/hire-food-truck">
                   Hire for an Event
                   <IconArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
             </div>
+
+            <div className="mt-4 text-center">
+              <Link href="/owner/signup" className="text-sm font-semibold text-orange-700 hover:text-orange-500">
+                Own a food truck? List it free →
+              </Link>
+            </div>
           </motion.div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 pb-4">
+        <div className="section-frame p-6 sm:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                Choose your path
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">
+                The fastest route should be obvious.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-slate-600 sm:text-right sm:text-base">
+              Customers, event planners, and truck owners should all know exactly where to go next from the moment they land.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {PATHWAYS.map((path) => {
+              const card = (
+                <div className="group h-full rounded-[28px] border border-orange-100 bg-white/92 p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-soft">
+                  <div className="inline-flex rounded-2xl bg-orange-100 p-3 text-orange-600 shadow-sm">
+                    <path.icon className="h-5 w-5" />
+                  </div>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                    {path.accent}
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-bold text-slate-950 transition-colors group-hover:text-orange-600">
+                    {path.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {path.description}
+                  </p>
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-orange-700">
+                    {path.cta}
+                    <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </div>
+              );
+
+              if (path.action === 'browse') {
+                return (
+                  <button
+                    key={path.title}
+                    type="button"
+                    onClick={scrollToGrid}
+                    className="text-left"
+                  >
+                    {card}
+                  </button>
+                );
+              }
+
+              return (
+                <Link key={path.title} href={path.href || '/'}>
+                  {card}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -410,11 +511,15 @@ export default function HomeContent() {
             ═══════════════════════════════════════════════════════════ */}
         <section id="event-hire" className="mt-16 rounded-[32px] bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 p-8 sm:p-12 border border-orange-200">
           <div className="max-w-2xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm">
+              <IconSparkles className="h-4 w-4 text-orange-500" />
+              Event bookings
+            </div>
             <h2 className="font-display text-3xl font-bold text-slate-950 sm:text-4xl">
               Hiring a food truck for your event?
             </h2>
             <p className="mt-3 text-lg text-slate-600">
-              Tell us what you need and we'll reach out to the best trucks on your behalf.
+              Start with a quick brief here, or open the dedicated hire page for a fuller event-booking flow.
             </p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -433,14 +538,25 @@ export default function HomeContent() {
               ))}
             </div>
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 size="lg"
                 onClick={() => setEnquiryTruck({ id: '', name: 'Event Enquiry' })}
-                className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-8 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500"
+                className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-8 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500 w-full sm:w-auto"
               >
-                Send Event Enquiry
+                Start Free Event Brief
                 <IconArrowRight className="h-5 w-5" />
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="rounded-full border-orange-200 bg-white px-8 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50 w-full sm:w-auto"
+              >
+                <Link href="/hire-food-truck">
+                  Explore Hire Options
+                  <IconArrowRight className="h-5 w-5" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -479,6 +595,66 @@ export default function HomeContent() {
           </div>
         </section>
 
+        <section className="surface-panel-dark mt-16 overflow-hidden p-8 sm:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+                For food truck owners
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
+                Make the owner path feel like a no-brainer.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-white/75 sm:text-lg">
+                If someone lands here with a truck to grow, they should instantly see the value: more visibility, cleaner presentation, and faster event interest.
+              </p>
+              <div className="mt-6 space-y-3">
+                {OWNER_BENEFITS.map((benefit) => (
+                  <div key={benefit} className="flex items-start gap-3 rounded-[22px] border border-white/10 bg-white/5 px-4 py-4">
+                    <IconCheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-yellow" />
+                    <p className="text-sm leading-7 text-white/78 sm:text-base">
+                      {benefit}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 shadow-glow backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
+                Next step
+              </p>
+              <h3 className="mt-3 font-display text-3xl font-bold text-white">
+                List your truck and start showing up where people search.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-white/70 sm:text-base">
+                Keep the funnel simple: create your owner account, shape your truck profile, and get ready to appear in front of customers and event planners.
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="cta-sheen rounded-full bg-white px-8 py-6 font-semibold text-slate-950 hover:bg-orange-50"
+                >
+                  <Link href="/owner/signup">
+                    List Your Truck
+                    <IconArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-white/15 bg-transparent px-8 py-6 font-semibold text-white hover:bg-white/[0.08]"
+                >
+                  <Link href="/owner/login">
+                    Owner Login
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ═══════════════════════════════════════════════════════════
             SECTION F — TRUST BAR
             ═══════════════════════════════════════════════════════════ */}
@@ -501,15 +677,15 @@ export default function HomeContent() {
             ═══════════════════════════════════════════════════════════ */}
         <section className="mt-16 mb-8 text-center">
           <h2 className="font-display text-2xl font-bold text-slate-950 sm:text-3xl">
-            Ready to find your food truck?
+            Ready to use the platform your way?
           </h2>
-          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Button
               size="lg"
               onClick={scrollToGrid}
               className="cta-sheen rounded-full bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400 px-8 py-6 text-base font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500 w-full sm:w-auto"
             >
-              Browse All Trucks
+              Find Trucks
             </Button>
             <Button
               asChild
@@ -517,8 +693,19 @@ export default function HomeContent() {
               variant="outline"
               className="rounded-full border-orange-200 bg-white px-8 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50 w-full sm:w-auto"
             >
-              <Link href="#event-hire">
-                Hire for an Event
+              <Link href="/hire-food-truck">
+                Hire a Truck
+                <IconArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full border-orange-200 bg-white px-8 py-6 text-base font-semibold text-slate-800 shadow-sm hover:bg-orange-50 w-full sm:w-auto"
+            >
+              <Link href="/owner/signup">
+                List Your Truck
                 <IconArrowRight className="h-5 w-5" />
               </Link>
             </Button>

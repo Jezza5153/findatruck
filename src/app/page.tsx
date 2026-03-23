@@ -49,14 +49,14 @@ export default function HomePage() {
                 Adelaide&apos;s Food Truck Finder
               </p>
               <h2 className="mt-3 font-display text-4xl font-bold text-slate-950">
-                Built to turn hungry searches into real visits
+                Built to turn cravings, event plans, and truck growth into action
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-balance text-base leading-7 text-slate-600 sm:text-lg">
-                Food Truck Next 2 Me helps customers discover what is open now, compare menus quickly, and find the best trucks for a casual lunch, beach sunset, market night, or private event.
+                Food Truck Next 2 Me helps hungry customers discover what is open now, event planners hire with less friction, and truck owners get found when people are deciding.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Link href="/map" className="rounded-[24px] border border-orange-100 bg-orange-50/70 p-5 transition-transform hover:-translate-y-1">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Live Map</p>
                 <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">See what&apos;s open now</h3>
@@ -71,6 +71,11 @@ export default function HomePage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Event Bookings</p>
                 <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">Hire a truck for your next event</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">From weddings to corporate catering, connect with trucks built for high-intent enquiries.</p>
+              </Link>
+              <Link href="/owner/signup" className="rounded-[24px] border border-orange-100 bg-white p-5 transition-transform hover:-translate-y-1">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-700/75">Owner Growth</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">List your truck and get discovered</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Create your owner account, build your profile, and show up when local customers are searching.</p>
               </Link>
             </div>
 

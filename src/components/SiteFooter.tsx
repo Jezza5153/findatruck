@@ -1,6 +1,8 @@
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   IconChefHat,
   IconUser,
@@ -15,7 +17,14 @@ import {
 
 
 export function SiteFooter() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
+
+  // Don't show footer on admin pages (admin has its own layout)
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="relative overflow-hidden px-4 pb-10 pt-8 sm:px-6 lg:px-8">
       <div className="container mx-auto">
