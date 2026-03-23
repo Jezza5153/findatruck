@@ -218,12 +218,12 @@ export default function OwnerMenuPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-slate-900 p-6">
+      <div className="p-6">
         <div className="container mx-auto max-w-4xl space-y-6">
-          <Skeleton className="h-12 w-64 bg-slate-700" />
+          <Skeleton className="h-12 w-64 bg-white/10" />
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24 bg-slate-700 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-[24px] bg-white/10" />
             ))}
           </div>
         </div>
@@ -232,24 +232,28 @@ export default function OwnerMenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="pb-24 pt-8 text-white">
+      <div className="container mx-auto max-w-4xl px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="role-panel-dark-strong mb-8 flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8"
         >
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
+            <div className="role-pill-dark mb-4">
+              <IconUtensils className="h-4 w-4 text-orange-300" />
+              Menu studio
+            </div>
+            <h1 className="flex items-center gap-3 font-display text-3xl font-bold">
               <IconUtensils className="w-8 h-8 text-orange-400" />
               Menu Manager
             </h1>
-            <p className="text-slate-400 mt-1">{items.length} items in your menu</p>
+            <p className="mt-2 text-white/60">{items.length} items live in your menu, ready for fast edits.</p>
           </div>
           <Button
             onClick={() => setShowAddForm(true)}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+            className="rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 text-slate-950 hover:from-orange-400 hover:to-amber-300"
           >
             <IconPlus className="w-4 h-4 mr-2" />
             Add Item
@@ -278,18 +282,18 @@ export default function OwnerMenuPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="bg-slate-800/80 border-slate-700/50 mb-6">
+            <Card className="role-panel-dark mb-6">
               <CardHeader>
-                <CardTitle className="text-lg">Add New Item</CardTitle>
+                <CardTitle className="text-lg text-white">Add New Item</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Image upload */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Item Image</Label>
+                  <Label className="text-white/70">Item Image</Label>
                   <div className="flex items-center gap-4">
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-24 h-24 rounded-xl bg-slate-700 border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-orange-400 transition-colors"
+                      className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-[24px] border-2 border-dashed border-white/15 bg-black/15 transition-colors hover:border-orange-300/40"
                     >
                       {newItem.imageUrl ? (
                         <img src={newItem.imageUrl} alt="Preview" className="w-full h-full object-cover rounded-xl" />
@@ -299,22 +303,22 @@ export default function OwnerMenuPage() {
                         <IconUpload className="w-6 h-6 text-slate-400" />
                       )}
                     </div>
-                    <p className="text-sm text-slate-400">Click to upload an image</p>
+                    <p className="text-sm text-white/45">Click to upload an image</p>
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Item Name *</Label>
+                    <Label className="text-white/70">Item Name *</Label>
                     <Input
                       value={newItem.name}
                       onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                       placeholder="Deluxe Burger"
-                      className="bg-slate-900/50 border-slate-600 text-white"
+                      className="role-input-dark"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Price *</Label>
+                    <Label className="text-white/70">Price *</Label>
                     <div className="relative">
                       <IconDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -323,19 +327,19 @@ export default function OwnerMenuPage() {
                         value={newItem.price}
                         onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
                         placeholder="12.99"
-                        className="bg-slate-900/50 border-slate-600 text-white pl-9"
+                        className="role-input-dark pl-9"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Description</Label>
+                  <Label className="text-white/70">Description</Label>
                   <Textarea
                     value={newItem.description}
                     onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     placeholder="Juicy beef patty with all the fixings..."
-                    className="bg-slate-900/50 border-slate-600 text-white"
+                    className="role-input-dark"
                   />
                 </div>
 
@@ -343,14 +347,14 @@ export default function OwnerMenuPage() {
                   <Button
                     variant="outline"
                     onClick={() => setShowAddForm(false)}
-                    className="border-slate-600 bg-slate-700/50 text-slate-300 hover:bg-slate-600"
+                    className="rounded-full border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleAddItem}
                     disabled={saving}
-                    className="bg-green-500 hover:bg-green-600"
+                    className="rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                   >
                     {saving ? (
                       <><IconLoader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
@@ -370,9 +374,9 @@ export default function OwnerMenuPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="bg-slate-800/80 border-orange-500/50 mb-6">
+            <Card className="role-panel-dark mb-6 border-orange-300/20">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg text-orange-400">Editing: {editingItem.name}</CardTitle>
+                <CardTitle className="text-lg text-orange-100">Editing: {editingItem.name}</CardTitle>
                 <Button size="icon" variant="ghost" onClick={() => setEditingItem(null)}>
                   <IconX className="w-4 h-4" />
                 </Button>
@@ -380,11 +384,11 @@ export default function OwnerMenuPage() {
               <CardContent className="space-y-4">
                 {/* Edit image */}
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Item Image</Label>
+                  <Label className="text-white/70">Item Image</Label>
                   <div className="flex items-center gap-4">
                     <div
                       onClick={() => editFileInputRef.current?.click()}
-                      className="w-24 h-24 rounded-xl bg-slate-700 border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-orange-400 transition-colors"
+                      className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-[24px] border-2 border-dashed border-white/15 bg-black/15 transition-colors hover:border-orange-300/40"
                     >
                       {editingItem.imageUrl ? (
                         <img src={editingItem.imageUrl} alt="Preview" className="w-full h-full object-cover rounded-xl" />
@@ -394,21 +398,21 @@ export default function OwnerMenuPage() {
                         <IconUpload className="w-6 h-6 text-slate-400" />
                       )}
                     </div>
-                    <p className="text-sm text-slate-400">Click to change image</p>
+                    <p className="text-sm text-white/45">Click to change image</p>
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Item Name *</Label>
+                    <Label className="text-white/70">Item Name *</Label>
                     <Input
                       value={editingItem.name}
                       onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                      className="bg-slate-900/50 border-slate-600 text-white"
+                      className="role-input-dark"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Price *</Label>
+                    <Label className="text-white/70">Price *</Label>
                     <div className="relative">
                       <IconDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -416,18 +420,18 @@ export default function OwnerMenuPage() {
                         step="0.01"
                         value={editingItem.price}
                         onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) || 0 })}
-                        className="bg-slate-900/50 border-slate-600 text-white pl-9"
+                        className="role-input-dark pl-9"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Description</Label>
+                  <Label className="text-white/70">Description</Label>
                   <Textarea
                     value={editingItem.description || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                    className="bg-slate-900/50 border-slate-600 text-white"
+                    className="role-input-dark"
                   />
                 </div>
 
@@ -435,14 +439,14 @@ export default function OwnerMenuPage() {
                   <Button
                     variant="outline"
                     onClick={() => setEditingItem(null)}
-                    className="border-slate-600 bg-slate-700/50 text-slate-300 hover:bg-slate-600"
+                    className="rounded-full border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleEditItem}
                     disabled={saving}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    className="rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                   >
                     {saving ? (
                       <><IconLoader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
@@ -467,33 +471,31 @@ export default function OwnerMenuPage() {
             items.map((item) => (
               <Card
                 key={item.id}
-                className={`bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 transition-colors group ${editingItem?.id === item.id ? 'ring-2 ring-orange-500' : ''}`}
+                className={`role-panel-dark group transition-colors hover:bg-white/[0.08] ${editingItem?.id === item.id ? 'ring-2 ring-orange-400/60' : ''}`}
               >
                 <CardContent className="p-4 flex items-center gap-4">
-                  <div className="text-slate-500 cursor-grab">
+                  <div className="cursor-grab text-white/35">
                     <IconGripVertical className="w-5 h-5" />
                   </div>
 
-                  <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-black/20">
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
-                      <IconImage className="w-6 h-6 text-slate-500" />
+                      <IconImage className="w-6 h-6 text-white/30" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold truncate">{item.name}</h3>
-                      {item.isSpecial && (
-                        <Badge className="bg-orange-500 text-xs">Special</Badge>
-                      )}
+                      {item.isSpecial && <Badge className="bg-orange-500 text-xs text-slate-950">Special</Badge>}
                     </div>
-                    <p className="text-sm text-slate-400 truncate">{item.description || 'No description'}</p>
+                    <p className="truncate text-sm text-white/50">{item.description || 'No description'}</p>
                   </div>
 
                   <div className="text-right flex-shrink-0">
-                    <p className="text-lg font-bold text-green-400">${item.price.toFixed(2)}</p>
+                    <p className="font-display text-2xl font-bold text-emerald-200">${item.price.toFixed(2)}</p>
                     {item.availability === 'sold_out' && (
                       <Badge variant="destructive" className="text-xs">Sold Out</Badge>
                     )}
@@ -520,15 +522,15 @@ export default function OwnerMenuPage() {
                 </CardContent>
               </Card>
             ))
-          ) : (
-            <Card className="bg-slate-800/50 border-slate-700/50">
+        ) : (
+            <Card className="role-panel-dark">
               <CardContent className="p-12 text-center">
-                <IconUtensils className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                <IconUtensils className="mx-auto mb-4 h-16 w-16 text-white/30" />
                 <h3 className="text-xl font-semibold mb-2">No menu items yet</h3>
-                <p className="text-slate-400 mb-4">Start adding items to your menu</p>
+                <p className="mb-4 text-white/50">Start adding items to your menu.</p>
                 <Button
                   onClick={() => setShowAddForm(true)}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500"
+                  className="rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-slate-950 hover:from-orange-400 hover:to-amber-300"
                 >
                   <IconPlus className="w-4 h-4 mr-2" />
                   Add First Item
@@ -541,4 +543,3 @@ export default function OwnerMenuPage() {
     </div>
   );
 }
-

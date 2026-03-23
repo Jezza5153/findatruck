@@ -3,12 +3,13 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { IconBell, IconBellOff } from '@/components/ui/branded-icons';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { IconBell, IconBellOff, IconArrowRight, IconHeart } from '@/components/ui/branded-icons';
 
 export default function CustomerNotificationsPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,40 +20,49 @@ export default function CustomerNotificationsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+      <div className="ambient-shell flex min-h-screen items-center justify-center">
+        <div className="text-slate-500">Loading notifications...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <IconBell className="w-8 h-8 text-purple-400" />
+    <div className="ambient-shell min-h-screen px-4 py-8">
+      <div className="container mx-auto max-w-4xl space-y-6">
+        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="surface-panel p-6 sm:p-8">
+          <div className="eyebrow-chip">
+            <IconBell className="h-4 w-4 text-orange-500" />
+            Alert center
+          </div>
+          <h1 className="mt-5 flex items-center gap-3 font-display text-4xl font-bold text-slate-950">
+            <IconBell className="h-8 w-8 text-orange-500" />
             Notifications
           </h1>
-          <p className="text-slate-400 mb-8">
-            Stay updated on your favorite trucks
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
+            This area is ready to become the customer pulse for truck openings, favorites, and specials.
           </p>
-        </motion.div>
+        </motion.section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="bg-slate-800/50 border-slate-700/50">
-            <CardContent className="p-12 text-center">
-              <IconBellOff className="w-16 h-16 mx-auto mb-4 text-slate-500" />
-              <h3 className="text-xl font-semibold mb-2">No notifications yet</h3>
-              <p className="text-slate-400">
-                Favorite some trucks to receive updates about their locations and specials!
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Card className="section-frame overflow-hidden rounded-[30px] border-none shadow-none">
+            <CardContent className="p-10 text-center sm:p-14">
+              <div className="mx-auto mb-5 inline-flex rounded-3xl bg-orange-100 p-4 text-orange-600">
+                <IconBellOff className="h-10 w-10" />
+              </div>
+              <h2 className="font-display text-3xl font-bold text-slate-950">No notifications yet</h2>
+              <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-slate-600">
+                Once you start saving trucks and following updates, this becomes your shortcut to what is worth checking right now.
               </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link href="/favorites" className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-6 py-3 font-semibold text-slate-800 hover:bg-orange-50">
+                  <IconHeart className="h-4 w-4 text-orange-500" />
+                  View Favorites
+                </Link>
+                <Link href="/map" className="cta-sheen inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 px-6 py-3 font-semibold text-white shadow-glow hover:from-orange-600 hover:to-amber-500">
+                  Open Live Map
+                  <IconArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </motion.div>

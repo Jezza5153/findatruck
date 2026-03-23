@@ -1,236 +1,252 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    IconTruck, IconSearch, IconFilter, IconCheckCircle, IconXCircle, IconAlertTriangle,
-    IconMoreVertical, IconEye, IconBan, IconLoader2, IconExternalLink
+  IconTruck,
+  IconSearch,
+  IconCheckCircle,
+  IconAlertTriangle,
+  IconMoreVertical,
+  IconEye,
+  IconBan,
+  IconLoader2,
 } from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 
 interface TruckData {
-    id: string;
-    name: string;
-    cuisine: string;
-    ownerEmail?: string;
-    isVerified: boolean;
-    isOpen: boolean;
-    isFeatured: boolean;
-    subscriptionTier: string;
-    createdAt: string;
+  id: string;
+  name: string;
+  cuisine: string;
+  ownerEmail?: string;
+  isVerified: boolean;
+  isOpen: boolean;
+  isFeatured: boolean;
+  subscriptionTier: string;
+  createdAt: string;
 }
 
 type FilterType = 'all' | 'verified' | 'pending' | 'flagged';
 
 export default function AdminTrucksPage() {
-    const { data: session, status: authStatus } = useSession();
-    const router = useRouter();
-    const [trucks, setTrucks] = useState<TruckData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState<FilterType>('all');
+  const { data: session, status: authStatus } = useSession();
+  const router = useRouter();
+  const [trucks, setTrucks] = useState<TruckData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<FilterType>('all');
 
-    useEffect(() => {
-        if (authStatus === 'unauthenticated') {
-            router.replace('/login?redirect=/admin/trucks');
-            return;
-        }
-
-        if (authStatus === 'authenticated') {
-            if (session?.user?.role !== 'admin') {
-                router.replace('/');
-                return;
-            }
-            fetchTrucks();
-        }
-    }, [authStatus, session, router]);
-
-    const fetchTrucks = async () => {
-        try {
-            const res = await fetch('/api/admin/trucks');
-            if (res.ok) {
-                const data = await res.json();
-                setTrucks(data.trucks || []);
-            }
-        } catch {
-            // Ignore
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const updateTruck = async (id: string, updates: Partial<TruckData>) => {
-        try {
-            await fetch(`/api/admin/trucks/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
-            setTrucks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-        } catch {
-            // Handle error
-        }
-    };
-
-    const filteredTrucks = trucks
-        .filter(t => {
-            if (filter === 'verified') return t.isVerified;
-            if (filter === 'pending') return !t.isVerified;
-            return true;
-        })
-        .filter(t =>
-            t.name.toLowerCase().includes(search.toLowerCase()) ||
-            t.cuisine.toLowerCase().includes(search.toLowerCase())
-        );
-
-    if (authStatus === 'loading' || isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <IconLoader2 className="w-8 h-8 text-primary animate-spin" />
-            </div>
-        );
+  useEffect(() => {
+    if (authStatus === 'unauthenticated') {
+      router.replace('/login?redirect=/admin/trucks');
+      return;
     }
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white pb-24">
-            {/* Header */}
-            <div className="pt-8 pb-6 px-4">
-                <div className="container mx-auto max-w-4xl">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                            <IconTruck className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold">Trucks</h1>
-                            <p className="text-slate-400">{trucks.length} registered</p>
-                        </div>
-                    </div>
+    if (authStatus === 'authenticated') {
+      if (session?.user?.role !== 'admin') {
+        router.replace('/');
+        return;
+      }
+      fetchTrucks();
+    }
+  }, [authStatus, session, router]);
 
-                    {/* Search & Filter */}
-                    <div className="flex gap-3">
-                        <div className="flex-1 relative">
-                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                            <Input
-                                placeholder="Search trucks..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pl-10 bg-slate-800 border-slate-700"
-                            />
-                        </div>
-                        <div className="flex gap-1 bg-slate-800 rounded-lg p-1 border border-slate-700">
-                            {(['all', 'verified', 'pending'] as FilterType[]).map((f) => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFilter(f)}
-                                    className={cn(
-                                        "px-3 py-1.5 text-sm rounded-md transition-colors capitalize",
-                                        filter === f ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
-                                    )}
-                                >
-                                    {f}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  const fetchTrucks = async () => {
+    try {
+      const res = await fetch('/api/admin/trucks');
+      if (res.ok) {
+        const data = await res.json();
+        setTrucks(data.trucks || []);
+      }
+    } catch {
+      // Ignore
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            <div className="container mx-auto max-w-4xl px-4">
-                <div className="space-y-2">
-                    {filteredTrucks.map((truck, i) => (
-                        <motion.div
-                            key={truck.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.02 }}
-                            className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/30"
-                        >
-                            <div className="flex items-center gap-4 min-w-0">
-                                <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-lg flex-shrink-0">
-                                    🚚
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium truncate">{truck.name}</span>
-                                        {truck.isVerified ? (
-                                            <IconCheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                                        ) : (
-                                            <IconAlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                                        )}
-                                        {truck.isFeatured && (
-                                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-yellow-500/20 text-yellow-400">
-                                                Featured
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-slate-400 truncate">{truck.cuisine}</p>
-                                </div>
-                            </div>
+  const updateTruck = async (id: string, updates: Partial<TruckData>) => {
+    try {
+      await fetch(`/api/admin/trucks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      setTrucks((prev) => prev.map((truck) => (truck.id === id ? { ...truck, ...updates } : truck)));
+    } catch {
+      // Handle error
+    }
+  };
 
-                            <div className="flex items-center gap-3">
-                                <span className={cn(
-                                    "px-2 py-0.5 text-xs rounded-full",
-                                    truck.isOpen ? "bg-green-500/20 text-green-400" : "bg-slate-700 text-slate-400"
-                                )}>
-                                    {truck.isOpen ? 'Live' : 'Offline'}
-                                </span>
-
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                            <IconMoreVertical className="w-4 h-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                                        <DropdownMenuItem asChild>
-                                            <Link href={`/trucks/${truck.id}`} className="flex items-center gap-2">
-                                                <IconEye className="w-4 h-4" />
-                                                View Profile
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => updateTruck(truck.id, { isVerified: !truck.isVerified })}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <IconCheckCircle className="w-4 h-4" />
-                                            {truck.isVerified ? 'Unverify' : 'Verify'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => updateTruck(truck.id, { isFeatured: !truck.isFeatured })}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <span>⭐</span>
-                                            {truck.isFeatured ? 'Remove Featured' : 'Make Featured'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-red-400 flex items-center gap-2">
-                                            <IconBan className="w-4 h-4" />
-                                            Suspend Truck
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </motion.div>
-                    ))}
-
-                    {filteredTrucks.length === 0 && (
-                        <div className="text-center py-12 text-slate-500">
-                            <IconTruck className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                            <p>No trucks found</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+  const filteredTrucks = trucks
+    .filter((truck) => {
+      if (filter === 'verified') return truck.isVerified;
+      if (filter === 'pending') return !truck.isVerified;
+      return true;
+    })
+    .filter(
+      (truck) =>
+        truck.name.toLowerCase().includes(search.toLowerCase()) ||
+        truck.cuisine.toLowerCase().includes(search.toLowerCase())
     );
+
+  if (authStatus === 'loading' || isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <IconLoader2 className="h-8 w-8 animate-spin text-orange-300" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-24 pt-8 text-white">
+      <div className="container mx-auto max-w-6xl space-y-6 px-4">
+        <section className="role-panel-dark-strong p-6 sm:p-8">
+          <div className="role-pill-dark mb-4">
+            <IconTruck className="h-4 w-4 text-orange-300" />
+            Truck directory control
+          </div>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Trucks</h1>
+              <p className="mt-2 text-white/60">{trucks.length} registered trucks across moderation, visibility, and featured status.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="role-stat-dark p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200/70">Verified</p>
+                <p className="mt-2 font-display text-3xl font-bold text-white">{trucks.filter((truck) => truck.isVerified).length}</p>
+              </div>
+              <div className="role-stat-dark p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200/70">Live now</p>
+                <p className="mt-2 font-display text-3xl font-bold text-white">{trucks.filter((truck) => truck.isOpen).length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 lg:flex-row">
+            <div className="relative flex-1">
+              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35" />
+              <Input
+                placeholder="Search trucks..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="role-input-dark h-12 rounded-full pl-10"
+              />
+            </div>
+            <div className="inline-flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
+              {(['all', 'verified', 'pending'] as FilterType[]).map((filterKey) => (
+                <button
+                  key={filterKey}
+                  onClick={() => setFilter(filterKey)}
+                  className={cn(
+                    'rounded-full px-4 py-2 text-sm font-semibold capitalize transition-colors',
+                    filter === filterKey ? 'bg-orange-500 text-slate-950' : 'text-white/60 hover:text-white'
+                  )}
+                >
+                  {filterKey}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          {filteredTrucks.map((truck, i) => (
+            <motion.div
+              key={truck.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.02 }}
+              className="role-panel-dark flex items-center justify-between p-4"
+            >
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/8 text-lg">
+                  🚚
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-semibold text-white">{truck.name}</span>
+                    {truck.isVerified ? (
+                      <IconCheckCircle className="h-4 w-4 flex-shrink-0 text-emerald-300" />
+                    ) : (
+                      <IconAlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-300" />
+                    )}
+                    {truck.isFeatured ? (
+                      <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
+                        Featured
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="truncate text-sm text-white/55">{truck.cuisine}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]',
+                    truck.isOpen ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/8 text-white/50'
+                  )}
+                >
+                  {truck.isOpen ? 'Live' : 'Offline'}
+                </span>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full p-0 text-white/60 hover:bg-white/10 hover:text-white">
+                      <IconMoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="border-white/10 bg-[#151923] text-white">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/trucks/${truck.id}`} className="flex items-center gap-2">
+                        <IconEye className="h-4 w-4" />
+                        View Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => updateTruck(truck.id, { isVerified: !truck.isVerified })}
+                      className="flex items-center gap-2"
+                    >
+                      <IconCheckCircle className="h-4 w-4" />
+                      {truck.isVerified ? 'Unverify' : 'Verify'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => updateTruck(truck.id, { isFeatured: !truck.isFeatured })}
+                      className="flex items-center gap-2"
+                    >
+                      <span>★</span>
+                      {truck.isFeatured ? 'Remove Featured' : 'Make Featured'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 text-red-300">
+                      <IconBan className="h-4 w-4" />
+                      Suspend Truck
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </motion.div>
+          ))}
+
+          {filteredTrucks.length === 0 ? (
+            <div className="role-panel-dark py-12 text-center text-white/45">
+              <IconTruck className="mx-auto mb-3 h-10 w-10 opacity-50" />
+              <p>No trucks found</p>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </div>
+  );
 }

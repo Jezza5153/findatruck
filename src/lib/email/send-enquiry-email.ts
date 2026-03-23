@@ -1,6 +1,14 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY_FOODTRUCK);
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    const key = process.env.RESEND_API_KEY_FOODTRUCK;
+    if (!key) throw new Error('RESEND_API_KEY_FOODTRUCK not set');
+    _resend = new Resend(key);
+  }
+  return _resend;
+}
 
 const FROM_EMAIL = 'Food Truck Next 2 Me <info@foodtrucknext2me.com>';
 const PLATFORM_CC = 'info@jezzacooks.com';
@@ -63,7 +71,7 @@ export async function sendCustomerConfirmation(data: EnquiryEmailData) {
   ].filter(Boolean).join('\n');
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: data.customerEmail,
       cc: PLATFORM_CC,
@@ -111,7 +119,7 @@ export async function sendOwnerNotification(
   ].filter(Boolean).join('\n');
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: FROM_EMAIL,
       to: data.ownerEmail,
       cc: PLATFORM_CC,

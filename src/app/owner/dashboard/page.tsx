@@ -233,12 +233,12 @@ export default function OwnerDashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <div className="p-6">
         <div className="container mx-auto max-w-6xl space-y-6">
-          <Skeleton className="h-12 w-64 bg-slate-800" />
+          <Skeleton className="h-12 w-64 bg-white/10" />
           <div className="grid md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32 bg-slate-800 rounded-xl" />
+              <Skeleton key={i} className="h-32 rounded-[24px] bg-white/10" />
             ))}
           </div>
         </div>
@@ -247,19 +247,23 @@ export default function OwnerDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="container mx-auto max-w-6xl px-4 py-8">
+    <div className="pb-24 pt-8 text-white">
+      <div className="container mx-auto max-w-6xl px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+          className="role-panel-dark-strong mb-6 flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8"
         >
           <div>
-            <h1 className="text-3xl font-bold mb-1 text-white">
+            <div className="role-pill-dark mb-4">
+              <IconTruck className="h-4 w-4 text-orange-300" />
+              Owner dashboard
+            </div>
+            <h1 className="mb-1 font-display text-3xl font-bold text-white sm:text-4xl">
               {truck?.name || 'Your Truck'} Dashboard
             </h1>
-            <p className="text-slate-400">Manage your food truck operations</p>
+            <p className="text-white/60">Manage your live status, location, menu, and visibility from one place.</p>
           </div>
         </motion.div>
 
@@ -270,26 +274,26 @@ export default function OwnerDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="bg-gradient-to-r from-orange-950/60 to-amber-950/60 border-orange-800/50 shadow-xl">
+            <Card className="role-panel-dark border-orange-300/15 bg-orange-400/[0.06] shadow-xl">
               <CardContent className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-orange-200">
-                      🚀 Complete your profile to attract more customers
+                    <h3 className="text-lg font-bold text-orange-100">
+                      Complete your profile to attract more customers
                     </h3>
-                    <p className="text-sm text-orange-300/70 mt-1">
+                    <p className="mt-1 text-sm text-orange-100/65">
                       Trucks with complete profiles get 3× more views
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-orange-400">
+                    <span className="font-display text-3xl font-bold text-white">
                       {completeness.score}%
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="h-3 rounded-full bg-slate-800 overflow-hidden mb-4">
+                <div className="mb-4 h-3 overflow-hidden rounded-full bg-black/20">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${completeness.score}%` }}
@@ -308,15 +312,15 @@ export default function OwnerDashboardPage() {
                         <Link
                           key={item.key}
                           href={item.href}
-                          className="flex items-center gap-3 rounded-xl bg-slate-900/60 border border-orange-900/30 px-4 py-3 text-sm hover:bg-slate-800/80 transition-colors group"
+                          className="group flex items-center gap-3 rounded-[22px] border border-white/10 bg-black/15 px-4 py-3 text-sm transition-colors hover:bg-white/[0.08]"
                         >
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs font-bold">
+                          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-orange-400/15 text-xs font-bold text-orange-100">
                             +{item.points}
                           </span>
-                          <span className="text-slate-300 group-hover:text-white transition-colors">
+                          <span className="text-white/75 transition-colors group-hover:text-white">
                             {item.label}
                           </span>
-                          <IconArrowRight className="w-4 h-4 text-slate-600 ml-auto group-hover:text-orange-400 transition-colors" />
+                          <IconArrowRight className="ml-auto h-4 w-4 text-white/35 transition-colors group-hover:text-orange-100" />
                         </Link>
                       ))}
                   </div>
@@ -332,10 +336,10 @@ export default function OwnerDashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <Card className="bg-slate-900 border-slate-800 mb-6 shadow-xl">
+          <Card className="role-panel-dark mb-6 shadow-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-white">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-400">
                   <IconMapPin className="w-4 h-4 text-white" />
                 </div>
                 Where are you today?
@@ -344,14 +348,14 @@ export default function OwnerDashboardPage() {
             <CardContent className="space-y-4">
               {/* Open/Closed Toggle - Prominent */}
               <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isOpen
-                ? 'bg-green-500/10 border-green-500/50'
-                : 'bg-slate-800 border-slate-700'
+                ? 'bg-emerald-400/10 border-emerald-300/30'
+                : 'bg-black/20 border-white/10'
                 }`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full ${isOpen ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50' : 'bg-slate-500'}`} />
+                  <div className={`h-4 w-4 rounded-full ${isOpen ? 'bg-emerald-300 animate-pulse shadow-lg shadow-emerald-400/40' : 'bg-white/30'}`} />
                   <div>
-                    <p className="font-bold text-lg text-white">{isOpen ? '🟢 You are OPEN' : '⚫ You are CLOSED'}</p>
-                    <p className="text-sm text-slate-400">{isOpen ? 'Customers can find you on the map' : 'Hidden from customers'}</p>
+                    <p className="text-lg font-bold text-white">{isOpen ? 'You are open now' : 'You are currently closed'}</p>
+                    <p className="text-sm text-white/55">{isOpen ? 'Customers can find you on the map.' : 'Your truck is hidden from discovery.'}</p>
                   </div>
                 </div>
                 <Switch
@@ -364,12 +368,12 @@ export default function OwnerDashboardPage() {
               {/* Location Input */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-3">
-                  <Label className="text-slate-300 font-medium">Current Location</Label>
+                  <Label className="font-medium text-white/75">Current Location</Label>
                   <div className="flex gap-2">
                     <Button
                       onClick={useCurrentLocation}
                       disabled={updatingLocation}
-                      className="bg-blue-600 hover:bg-blue-500 text-white"
+                      className="rounded-full bg-white/8 text-white hover:bg-white/12"
                     >
                       {updatingLocation ? (
                         <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -383,48 +387,48 @@ export default function OwnerDashboardPage() {
                     placeholder="Or enter address (e.g., Central Park, NYC)"
                     value={addressInput}
                     onChange={(e) => setAddressInput(e.target.value)}
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
+                    className="role-input-dark"
                   />
                   <Input
                     placeholder="Note (e.g., Near the fountain)"
                     value={locationNote}
                     onChange={(e) => setLocationNote(e.target.value)}
-                    className="bg-slate-800 border-slate-700 text-white text-sm placeholder:text-slate-500 focus:border-blue-500"
+                    className="role-input-dark text-sm"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-slate-300 font-medium">Today's Hours</Label>
+                  <Label className="font-medium text-white/75">Today's Hours</Label>
                   <div className="flex gap-2 items-center">
                     <Input
                       type="time"
                       value={openingTime}
                       onChange={(e) => setOpeningTime(e.target.value)}
-                      className="bg-slate-800 border-slate-700 text-white focus:border-blue-500"
+                      className="role-input-dark"
                     />
                     <span className="text-slate-400 font-medium">to</span>
                     <Input
                       type="time"
                       value={closingTime}
                       onChange={(e) => setClosingTime(e.target.value)}
-                      className="bg-slate-800 border-slate-700 text-white focus:border-blue-500"
+                      className="role-input-dark"
                     />
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-white/40">
                     Set your operating hours for today
                   </p>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-2">
-                <Link href="/owner/schedule" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium">
+                <Link href="/owner/schedule" className="flex items-center gap-1 text-sm font-medium text-orange-200 hover:text-orange-100">
                   <IconCalendar className="w-4 h-4" />
                   Plan future schedule →
                 </Link>
                 <Button
                   onClick={saveAddressLocation}
                   disabled={updatingLocation}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold shadow-lg"
+                  className="rounded-full bg-gradient-to-r from-orange-500 to-amber-400 font-semibold text-slate-950 shadow-lg shadow-orange-500/20 hover:from-orange-400 hover:to-amber-300"
                 >
                   {updatingLocation ? (
                     <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -446,20 +450,20 @@ export default function OwnerDashboardPage() {
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
           {[
-            { icon: IconShoppingBag, label: "Today's Orders", value: stats.todayOrders, color: 'bg-blue-600', textColor: 'text-blue-400' },
-            { icon: IconDollarSign, label: "Today's Revenue", value: `$${stats.todayRevenue}`, color: 'bg-green-600', textColor: 'text-green-400' },
-            { icon: IconUsers, label: 'Active Customers', value: stats.activeCustomers, color: 'bg-purple-600', textColor: 'text-purple-400' },
-            { icon: IconClock, label: 'Avg Prep Time', value: stats.avgPrepTime, color: 'bg-orange-600', textColor: 'text-orange-400' },
+            { icon: IconShoppingBag, label: "Today's Orders", value: stats.todayOrders, color: 'bg-sky-500/15', textColor: 'text-sky-200' },
+            { icon: IconDollarSign, label: "Today's Revenue", value: `$${stats.todayRevenue}`, color: 'bg-emerald-500/15', textColor: 'text-emerald-200' },
+            { icon: IconUsers, label: 'Active Customers', value: stats.activeCustomers, color: 'bg-violet-500/15', textColor: 'text-violet-200' },
+            { icon: IconClock, label: 'Avg Prep Time', value: stats.avgPrepTime, color: 'bg-amber-500/15', textColor: 'text-amber-200' },
           ].map((stat) => (
-            <Card key={stat.label} className="bg-slate-900 border-slate-800 shadow-lg">
+            <Card key={stat.label} className="role-stat-dark shadow-lg">
               <CardContent className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center shadow-lg`}>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${stat.color}`}>
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
-                    <p className="text-sm text-slate-400">{stat.label}</p>
+                    <p className={`font-display text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
+                    <p className="text-sm text-white/50">{stat.label}</p>
                   </div>
                 </div>
               </CardContent>
@@ -475,24 +479,24 @@ export default function OwnerDashboardPage() {
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {[
-            { icon: IconUtensils, label: 'Manage Menu', href: '/owner/menu', desc: 'Edit items, categories & prices', color: 'bg-orange-600' },
-            { icon: IconShoppingBag, label: 'View Orders', href: '/owner/orders', desc: 'Process incoming orders', color: 'bg-blue-600' },
-            { icon: IconTrendingUp, label: 'Analytics', href: '/owner/analytics', desc: 'View sales & performance', color: 'bg-green-600' },
-            { icon: IconCalendar, label: 'Schedule', href: '/owner/schedule', desc: 'Plan future locations & dates', color: 'bg-purple-600' },
-            { icon: IconSettings, label: 'Truck Settings', href: '/owner/profile', desc: 'Edit profile & hours', color: 'bg-slate-600' },
-            { icon: IconDollarSign, label: 'Billing', href: '/owner/billing', desc: 'Manage payments', color: 'bg-violet-600' },
+            { icon: IconUtensils, label: 'Manage Menu', href: '/owner/menu', desc: 'Edit items, categories, and prices', color: 'bg-orange-500/15 text-orange-100' },
+            { icon: IconShoppingBag, label: 'View Orders', href: '/owner/orders', desc: 'Process incoming orders', color: 'bg-sky-500/15 text-sky-100' },
+            { icon: IconTrendingUp, label: 'Analytics', href: '/owner/analytics', desc: 'View sales and performance', color: 'bg-emerald-500/15 text-emerald-100' },
+            { icon: IconCalendar, label: 'Schedule', href: '/owner/schedule', desc: 'Plan future locations and dates', color: 'bg-violet-500/15 text-violet-100' },
+            { icon: IconSettings, label: 'Truck Settings', href: '/owner/profile', desc: 'Edit profile and hours', color: 'bg-white/10 text-white' },
+            { icon: IconDollarSign, label: 'Billing', href: '/owner/billing', desc: 'Manage payments', color: 'bg-amber-500/15 text-amber-100' },
           ].map((action) => (
             <Link key={action.label} href={action.href}>
-              <Card className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all cursor-pointer h-full group shadow-lg">
+              <Card className="role-panel-dark group h-full cursor-pointer transition-all hover:border-orange-300/20 hover:bg-white/[0.08] shadow-lg">
                 <CardContent className="p-5 flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                    <action.icon className="w-7 h-7 text-white" />
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${action.color} transition-transform group-hover:scale-110`}>
+                    <action.icon className="h-7 w-7" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-white group-hover:text-yellow-400 transition-colors">{action.label}</h3>
-                    <p className="text-sm text-slate-400">{action.desc}</p>
+                    <h3 className="font-semibold text-white transition-colors group-hover:text-orange-100">{action.label}</h3>
+                    <p className="text-sm text-white/50">{action.desc}</p>
                   </div>
-                  <IconChevronRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                  <IconChevronRight className="h-5 w-5 text-white/30 transition-colors group-hover:text-white/80" />
                 </CardContent>
               </Card>
             </Link>
