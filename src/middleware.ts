@@ -58,11 +58,11 @@ export async function middleware(request: NextRequest) {
     // Content Security Policy - complete policy
     response.headers.set('Content-Security-Policy', [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://www.googletagmanager.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.stripe.com https:",
+        "img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://*.stripe.com https://www.googletagmanager.com https:",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://*.neon.tech wss:",
+        "connect-src 'self' https://api.stripe.com https://maps.googleapis.com https://*.neon.tech https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com wss:",
         "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
