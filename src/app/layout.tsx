@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Space_Grotesk } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -9,6 +10,8 @@ import { SessionProvider } from '@/components/SessionProvider';
 import CustomerBottomNav from '@/components/CustomerBottomNav';
 import { cn } from '@/lib/utils';
 import { toJsonLd } from '@/lib/json-ld';
+
+const GA_MEASUREMENT_ID = 'G-2XRZY0HG5V';
 
 const SUPPORT_EMAIL = 'info@foodtrucknext2me.com';
 
@@ -152,6 +155,19 @@ export default function RootLayout({ children }: RootLayoutProps) {
         )}
       >
         <SessionProvider>
+          {/* GA4 Analytics */}
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script id="ga4-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}');
+            `}
+          </Script>
           {/* Accessibility skip link */}
           <a
             href="#main-content"
