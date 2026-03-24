@@ -5,6 +5,135 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+const SEARCH_STOP_WORDS = new Set([
+  'adelaide',
+  'and',
+  'best',
+  'find',
+  'food',
+  'for',
+  'hire',
+  'local',
+  'me',
+  'near',
+  'nearby',
+  'rent',
+  'sa',
+  'search',
+  'south',
+  'truck',
+  'trucks',
+  'van',
+  'vans',
+]);
+
+const SEARCH_ALIASES: Record<string, string[]> = {
+  bbq: ['barbecue', 'barbeque', 'smoked'],
+  barbeque: ['bbq', 'barbecue'],
+  barbecue: ['bbq', 'barbeque'],
+  cafe: ['coffee'],
+  coffee: ['cafe', 'espresso'],
+  espresso: ['coffee', 'cafe'],
+  gf: ['gluten free', 'gluten-free'],
+  gluten: ['gf', 'gluten free', 'gluten-free'],
+  veg: ['vegetarian', 'vego'],
+  vegan: ['plant based', 'plant-based'],
+  vegetarian: ['veg', 'vego', 'veggie'],
+  vego: ['vegetarian', 'veg'],
+  veggie: ['vegetarian', 'veg', 'vego'],
+};
+
+function unique<T>(values: T[]): T[] {
+  return Array.from(new Set(values));
+}
+
+export function normalizeSearchText(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function getTokenVariants(token: string): string[] {
+  const aliases = SEARCH_ALIASES[token] ?? [];
+
+  return unique(
+    [token, ...aliases]
+      .map((value) => normalizeSearchText(value))
+      .filter(Boolean)
+  );
+}
+
+function getSearchTokens(query: string): string[] {
+  const normalizedQuery = normalizeSearchText(query);
+  const rawTokens = normalizedQuery.split(' ').filter(Boolean);
+  const filteredTokens = rawTokens.filter((token) => !SEARCH_STOP_WORDS.has(token));
+
+  return unique(filteredTokens);
+}
+
+export function scoreSearchMatch(
+  query: string,
+  fields: Array<{ value?: string | null; weight: number }>
+): number {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+
+  const normalizedFields = fields
+    .map((field) => ({
+      value: normalizeSearchText(field.value),
+      weight: field.weight,
+    }))
+    .filter((field) => field.value);
+
+  if (normalizedFields.length === 0) return -1;
+
+  let score = -1;
+
+  for (const field of normalizedFields) {
+    if (field.value === normalizedQuery) {
+      score = Math.max(score, 200 + field.weight * 20);
+      continue;
+    }
+
+    if (field.value.startsWith(normalizedQuery)) {
+      score = Math.max(score, 150 + field.weight * 18);
+      continue;
+    }
+
+    if (field.value.includes(normalizedQuery)) {
+      score = Math.max(score, 110 + field.weight * 14);
+    }
+  }
+
+  const tokens = getSearchTokens(normalizedQuery);
+  if (tokens.length === 0) return Math.max(score, 0);
+
+  let tokenScore = 0;
+
+  for (const token of tokens) {
+    const variants = getTokenVariants(token);
+    let bestWeight = 0;
+
+    for (const field of normalizedFields) {
+      if (variants.some((variant) => field.value.includes(variant))) {
+        bestWeight = Math.max(bestWeight, field.weight);
+      }
+    }
+
+    if (!bestWeight) {
+      return score;
+    }
+
+    tokenScore += bestWeight * 12;
+  }
+
+  return Math.max(score, tokenScore);
+}
+
 // Australian locale for all formatting
 const AU_LOCALE = 'en-AU';
 

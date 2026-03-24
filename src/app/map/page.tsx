@@ -25,7 +25,7 @@ import {
   IconTruck,
   IconUsers,
 } from '@/components/ui/branded-icons';
-import { cn } from '@/lib/utils';
+import { cn, scoreSearchMatch } from '@/lib/utils';
 import { toJsonLd } from '@/lib/json-ld';
 
 interface TruckData {
@@ -69,6 +69,12 @@ const QUICK_LINKS = [
   { href: '/hire-food-truck', label: 'Hire for an event' },
 ];
 
+const SORT_OPTIONS = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'rating', label: 'Top rated' },
+  { value: 'az', label: 'A-Z' },
+] as const;
+
 function getRelativeTime(dateString?: string): string | null {
   if (!dateString) return null;
 
@@ -87,6 +93,7 @@ function getRelativeTime(dateString?: string): string | null {
 }
 
 type FilterType = 'all' | 'open' | 'favorites';
+type SortMode = (typeof SORT_OPTIONS)[number]['value'];
 
 export default function MapPage() {
   const searchParams = useSearchParams();
@@ -95,6 +102,8 @@ export default function MapPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [cuisineFilter, setCuisineFilter] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('recommended');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [filter, setFilter] = useState<FilterType>('all');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -207,20 +216,51 @@ export default function MapPage() {
       if (filter === 'favorites') return favorites.has(truck.id);
       return true;
     })
-    .filter(
-      (truck) =>
-        truck.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        truck.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    .filter((truck) => {
+      if (cuisineFilter) return truck.cuisine === cuisineFilter;
+      return true;
+    })
+    .map((truck) => ({
+      truck,
+      searchScore: scoreSearchMatch(searchTerm, [
+        { value: truck.name, weight: 5 },
+        { value: truck.cuisine, weight: 4 },
+        { value: truck.address, weight: 3 },
+        { value: truck.description, weight: 2 },
+      ]),
+    }))
+    .filter(({ searchScore }) => searchScore >= 0);
 
   const sortedTrucks = [...filteredTrucks].sort((a, b) => {
-    if (a.isOpen && !b.isOpen) return -1;
-    if (!a.isOpen && b.isOpen) return 1;
-    return 0;
-  });
+    if (searchTerm.trim() && b.searchScore !== a.searchScore) return b.searchScore - a.searchScore;
+
+    if (sortMode === 'rating') {
+      const ratingDiff = (b.truck.rating ?? 0) - (a.truck.rating ?? 0);
+      if (ratingDiff !== 0) return ratingDiff;
+    }
+
+    if (sortMode === 'az') {
+      return a.truck.name.localeCompare(b.truck.name);
+    }
+
+    if (a.truck.isOpen && !b.truck.isOpen) return -1;
+    if (!a.truck.isOpen && b.truck.isOpen) return 1;
+    if ((b.truck.rating ?? 0) !== (a.truck.rating ?? 0)) {
+      return (b.truck.rating ?? 0) - (a.truck.rating ?? 0);
+    }
+    return a.truck.name.localeCompare(b.truck.name);
+  }).map(({ truck }) => truck);
 
   const totalOpenCount = trucks.filter((truck) => truck.isOpen).length;
-  const cuisineCount = new Set(trucks.map((truck) => truck.cuisine)).size;
+  const cuisineCounts = trucks.reduce((acc, truck) => {
+    acc[truck.cuisine] = (acc[truck.cuisine] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const cuisineCount = Object.keys(cuisineCounts).length;
+  const topCuisineFilters = Object.entries(cuisineCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, count]) => ({ name, count }));
   const activeFilterLabel =
     filter === 'favorites' ? 'favorites' : filter === 'open' ? 'open trucks' : 'all trucks';
 
@@ -245,7 +285,7 @@ export default function MapPage() {
             icon: IconSearch,
             title: 'No trucks matched that search',
             description: searchTerm
-              ? 'Try a different truck name or cuisine keyword.'
+              ? 'Try a different truck name, cuisine, or suburb keyword.'
               : 'No food trucks are available to show here yet.',
             actionLabel: searchTerm ? 'Reset Search' : 'Explore Featured Trucks',
             onAction: searchTerm ? () => setSearchTerm('') : undefined,
@@ -336,7 +376,7 @@ export default function MapPage() {
               </div>
               <div className="mt-5 flex flex-wrap gap-2 text-sm font-medium text-slate-600">
                 <span className="rounded-full border border-orange-200 bg-white px-4 py-2">Open trucks rise to the top</span>
-                <span className="rounded-full border border-orange-200 bg-white px-4 py-2">Search by name or cuisine</span>
+                <span className="rounded-full border border-orange-200 bg-white px-4 py-2">Search by truck, cuisine, or suburb</span>
                 <span className="rounded-full border border-orange-200 bg-white px-4 py-2">No account needed to browse</span>
               </div>
             </div>
@@ -418,6 +458,7 @@ export default function MapPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Current view</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {sortedTrucks.length} result{sortedTrucks.length !== 1 ? 's' : ''} across {activeFilterLabel}
+                {cuisineFilter ? ` in ${cuisineFilter}` : ''}
                 {searchTerm ? ` matching “${searchTerm}”` : ''}.
               </p>
             </div>
@@ -426,12 +467,12 @@ export default function MapPage() {
           <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="relative">
               <label htmlFor="map-truck-search" className="sr-only">
-                Search food trucks by name or cuisine
+                Search food trucks by name, cuisine, or suburb
               </label>
               <IconSearch className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <Input
                 id="map-truck-search"
-                placeholder="Search truck names or cuisines"
+                placeholder="Search by truck, cuisine, or suburb"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="h-12 rounded-2xl border-2 border-orange-200 bg-white pl-11 text-slate-800 placeholder:text-slate-400 focus:border-orange-400"
@@ -499,18 +540,83 @@ export default function MapPage() {
               </button>
             ))}
 
-            {(searchTerm || filter !== 'all') && (
+            {(searchTerm || filter !== 'all' || cuisineFilter || sortMode !== 'recommended') && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchTerm('');
                   setFilter('all');
+                  setCuisineFilter(null);
+                  setSortMode('recommended');
                 }}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
               >
                 Reset filters
               </button>
             )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+              Sort
+            </span>
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setSortMode(option.value)}
+                aria-pressed={sortMode === option.value}
+                className={cn(
+                  'inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold transition-all',
+                  sortMode === option.value
+                    ? 'bg-slate-900 text-white shadow-lg'
+                    : 'border border-orange-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-600'
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+              Popular cuisines
+            </span>
+            <button
+              type="button"
+              onClick={() => setCuisineFilter(null)}
+              aria-pressed={!cuisineFilter}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition-all',
+                !cuisineFilter
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                  : 'border border-orange-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-600'
+              )}
+            >
+              All cuisines
+            </button>
+            {topCuisineFilters.map((option) => (
+              <button
+                key={option.name}
+                type="button"
+                onClick={() => setCuisineFilter(cuisineFilter === option.name ? null : option.name)}
+                aria-pressed={cuisineFilter === option.name}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition-all',
+                  cuisineFilter === option.name
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                    : 'border border-orange-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-600'
+                )}
+              >
+                {option.name}
+                <span className={cn(
+                  'rounded-full px-1.5 py-0.5 text-xs',
+                  cuisineFilter === option.name ? 'bg-white/20 text-white/80' : 'bg-orange-100 text-orange-600'
+                )}>
+                  {option.count}
+                </span>
+              </button>
+            ))}
           </div>
         </motion.section>
 

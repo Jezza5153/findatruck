@@ -3,9 +3,8 @@
 import { getSafeImageUrl } from '@/lib/image-proxy';
 import EnquiryFormModal from '@/components/EnquiryFormModal';
 
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
@@ -17,7 +16,7 @@ import {
   IconSearch, IconTruck, IconArrowRight, IconCheckCircle,
   IconStar, IconMapPin, IconChefHat, IconSparkles
 } from '@/components/ui/branded-icons';
-import { cn } from '@/lib/utils';
+import { cn, scoreSearchMatch } from '@/lib/utils';
 
 interface TruckData {
   id: string;
@@ -104,6 +103,41 @@ const OWNER_BENEFITS = [
   'Turn event interest and everyday discovery into more enquiries.',
 ];
 
+const DIRECTORY_SURFACES = [
+  {
+    href: '/map',
+    title: 'Live map',
+    description: 'Best when someone wants what is open right now and nearby.',
+    icon: IconMapPin,
+    accent: 'Right now',
+  },
+  {
+    href: '/featured',
+    title: 'Featured trucks',
+    description: 'Best when someone wants a stronger shortlist instead of a blank-slate search.',
+    icon: IconSparkles,
+    accent: 'Curated',
+  },
+  {
+    href: '/food-trucks',
+    title: 'Browse by location',
+    description: 'Best when someone wants to explore suburbs, beaches, and cuisine pages with more intent.',
+    icon: IconChefHat,
+    accent: 'Deep browse',
+  },
+];
+
+const SORT_OPTIONS = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'rating', label: 'Top rated' },
+  { value: 'az', label: 'A-Z' },
+] as const;
+
+type SortMode = (typeof SORT_OPTIONS)[number]['value'];
+
+const INITIAL_DISPLAY = 12;
+const LOAD_MORE_STEP = 12;
+
 export default function HomeContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -113,8 +147,9 @@ export default function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('recommended');
   const [enquiryTruck, setEnquiryTruck] = useState<{ id: string; name: string } | null>(null);
-  const [showAllTrucks, setShowAllTrucks] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_DISPLAY);
 
   // Redirect logged-in owners to their dashboard (admins can browse the public site)
   useEffect(() => {
@@ -129,6 +164,10 @@ export default function HomeContent() {
   useEffect(() => {
     fetchTrucks();
   }, []);
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_DISPLAY);
+  }, [searchTerm, cuisineFilter, sortMode]);
 
   const fetchTrucks = async () => {
     try {
@@ -152,30 +191,53 @@ export default function HomeContent() {
   const cuisineList = Object.entries(cuisineCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
+  const totalOpenCount = trucks.filter((truck) => truck.isOpen).length;
+  const featuredCount = trucks.filter((truck) => truck.isFeatured).length;
+  const topCuisineHighlights = cuisineList.slice(0, 3);
 
   // Filter trucks
-  const filteredTrucks = trucks
+  const scoredTrucks = trucks
     .filter(truck => {
       if (cuisineFilter) return truck.cuisine === cuisineFilter;
       return true;
     })
-    .filter(truck =>
-      truck.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      truck.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    .map((truck) => ({
+      truck,
+      searchScore: scoreSearchMatch(searchTerm, [
+        { value: truck.name, weight: 5 },
+        { value: truck.cuisine, weight: 4 },
+        { value: truck.address, weight: 3 },
+        { value: truck.description, weight: 2 },
+      ]),
+    }))
+    .filter(({ searchScore }) => searchScore >= 0);
 
   // Sort: verified first, then has image, then alphabetical
-  const sortedTrucks = [...filteredTrucks].sort((a, b) => {
-    if (a.isVerified && !b.isVerified) return -1;
-    if (!a.isVerified && b.isVerified) return 1;
-    if (a.imageUrl && !b.imageUrl) return -1;
-    if (!a.imageUrl && b.imageUrl) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedTrucks = [...scoredTrucks].sort((a, b) => {
+    if (searchTerm.trim() && b.searchScore !== a.searchScore) return b.searchScore - a.searchScore;
 
-  // Limit display on initial load
-  const INITIAL_DISPLAY = typeof window !== 'undefined' && window.innerWidth < 768 ? 6 : 12;
-  const displayedTrucks = showAllTrucks ? sortedTrucks : sortedTrucks.slice(0, INITIAL_DISPLAY);
+    if (sortMode === 'rating') {
+      const ratingDiff = (b.truck.rating ?? 0) - (a.truck.rating ?? 0);
+      if (ratingDiff !== 0) return ratingDiff;
+    }
+
+    if (sortMode === 'az') {
+      return a.truck.name.localeCompare(b.truck.name);
+    }
+
+    if (a.truck.isFeatured && !b.truck.isFeatured) return -1;
+    if (!a.truck.isFeatured && b.truck.isFeatured) return 1;
+    if (a.truck.isOpen && !b.truck.isOpen) return -1;
+    if (!a.truck.isOpen && b.truck.isOpen) return 1;
+    if (a.truck.isVerified && !b.truck.isVerified) return -1;
+    if (!a.truck.isVerified && b.truck.isVerified) return 1;
+    if (a.truck.imageUrl && !b.truck.imageUrl) return -1;
+    if (!a.truck.imageUrl && b.truck.imageUrl) return 1;
+    return a.truck.name.localeCompare(b.truck.name);
+  }).map(({ truck }) => truck);
+
+  const displayedTrucks = sortedTrucks.slice(0, visibleCount);
+  const remainingCount = Math.max(sortedTrucks.length - displayedTrucks.length, 0);
 
   const scrollToGrid = () => {
     truckGridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -207,24 +269,14 @@ export default function HomeContent() {
             <div className="mx-auto mt-6 max-w-lg">
               <div className="relative">
                 <label htmlFor="hero-search" className="sr-only">
-                  Search food trucks by name or cuisine
+                  Search food trucks by name, cuisine, or suburb
                 </label>
                 <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
                   id="hero-search"
-                  placeholder="Search trucks by name or cuisine..."
+                  placeholder="Search by truck, cuisine, or suburb..."
                   value={searchTerm}
-                  onChange={(e) => {
-                    const wasEmpty = !searchTerm;
-                    setSearchTerm(e.target.value);
-                    // Only scroll to grid on the first character, not every keystroke
-                    if (wasEmpty && e.target.value) {
-                      // Use requestAnimationFrame so the scroll happens after render
-                      requestAnimationFrame(() => {
-                        truckGridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                      });
-                    }
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="rounded-full border-2 border-orange-200 bg-white py-6 pl-12 pr-4 text-slate-800 shadow-soft placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-400"
                 />
               </div>
@@ -325,6 +377,75 @@ export default function HomeContent() {
         </div>
       </section>
 
+      <section className="container mx-auto px-4 pb-4">
+        <div className="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
+          <div className="section-frame p-6 sm:p-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                  Directory at scale
+                </p>
+                <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">
+                  A bigger directory needs clearer browse lanes.
+                </h2>
+              </div>
+              <p className="max-w-xl text-sm leading-7 text-slate-600 sm:text-right sm:text-base">
+                With 100 trucks, the best experience is helping people pick the right browse mode fast instead of making them sift through everything at once.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {DIRECTORY_SURFACES.map((surface) => (
+                <Link
+                  key={surface.href}
+                  href={surface.href}
+                  className="group rounded-[28px] border border-orange-100 bg-white/92 p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-soft"
+                >
+                  <div className="inline-flex rounded-2xl bg-orange-100 p-3 text-orange-600 shadow-sm">
+                    <surface.icon className="h-5 w-5" />
+                  </div>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                    {surface.accent}
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-bold text-slate-950 transition-colors group-hover:text-orange-600">
+                    {surface.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {surface.description}
+                  </p>
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-orange-700">
+                    Open this view
+                    <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+            <div className="rounded-[28px] border border-orange-100 bg-orange-50/70 p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Directory size</p>
+              <p className="mt-3 font-display text-4xl font-bold text-slate-950">{trucks.length}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Visible trucks customers can browse right now across Adelaide and South Australia.</p>
+            </div>
+            <div className="rounded-[28px] border border-orange-100 bg-white p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Open now</p>
+              <p className="mt-3 font-display text-4xl font-bold text-slate-950">{totalOpenCount}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Use the map when live discovery matters more than broad browsing.</p>
+            </div>
+            <div className="rounded-[28px] border border-orange-100 bg-white p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">Top cuisines</p>
+              <p className="mt-3 text-base font-semibold text-slate-950">
+                {topCuisineHighlights.map((item) => item.name).join(' · ') || 'Growing fast'}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {featuredCount > 0 ? `${featuredCount} featured trucks currently help anchor the premium path.` : 'Use cuisine chips to collapse the list into a faster shortlist.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════════════════════════════════════════════════
           SECTION B — CUISINE CHIPS BAR
           ═══════════════════════════════════════════════════════════ */}
@@ -369,10 +490,14 @@ export default function HomeContent() {
             </button>
           ))}
 
-          {(searchTerm || cuisineFilter) && (
+          {(searchTerm || cuisineFilter || sortMode !== 'recommended') && (
             <button
               type="button"
-              onClick={() => { setSearchTerm(''); setCuisineFilter(null); }}
+              onClick={() => {
+                setSearchTerm('');
+                setCuisineFilter(null);
+                setSortMode('recommended');
+              }}
               className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 whitespace-nowrap hover:bg-slate-200 transition-colors"
             >
               ✕ Reset
@@ -385,12 +510,42 @@ export default function HomeContent() {
           SECTION C — TRUCK GRID (the product)
           ═══════════════════════════════════════════════════════════ */}
       <div className="container mx-auto px-4 pb-16">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-500">
-            {sortedTrucks.length} truck{sortedTrucks.length !== 1 ? 's' : ''}
-            {cuisineFilter ? ` · ${cuisineFilter}` : ''}
-            {searchTerm ? ` · "${searchTerm}"` : ''}
-          </p>
+        <div className="mb-6 rounded-[28px] border border-orange-100 bg-white/92 p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700/75">
+                Browse the directory
+              </p>
+              <p className="mt-2 text-sm font-semibold text-slate-700 sm:text-base">
+                {sortedTrucks.length} truck{sortedTrucks.length !== 1 ? 's' : ''} matched
+                {cuisineFilter ? ` in ${cuisineFilter}` : ''}
+                {searchTerm ? ` for “${searchTerm}”` : ''}
+                .
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Showing {displayedTrucks.length} of {sortedTrucks.length}. Use sort and cuisine filters to keep the list manageable.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {SORT_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSortMode(option.value)}
+                  aria-pressed={sortMode === option.value}
+                  className={cn(
+                    'inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold transition-all',
+                    sortMode === option.value
+                      ? 'bg-slate-900 text-white shadow-lg'
+                      : 'border border-orange-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-700'
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -474,18 +629,40 @@ export default function HomeContent() {
               ))}
             </motion.div>
 
-            {/* Show More / Show All */}
-            {!showAllTrucks && sortedTrucks.length > INITIAL_DISPLAY && (
-              <div className="mt-8 text-center">
-                <Button
-                  onClick={() => setShowAllTrucks(true)}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full border-orange-200 px-8 py-6 font-semibold text-slate-700 hover:bg-orange-50"
-                >
-                  Show All {sortedTrucks.length} Trucks
-                  <IconArrowRight className="h-4 w-4" />
-                </Button>
+            {sortedTrucks.length > INITIAL_DISPLAY && (
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                {remainingCount > 0 ? (
+                  <Button
+                    onClick={() => setVisibleCount((current) => Math.min(current + LOAD_MORE_STEP, sortedTrucks.length))}
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full border-orange-200 px-8 py-6 font-semibold text-slate-700 hover:bg-orange-50"
+                  >
+                    Load {Math.min(LOAD_MORE_STEP, remainingCount)} More Trucks
+                    <IconArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : null}
+
+                {displayedTrucks.length > INITIAL_DISPLAY ? (
+                  <Button
+                    onClick={() => setVisibleCount(INITIAL_DISPLAY)}
+                    variant="ghost"
+                    size="lg"
+                    className="rounded-full px-6 py-6 font-semibold text-slate-600 hover:bg-slate-100"
+                  >
+                    Show Fewer
+                  </Button>
+                ) : null}
+
+                {remainingCount > 0 ? (
+                  <Link
+                    href="/food-trucks"
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-6 py-3 font-semibold text-slate-800 transition-colors hover:bg-orange-50"
+                  >
+                    Browse All via Locations
+                    <IconArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
               </div>
             )}
           </>
@@ -497,11 +674,15 @@ export default function HomeContent() {
                 No trucks found
               </h3>
               <p className="text-slate-500 mb-6">
-                {searchTerm ? 'Try a different search' : 'Check back soon!'}
+                {searchTerm ? 'Try a different truck, cuisine, or suburb search' : 'Check back soon!'}
               </p>
-              {(searchTerm || cuisineFilter) && (
+              {(searchTerm || cuisineFilter || sortMode !== 'recommended') && (
                 <Button
-                  onClick={() => { setSearchTerm(''); setCuisineFilter(null); }}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCuisineFilter(null);
+                    setSortMode('recommended');
+                  }}
                   className="bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-full px-8"
                 >
                   Reset Filters
