@@ -12,7 +12,6 @@ import {
   IconAlertTriangle,
   IconMoreVertical,
   IconEye,
-  IconBan,
   IconLoader2,
 } from '@/components/ui/branded-icons';
 import { Input } from '@/components/ui/input';
@@ -24,6 +23,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+
+const SCOUT_EMAIL = 'scout@foodtrucknext2me.com';
 
 interface TruckData {
   id: string;
@@ -37,7 +38,7 @@ interface TruckData {
   createdAt: string;
 }
 
-type FilterType = 'all' | 'verified' | 'pending' | 'flagged';
+type FilterType = 'all' | 'verified' | 'pending' | 'scouted';
 
 export default function AdminTrucksPage() {
   const { data: session, status: authStatus } = useSession();
@@ -89,10 +90,25 @@ export default function AdminTrucksPage() {
     }
   };
 
+  const deleteTruck = async (id: string, name: string) => {
+    if (!confirm(`Delete "${name}" permanently? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/admin/trucks/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setTrucks((prev) => prev.filter((t) => t.id !== id));
+      }
+    } catch {
+      // Handle error
+    }
+  };
+
+  const isScouted = (truck: TruckData) => truck.ownerEmail === SCOUT_EMAIL;
+
   const filteredTrucks = trucks
     .filter((truck) => {
       if (filter === 'verified') return truck.isVerified;
       if (filter === 'pending') return !truck.isVerified;
+      if (filter === 'scouted') return isScouted(truck);
       return true;
     })
     .filter(
@@ -122,7 +138,7 @@ export default function AdminTrucksPage() {
               <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Trucks</h1>
               <p className="mt-2 text-white/60">{trucks.length} registered trucks across moderation, visibility, and featured status.</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="role-stat-dark p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200/70">Verified</p>
                 <p className="mt-2 font-display text-3xl font-bold text-white">{trucks.filter((truck) => truck.isVerified).length}</p>
@@ -130,6 +146,10 @@ export default function AdminTrucksPage() {
               <div className="role-stat-dark p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200/70">Live now</p>
                 <p className="mt-2 font-display text-3xl font-bold text-white">{trucks.filter((truck) => truck.isOpen).length}</p>
+              </div>
+              <div className="role-stat-dark p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/70">Scouted</p>
+                <p className="mt-2 font-display text-3xl font-bold text-white">{trucks.filter(isScouted).length}</p>
               </div>
             </div>
           </div>
@@ -145,7 +165,7 @@ export default function AdminTrucksPage() {
               />
             </div>
             <div className="inline-flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
-              {(['all', 'verified', 'pending'] as FilterType[]).map((filterKey) => (
+              {(['all', 'verified', 'pending', 'scouted'] as FilterType[]).map((filterKey) => (
                 <button
                   key={filterKey}
                   onClick={() => setFilter(filterKey)}
@@ -185,6 +205,11 @@ export default function AdminTrucksPage() {
                     {truck.isFeatured ? (
                       <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
                         Featured
+                      </span>
+                    ) : null}
+                    {isScouted(truck) ? (
+                      <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-200">
+                        Scouted
                       </span>
                     ) : null}
                   </div>
@@ -229,9 +254,12 @@ export default function AdminTrucksPage() {
                       <span>★</span>
                       {truck.isFeatured ? 'Remove Featured' : 'Make Featured'}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-red-300">
-                      <IconBan className="h-4 w-4" />
-                      Suspend Truck
+                    <DropdownMenuItem
+                      onClick={() => deleteTruck(truck.id, truck.name)}
+                      className="flex items-center gap-2 text-red-300 focus:text-red-200"
+                    >
+                      <span className="text-sm">🗑</span>
+                      Delete Truck
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

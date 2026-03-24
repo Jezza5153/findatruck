@@ -36,8 +36,10 @@ export async function GET() {
                 isOpen: trucks.isOpen,
                 isFeatured: trucks.isFeatured,
                 createdAt: trucks.createdAt,
+                ownerEmail: users.email,
             })
             .from(trucks)
+            .leftJoin(users, eq(trucks.ownerUid, users.id))
             .orderBy(desc(trucks.createdAt));
 
         return NextResponse.json({ trucks: allTrucks });

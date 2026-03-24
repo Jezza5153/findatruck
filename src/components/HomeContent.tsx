@@ -215,8 +215,15 @@ export default function HomeContent() {
                   placeholder="Search trucks by name or cuisine..."
                   value={searchTerm}
                   onChange={(e) => {
+                    const wasEmpty = !searchTerm;
                     setSearchTerm(e.target.value);
-                    scrollToGrid();
+                    // Only scroll to grid on the first character, not every keystroke
+                    if (wasEmpty && e.target.value) {
+                      // Use requestAnimationFrame so the scroll happens after render
+                      requestAnimationFrame(() => {
+                        truckGridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                      });
+                    }
                   }}
                   className="rounded-full border-2 border-orange-200 bg-white py-6 pl-12 pr-4 text-slate-800 shadow-soft placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-400"
                 />

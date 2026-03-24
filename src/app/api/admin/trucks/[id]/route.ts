@@ -59,3 +59,37 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: 'Failed to update truck' }, { status: 500 });
     }
 }
+
+// DELETE: Permanently remove a truck
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        const { id } = await params;
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (!(await isAdmin(session.user.id))) {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+        }
+
+        // Get truck name for logging
+        const [truck] = await db
+            .select({ name: trucks.name })
+            .from(trucks)
+            .where(eq(trucks.id, id))
+            .limit(1);
+
+        if (!truck) {
+            return NextResponse.json({ error: 'Truck not found' }, { status: 404 });
+        }
+
+        await db.delete(trucks).where(eq(trucks.id, id));
+
+        return NextResponse.json({ success: true, message: `Deleted truck: ${truck.name}` });
+    } catch (error) {
+        console.error('Admin delete truck error:', error);
+        return NextResponse.json({ error: 'Failed to delete truck' }, { status: 500 });
+    }
+}
